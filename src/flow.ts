@@ -215,7 +215,12 @@ function esc(text: string): string {
 const one = (s: string) => esc(s.replace(/\s+/g, " ").trim());
 
 /** Mermaid flowchart of developer requests + per-request details (prompts, AI steps, decisions, prompt review). */
-export function renderFlow(entries: CommitEntry[], max = MAX_FLOW_TURNS, outcomeOverrides: (string | undefined)[] = []): string {
+export function renderFlow(
+  entries: CommitEntry[],
+  max = MAX_FLOW_TURNS,
+  outcomeOverrides: (string | undefined)[] = [],
+  translate: (s: string) => string = (s) => s,
+): string {
   const turns = mergeToMax(collectTurns(entries), max).map((t, i) => (outcomeOverrides[i] ? { ...t, outcome: outcomeOverrides[i]! } : t));
   if (!turns.length) return "";
   const sessionIds = [...new Set(turns.flatMap((t) => t.sessions))];
@@ -251,15 +256,19 @@ export function renderFlow(entries: CommitEntry[], max = MAX_FLOW_TURNS, outcome
     const out = [`<details><summary><b>${CIRCLED[i] ?? i + 1} ${one(t.title)}</b> · ${one(metricsLine(t))}${badge(t)}${commits}</summary>`, ""];
     if (t.prompts.length) {
       out.push("**🧑‍💻 Prompt**", "");
+      let translated = false;
       for (const p of t.prompts) {
+        const shown = translate(p);
+        translated ||= shown !== p;
         out.push(
-          esc(p)
+          esc(shown)
             .split("\n")
             .map((l) => `> ${l}`)
             .join("\n"),
           "",
         );
       }
+      if (translated) out.push("<sub>🌐 Translated to English from the original prompt.</sub>", "");
     } else if (!t.manual) out.push("> 🤖 _Continued an earlier request without a new prompt._", "");
     if (t.steps.length) {
       const step = (s: TurnStep) => `${icon(s.type)} **${one(title(s.type))}**${s.text ? ` — ${one(s.text)}` : ""}`;

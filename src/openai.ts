@@ -104,3 +104,35 @@ export async function synthesize(entries: CommitEntry[], diffStat: string): Prom
     return fallback;
   }
 }
+
+/** Text worth translating: contains letters outside the Latin script (e.g. Korean). */
+export function needsTranslation(text: string): boolean {
+  return /[^\P{L}\p{Script=Latin}]/u.test(text);
+}
+
+/**
+ * Translate non-English prompts to English for the PR comment (notes keep the original).
+ * Returns original → English; texts that fail or need no translation are simply absent.
+ */
+export async function translatePrompts(texts: string[]): Promise<Map<string, string>> {
+  const out = new Map<string, string>();
+  const todo = [...new Set(texts)].filter(needsTranslation);
+  if (!todo.length || !process.env.OPENAI_API_KEY) return out;
+  const prompt = [
+    "Translate each developer prompt below into natural English for a code reviewer.",
+    "Rules: translate faithfully and completely (do not summarize); keep the author's tone, line breaks, markdown, code, file paths, URLs and [REDACTED:...] tokens exactly as they are.",
+    'Return ONLY JSON: {"items":[{"id":number,"en":string}]}',
+    "",
+    JSON.stringify({ items: todo.map((text, id) => ({ id, text })) }),
+  ].join("\n");
+  try {
+    const json = await openaiJson(prompt);
+    for (const it of Array.isArray(json?.items) ? json.items : []) {
+      const src = todo[Number(it?.id)];
+      if (src && typeof it?.en === "string" && it.en.trim()) out.set(src, redact(it.en.trim()));
+    }
+  } catch (err) {
+    process.stderr.write(`[promptlens] prompt translation failed, showing originals: ${(err as Error).message}\n`);
+  }
+  return out;
+}

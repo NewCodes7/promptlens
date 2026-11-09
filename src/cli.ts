@@ -7,8 +7,8 @@ import { captureCommit, readRaw } from "./capture.js";
 import { NOTES_REF, git, gitDir, readNote, resolveSha, revList, writeNote } from "./git.js";
 import { upsertComment } from "./github.js";
 import { init } from "./init.js";
-import { synthesize } from "./openai.js";
-import { collectCommits, renderReport } from "./report.js";
+import { synthesize, translatePrompts } from "./openai.js";
+import { collectCommits, renderReport, translatableTexts } from "./report.js";
 import { summarize } from "./summarize.js";
 
 const CLI = realpathSync(fileURLToPath(import.meta.url));
@@ -143,8 +143,8 @@ async function main() {
       const base = (opt.base as string) ?? event?.pull_request?.base?.sha ?? "origin/main";
       const head = (opt.head as string) ?? event?.pull_request?.head?.sha ?? "HEAD";
       const { entries, diffStat } = collectCommits(base, head);
-      const synthesis = await synthesize(entries, diffStat);
-      const body = renderReport(entries, synthesis);
+      const [synthesis, translations] = await Promise.all([synthesize(entries, diffStat), translatePrompts(translatableTexts(entries))]);
+      const body = renderReport(entries, synthesis, { translations });
       if (!opt.post) {
         console.log(body);
         return;

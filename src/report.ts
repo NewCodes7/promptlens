@@ -97,7 +97,7 @@ function quote(text: string): string {
 
 const claim = (c: Claim) => `${line(c.text)}${c.inferred ? " _(inferred)_" : ""}`;
 
-function commitDetails(e: CommitEntry): string {
+function commitDetails(e: CommitEntry, tr: (s: string) => string): string {
   const short = e.sha.slice(0, 7);
   const c = e.context;
   if (!c) {
@@ -110,7 +110,7 @@ function commitDetails(e: CommitEntry): string {
   out.push(`**Intent:** ${claim(c.intent)}`, "");
   if (c.keyPrompts.length) {
     out.push("**Key prompts**", "");
-    for (const p of c.keyPrompts) out.push(quote(p.text), "", `<sub>↳ ${line(p.why)}</sub>`, "");
+    for (const p of c.keyPrompts) out.push(quote(tr(p.text)), "", `<sub>↳ ${line(p.why)}${tr(p.text) !== p.text ? " · 🌐 translated" : ""}</sub>`, "");
   }
   if (c.aiWork.length) out.push("**What the AI did**", ...c.aiWork.map((w) => `- ${line(w)}`), "");
   if (c.decisions.length) out.push("**Decisions**", ...c.decisions.map((d) => `- ${claim(d)}`), "");
@@ -123,7 +123,48 @@ function commitDetails(e: CommitEntry): string {
   return out.join("\n");
 }
 
-export function renderReport(entries: CommitEntry[], syn: Synthesis, opts: { now?: Date } = {}): string {
+/** Every non-prompt text in the report that may echo a prompt (heuristic titles, intents, decisions). */
+export function translatableTexts(entries: CommitEntry[]): string[] {
+  return entries.flatMap((e) => {
+    const c = e.context;
+    if (!c) return [];
+    return [
+      ...c.keyPrompts.map((k) => k.text),
+      c.intent.text,
+      ...c.decisions.map((d) => d.text),
+      ...(c.turns ?? []).flatMap((t) => [...t.prompts, t.title, ...t.decisions.map((d) => d.text)]),
+    ];
+  });
+}
+
+/** Swap translated texts into titles, intents and decisions (prompts are swapped at render time so they can be marked). */
+function applyTranslations(entries: CommitEntry[], syn: Synthesis, map: Map<string, string>): [CommitEntry[], Synthesis] {
+  if (!map.size) return [entries, syn];
+  const sub = (s: string) => {
+    let out = map.get(s) ?? s;
+    for (const [k, v] of map) if (k.length > 8 && out.includes(k)) out = out.split(k).join(v);
+    return out;
+  };
+  const tEntries = entries.map((e) =>
+    e.context
+      ? {
+          ...e,
+          context: {
+            ...e.context,
+            intent: { ...e.context.intent, text: sub(e.context.intent.text) },
+            decisions: e.context.decisions.map((d) => ({ ...d, text: sub(d.text) })),
+            turns: e.context.turns?.map((t) => ({ ...t, title: sub(t.title), decisions: t.decisions.map((d) => ({ ...d, text: sub(d.text) })) })),
+          },
+        }
+      : e,
+  );
+  const tSyn = { ...syn, overview: sub(syn.overview), why: syn.why.map(sub), keyDecisions: syn.keyDecisions.map((d) => ({ ...d, text: sub(d.text) })) };
+  return [tEntries, tSyn];
+}
+
+export function renderReport(rawEntries: CommitEntry[], rawSyn: Synthesis, opts: { now?: Date; translations?: Map<string, string> } = {}): string {
+  const tr = (s: string) => opts.translations?.get(s) ?? s;
+  const [entries, syn] = applyTranslations(rawEntries, rawSyn, opts.translations ?? new Map());
   const ctx = entries.map((e) => e.context).filter((c): c is CommitContext => c !== null);
   const sessions = new Set(ctx.flatMap((c) => c.sessionIds));
   const prompts = ctx.reduce((n, c) => n + c.stats.prompts, 0);
@@ -139,7 +180,7 @@ export function renderReport(entries: CommitEntry[], syn: Synthesis, opts: { now
     `| ${entries.length} | ${ctx.length} / ${entries.length} | ${sessions.size} | ${prompts} | ${aiFiles} / ${files.size} |`,
     "",
   );
-  const flow = renderFlow(entries, undefined, syn.turnOutcomes);
+  const flow = renderFlow(entries, undefined, syn.turnOutcomes, tr);
   if (flow) out.push("### 🧭 How this PR was built — prompt by prompt", "", flow, "");
   if (syn.why.length) out.push("### Why these changes", ...syn.why.map((w) => `- ${line(w)}`), "");
   if (syn.keyDecisions.length) out.push("### Key decisions", ...syn.keyDecisions.map((d) => `- ${claim(d)}`), "");
@@ -150,7 +191,7 @@ export function renderReport(entries: CommitEntry[], syn: Synthesis, opts: { now
       "",
     );
   if (syn.openQuestions.length) out.push("### Open questions", ...syn.openQuestions.map((q) => `- ${line(q)}`), "");
-  out.push("### Commit timeline", "", ...entries.map(commitDetails).flatMap((d) => [d, ""]));
+  out.push("### Commit timeline", "", ...entries.map((e) => commitDetails(e, tr)).flatMap((d) => [d, ""]));
   const now = (opts.now ?? new Date()).toISOString().replace(/\.\d+Z$/, "Z");
   out.push(
     "---",

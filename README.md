@@ -102,13 +102,13 @@ Git AI answers *"which lines did an AI write?"* (provenance). PromptLens answers
 ## Tests
 
 ```bash
-npm test          # 55 tests: parsing, matching, redaction, prompt-turn grouping, flow rendering, end-to-end on a temp git repo
+npm test          # 60 tests: parsing, matching, redaction, prompt-turn grouping, flow rendering, end-to-end on a temp git repo
 npm run coverage
 ```
 
 ```
  Test Files  6 passed (6)
-      Tests  55 passed (55)
+      Tests  60 passed (60)
 
  capture.ts   97% · report.ts 99% · redact.ts 100% · sessions.ts 96% · init.ts 90%
 ```
