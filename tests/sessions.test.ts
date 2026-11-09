@@ -34,6 +34,11 @@ describe("parseSessionLog", () => {
     expect(prompts[0]).toMatchObject({ text: "real prompt" });
   });
 
+  it("strips pasted-content wrappers from prompts", () => {
+    const ev = parseSessionLog(userPrompt("s1", "2026-11-09T01:00:00Z", '<pasted_content id="1">\n* make the PR more vivid\n</pasted_content id="1">'));
+    expect(ev[0]).toMatchObject({ kind: "prompt", text: "* make the PR more vivid" });
+  });
+
   it("accepts array content with text blocks (e.g. prompts with images)", () => {
     const line = JSON.stringify({
       type: "user",

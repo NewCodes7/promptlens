@@ -113,7 +113,8 @@ export function parseSessionLog(raw: string): SessionEvent[] {
         }
       }
       if (d.isMeta) continue;
-      const text = textOf(content);
+      // Strip harness wrappers around pasted text so only what the developer wrote remains.
+      const text = textOf(content)?.replace(/<\/?pasted_content[^>]*>/g, "").trim();
       if (text && !isNoise(text)) events.push({ kind: "prompt", ...base, text });
       continue;
     }
