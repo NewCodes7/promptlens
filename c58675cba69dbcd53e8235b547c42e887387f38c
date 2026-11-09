@@ -57,30 +57,30 @@
       "steps": [
         {
           "type": "investigate",
-          "text": "Scanned current notes for traces of other sessions"
+          "text": "Scanned current notes for other-session content; found clean, leftovers only in history"
         },
         {
           "type": "fix",
-          "text": "Squashed notes history to one commit and force-pushed the ref"
+          "text": "Squashed notes history into one commit and force-pushed"
         },
         {
           "type": "verify",
-          "text": "Re-ran PromptLens workflow and checked the PR comment"
+          "text": "Re-ran the PromptLens workflow and checked the PR comment"
         }
       ],
-      "outcome": "Notes ref is one commit with same tree; workflow still works.",
+      "outcome": "Notes ref is a single commit with identical tree; workflow still works.",
       "decisions": [
         {
-          "text": "Squash and force-push notes history instead of editing individual commits",
-          "why": "Other-session traces remained only in history; tree was already clean"
+          "text": "Squash and force-push the notes ref",
+          "why": "Removes leaked history while keeping current content unchanged"
         }
       ],
       "tips": {
         "keep": [
-          "Short, explicit approval after the agent explained the destructive force-push and its scope."
+          "Confirmed the destructive purge explicitly before the force-push"
         ],
         "improve": [
-          "Name which notes entries count as other-session content so the scan criteria are agreed upfront."
+          "Say up front which paths belong to this session so other-session files are not left ambiguous"
         ]
       },
       "metrics": {
@@ -94,7 +94,7 @@
     },
     {
       "key": "51830678-a9ab-4b3f-a2ed-661c974a5480@2026-11-09T04:25:21.329Z",
-      "title": "Publish the hub page and related files",
+      "title": "Publish the PromptLens Hub page",
       "prompts": [
         "Yes, publish it"
       ],
@@ -102,34 +102,34 @@
       "steps": [
         {
           "type": "build",
-          "text": "Built the hub page with tabs, flow cards, samples and real PR #1 data"
+          "text": "Wrote hub page with tabs, flow nodes and sample professions"
         },
         {
           "type": "docs",
-          "text": "Added npm script and README section for the hub"
+          "text": "Added README section and npm script for hub data export"
         },
         {
           "type": "verify",
-          "text": "Previewed at desktop/phone widths and in dark mode in browser"
+          "text": "Previewed desktop, phone width and dark mode in the browser"
         },
         {
           "type": "ship",
           "text": "Committed the hub page and related files"
         }
       ],
-      "outcome": "Hub committed; local preview clean; GitHub Pages not yet enabled.",
+      "outcome": "Hub page committed with README docs; GitHub Pages not yet enabled.",
       "decisions": [
         {
-          "text": "Keep hub inside the repo under docs/ in English, with all four extra professions",
-          "why": "Matches the setup the developer picked earlier"
+          "text": "Keep non-developer tabs as clearly labeled samples",
+          "why": "Only the developer flow is real captured data"
         }
       ],
       "tips": {
         "keep": [
-          "Confirmed publishing only after previewing the finished page."
+          "Gave a clear go-ahead after reviewing the local preview"
         ],
         "improve": [
-          "State whether GitHub Pages should be enabled so the README link works at commit time."
+          "Mention enabling GitHub Pages, since the README links to a URL that is not live yet"
         ]
       },
       "metrics": {
@@ -143,51 +143,52 @@
     }
   ],
   "intent": {
-    "text": "Add a PromptLens Hub page (docs/) showing cross-profession prompt flows, with the developer tab using the real prompt flow of PR #1 exported from the notes ref.",
-    "inferred": false
+    "text": "Add a PromptLens Hub page showing prompt flows across professions, featuring the real PR #1 flow exported from the notes ref, plus README and npm script docs.",
+    "inferred": true
   },
   "keyPrompts": [
     {
       "text": "Yes, purge it",
-      "why": "Authorizes purging other-session content from the notes ref via squash and force-push, which shaped the real data shown."
+      "why": "Approved purging other-session content from the notes ref history and force-pushing a clean ref."
     },
     {
       "text": "Yes, publish it",
-      "why": "Authorizes committing and publishing the hub page, README section and related files."
+      "why": "Approved committing and publishing the hub page and related files."
     }
   ],
   "decisions": [
     {
-      "text": "Squash refs/notes/promptlens history into a single commit and force-push to remove other-session traces; tree content unchanged.",
+      "text": "Purge notes history by squashing refs/notes/promptlens into one commit and force-pushing, after confirming current notes had no other-session content.",
       "inferred": false
     },
     {
-      "text": "Hub has Developer tab with real data plus Designer/Marketer/Professional/Founder tabs as clearly labeled hand-written samples.",
+      "text": "Leave docs/ and scripts/ files that appeared to come from another session untouched during the notes cleanup.",
       "inferred": false
     },
     {
-      "text": "Flow chart grouped per developer request (follow-up confirmations merged), with local claude -p judging and a rule-based fallback.",
-      "inferred": false
+      "text": "Hub covers Developer (real PR #1 data) plus four hand-labeled sample professions: Designer, Marketer, Professional, Founder, in English.",
+      "inferred": true
     },
     {
-      "text": "Left unrelated docs/ and scripts/ files from other sessions untouched during notes cleanup.",
+      "text": "Flow chart groups chunks by developer request rather than by commit; follow-up confirmations merge into the prior request.",
       "inferred": true
     }
   ],
   "aiWork": [
-    "Scanned current notes for other-session content, then rewrote the notes ref history as one commit and force-pushed it.",
+    "Scanned current notes for other-session content and found them clean; the old history held 73 commits.",
+    "Squashed notes history into one commit with an identical tree and force-pushed the ref.",
     "Re-ran the PromptLens workflow to confirm the PR comment still renders after the history rewrite.",
-    "Built the static hub page (docs/app.js, data, styles) with tabs, flow nodes, prompt review tips and cross-profession pattern cards.",
-    "Added an npm script for exporting hub data and a README section describing the hub and local preview.",
+    "Built docs/ hub page (app.js, data, styles, .nojekyll) with tabs, flow nodes, prompt review tips and cross-profession patterns.",
+    "Added README section and npm hub:data script; checked desktop, phone width and dark mode in the browser.",
     "Committed the hub page and related files."
   ],
   "verification": [
     {
-      "text": "Re-ran the PromptLens GitHub workflow after the notes squash and checked the PR comment.",
+      "text": "Re-ran the PromptLens GitHub workflow after force-pushing the notes ref and checked the PR comment.",
       "inferred": false
     },
     {
-      "text": "Previewed hub at localhost:4173 in the browser at desktop and phone widths and in dark mode; no console errors, no horizontal scroll.",
+      "text": "Previewed the hub locally at localhost:4173 on desktop and phone widths and in dark mode; no console errors or horizontal scrolling.",
       "inferred": false
     }
   ]
