@@ -9,7 +9,7 @@ PromptLens records which AI coding sessions produced each commit and posts one a
 ![node](https://img.shields.io/badge/node-%E2%89%A520-blue)
 ![license](https://img.shields.io/badge/license-MIT-lightgrey)
 
-**[📄 Live PR report](https://github.com/NewCodes7/promptlens/pull/1)** · **[🌐 PromptLens Hub](https://newcodes7.github.io/promptlens/)** · **[⚡ Quick start](#-quick-start)** · **[🧠 How I solved it](#-the-hard-problems-and-how-i-solved-them)**
+**[📄 Live PR report](https://github.com/NewCodes7/promptlens/pull/2)** · **[🌐 PromptLens Hub](https://newcodes7.github.io/promptlens/)** · **[⚡ Quick start](#-quick-start)** · **[🧠 How I solved it](#-the-hard-problems-and-how-i-solved-them)**
 <!-- TODO: add the 90-second demo video link to the line above -->
 
 <p align="center">
@@ -74,7 +74,7 @@ Developers keep working as usual: `git commit`, `git push`, then open a PR from 
 
 ## 🐶 Proof: PromptLens reviewed its own build
 
-This repository was built with Claude Code during a 5-hour hackathon, with PromptLens running on itself. **[PR #1](https://github.com/NewCodes7/promptlens/pull/1)** is the result:
+This repository was built with Claude Code during a 5-hour hackathon, with PromptLens running on itself. **[PR #1](https://github.com/NewCodes7/promptlens/pull/1)** is the result. **[PR #2](https://github.com/NewCodes7/promptlens/pull/2)** replays the same commits (plus the review file feature) as a live demo with both the comment and the line-commentable `.promptlens/PR-2.md`:
 
 | Commits | With AI context | AI sessions | Developer prompts | AI-edited files | Request nodes in the flow |
 |:-:|:-:|:-:|:-:|:-:|:-:|
