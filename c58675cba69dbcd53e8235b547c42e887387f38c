@@ -1,0 +1,194 @@
+{
+  "version": 1,
+  "sha": "c58675cba69dbcd53e8235b547c42e887387f38c",
+  "subject": "Add PromptLens Hub: cross-profession prompt-flow page with the real PR #1 flow",
+  "files": [
+    {
+      "path": "README.md",
+      "aiEdited": true
+    },
+    {
+      "path": "docs/.nojekyll",
+      "aiEdited": false
+    },
+    {
+      "path": "docs/app.js",
+      "aiEdited": true
+    },
+    {
+      "path": "docs/data/developer.js",
+      "aiEdited": false
+    },
+    {
+      "path": "docs/data/samples.js",
+      "aiEdited": true
+    },
+    {
+      "path": "docs/index.html",
+      "aiEdited": true
+    },
+    {
+      "path": "package.json",
+      "aiEdited": true
+    },
+    {
+      "path": "scripts/export-hub-data.mjs",
+      "aiEdited": true
+    }
+  ],
+  "stats": {
+    "sessions": 2,
+    "prompts": 2,
+    "aiEdits": 8
+  },
+  "sessionIds": [
+    "c877fe14-a41f-4c6b-a9ca-5c7fba24b2ff",
+    "51830678-a9ab-4b3f-a2ed-661c974a5480"
+  ],
+  "generatedBy": "claude-cli",
+  "turns": [
+    {
+      "key": "c877fe14-a41f-4c6b-a9ca-5c7fba24b2ff@2026-11-09T04:24:28.137Z",
+      "title": "Purge other-session content from the notes ref",
+      "prompts": [
+        "Yes, purge it"
+      ],
+      "carried": false,
+      "steps": [
+        {
+          "type": "investigate",
+          "text": "Scanned current notes for traces of other sessions"
+        },
+        {
+          "type": "fix",
+          "text": "Squashed notes history to one commit and force-pushed the ref"
+        },
+        {
+          "type": "verify",
+          "text": "Re-ran PromptLens workflow and checked the PR comment"
+        }
+      ],
+      "outcome": "Notes ref is one commit with same tree; workflow still works.",
+      "decisions": [
+        {
+          "text": "Squash and force-push notes history instead of editing individual commits",
+          "why": "Other-session traces remained only in history; tree was already clean"
+        }
+      ],
+      "tips": {
+        "keep": [
+          "Short, explicit approval after the agent explained the destructive force-push and its scope."
+        ],
+        "improve": [
+          "Name which notes entries count as other-session content so the scan criteria are agreed upfront."
+        ]
+      },
+      "metrics": {
+        "start": "2026-11-09T04:24:28.137Z",
+        "end": "2026-11-09T04:25:04.081Z",
+        "aiSteps": 3,
+        "files": 0,
+        "reruns": 0
+      },
+      "sessionId": "c877fe14-a41f-4c6b-a9ca-5c7fba24b2ff"
+    },
+    {
+      "key": "51830678-a9ab-4b3f-a2ed-661c974a5480@2026-11-09T04:25:21.329Z",
+      "title": "Publish the hub page and related files",
+      "prompts": [
+        "Yes, publish it"
+      ],
+      "carried": false,
+      "steps": [
+        {
+          "type": "build",
+          "text": "Built the hub page with tabs, flow cards, samples and real PR #1 data"
+        },
+        {
+          "type": "docs",
+          "text": "Added npm script and README section for the hub"
+        },
+        {
+          "type": "verify",
+          "text": "Previewed at desktop/phone widths and in dark mode in browser"
+        },
+        {
+          "type": "ship",
+          "text": "Committed the hub page and related files"
+        }
+      ],
+      "outcome": "Hub committed; local preview clean; GitHub Pages not yet enabled.",
+      "decisions": [
+        {
+          "text": "Keep hub inside the repo under docs/ in English, with all four extra professions",
+          "why": "Matches the setup the developer picked earlier"
+        }
+      ],
+      "tips": {
+        "keep": [
+          "Confirmed publishing only after previewing the finished page."
+        ],
+        "improve": [
+          "State whether GitHub Pages should be enabled so the README link works at commit time."
+        ]
+      },
+      "metrics": {
+        "start": "2026-11-09T04:25:21.329Z",
+        "end": "2026-11-09T04:25:28.659Z",
+        "aiSteps": 1,
+        "files": 0,
+        "reruns": 0
+      },
+      "sessionId": "51830678-a9ab-4b3f-a2ed-661c974a5480"
+    }
+  ],
+  "intent": {
+    "text": "Add a PromptLens Hub page (docs/) showing cross-profession prompt flows, with the developer tab using the real prompt flow of PR #1 exported from the notes ref.",
+    "inferred": false
+  },
+  "keyPrompts": [
+    {
+      "text": "Yes, purge it",
+      "why": "Authorizes purging other-session content from the notes ref via squash and force-push, which shaped the real data shown."
+    },
+    {
+      "text": "Yes, publish it",
+      "why": "Authorizes committing and publishing the hub page, README section and related files."
+    }
+  ],
+  "decisions": [
+    {
+      "text": "Squash refs/notes/promptlens history into a single commit and force-push to remove other-session traces; tree content unchanged.",
+      "inferred": false
+    },
+    {
+      "text": "Hub has Developer tab with real data plus Designer/Marketer/Professional/Founder tabs as clearly labeled hand-written samples.",
+      "inferred": false
+    },
+    {
+      "text": "Flow chart grouped per developer request (follow-up confirmations merged), with local claude -p judging and a rule-based fallback.",
+      "inferred": false
+    },
+    {
+      "text": "Left unrelated docs/ and scripts/ files from other sessions untouched during notes cleanup.",
+      "inferred": true
+    }
+  ],
+  "aiWork": [
+    "Scanned current notes for other-session content, then rewrote the notes ref history as one commit and force-pushed it.",
+    "Re-ran the PromptLens workflow to confirm the PR comment still renders after the history rewrite.",
+    "Built the static hub page (docs/app.js, data, styles) with tabs, flow nodes, prompt review tips and cross-profession pattern cards.",
+    "Added an npm script for exporting hub data and a README section describing the hub and local preview.",
+    "Committed the hub page and related files."
+  ],
+  "verification": [
+    {
+      "text": "Re-ran the PromptLens GitHub workflow after the notes squash and checked the PR comment.",
+      "inferred": false
+    },
+    {
+      "text": "Previewed hub at localhost:4173 in the browser at desktop and phone widths and in dark mode; no console errors, no horizontal scroll.",
+      "inferred": false
+    }
+  ]
+}
