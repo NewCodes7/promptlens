@@ -25,6 +25,12 @@ describe("redact", () => {
     expect(redact("-----BEGIN RSA PRIVATE KEY-----\nMIIE\n-----END RSA PRIVATE KEY-----")).toBe("[REDACTED:private-key]");
   });
 
+  it("does not mask prose that merely follows a secret-like word", () => {
+    const p = "uses the OPENAI_API_KEY secret: handling is documented";
+    expect(redact(p)).toBe(p);
+    expect(redact("token: abc123xyz")).toBe("token: [REDACTED:secret]");
+  });
+
   it("leaves ordinary prompts alone", () => {
     const p = "Refactor the token bucket so tests pass";
     expect(redact(p)).toBe(p);

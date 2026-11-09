@@ -13,8 +13,10 @@ const RULES: { name: string; re: RegExp; replace?: (m: string, ...g: string[]) =
   { name: "bearer", re: /\b(Bearer)\s+[A-Za-z0-9._~+/=-]{16,}/gi, replace: (_m, b) => `${b} [REDACTED:bearer]` },
   {
     name: "assignment",
-    re: /\b((?:api[_-]?key|secret|token|password|passwd|pwd)\s*[:=]\s*)(["']?)[^\s"']{6,}\2/gi,
-    replace: (_m, prefix) => `${prefix}[REDACTED:secret]`,
+    re: /\b((?:api[_-]?key|secret|token|password|passwd|pwd)\s*[:=]\s*)(["']?)([^\s"']{6,})\2/gi,
+    // Only mask values that look like credentials (quoted, or containing digits/symbols),
+    // so prose like "secret: handling" is left alone.
+    replace: (m, prefix, quote, value) => (quote || /[\d_+/=-]/.test(value) ? `${prefix}[REDACTED:secret]` : m),
   },
   { name: "email", re: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/g },
 ];
