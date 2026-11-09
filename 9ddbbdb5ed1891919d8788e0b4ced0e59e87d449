@@ -1,0 +1,140 @@
+{
+  "version": 1,
+  "sha": "9ddbbdb5ed1891919d8788e0b4ced0e59e87d449",
+  "subject": "Normalize step types, fold long step lists, rewrite whole-request outcomes in the PR synthesis",
+  "files": [
+    {
+      "path": "README.md",
+      "aiEdited": true
+    },
+    {
+      "path": "src/flow.ts",
+      "aiEdited": true
+    },
+    {
+      "path": "src/openai.ts",
+      "aiEdited": true
+    },
+    {
+      "path": "src/report.ts",
+      "aiEdited": true
+    },
+    {
+      "path": "src/turns.ts",
+      "aiEdited": true
+    },
+    {
+      "path": "tests/flow.test.ts",
+      "aiEdited": true
+    }
+  ],
+  "stats": {
+    "sessions": 1,
+    "prompts": 0,
+    "aiEdits": 7
+  },
+  "sessionIds": [
+    "c877fe14-a41f-4c6b-a9ca-5c7fba24b2ff"
+  ],
+  "generatedBy": "claude-cli",
+  "turns": [
+    {
+      "key": "c877fe14-a41f-4c6b-a9ca-5c7fba24b2ff@2026-11-09T03:52:33.945Z",
+      "title": "Group PR flow by developer request, not agent actions",
+      "prompts": [],
+      "carried": true,
+      "steps": [
+        {
+          "type": "build",
+          "text": "Normalize step types via synonym map in turns.ts"
+        },
+        {
+          "type": "build",
+          "text": "Track per-piece outcomes and fold steps longer than 8 in flow.ts"
+        },
+        {
+          "type": "build",
+          "text": "Request whole-request outcomes in the OpenAI synthesis and apply them in report"
+        },
+        {
+          "type": "verify",
+          "text": "Ran 49 tests and checked the Mermaid render in a local preview"
+        },
+        {
+          "type": "ship",
+          "text": "Committed, pushed, and waited for the workflow"
+        }
+      ],
+      "outcome": "Flow shows whole-request outcomes, normalized step types and folded long step lists; 49 tests pass",
+      "decisions": [
+        {
+          "text": "Rewrite each request's outcome over the whole request via the PR-level LLM synthesis",
+          "why": "A per-commit outcome only reflects the last piece of a multi-commit request"
+        }
+      ],
+      "tips": {
+        "keep": [
+          "Anchored the grouping on the user prompt rather than agent behavior, which gave a clear design target",
+          "Invited questions on ambiguous UI details and pointed to existing services as references"
+        ],
+        "improve": [
+          "Specify the desired outcome granularity (per commit vs whole request) and the step-list length limit up front"
+        ]
+      },
+      "metrics": {
+        "start": "2026-11-09T03:52:33.945Z",
+        "end": "2026-11-09T04:04:28.353Z",
+        "aiSteps": 13,
+        "files": 6,
+        "reruns": 0
+      },
+      "sessionId": "c877fe14-a41f-4c6b-a9ca-5c7fba24b2ff"
+    }
+  ],
+  "intent": {
+    "text": "Show the PR prompt flow grouped by developer request, with polished per-request outcomes and steps, rather than a raw log of agent actions",
+    "inferred": true
+  },
+  "keyPrompts": [
+    {
+      "text": "fix, build 등 범주를 나눌 때 에이전트의 행동을 기준으로 삼지 않고 사용자 프롬프트를 기준으로 삼아줘. 사용자 프롬프트 입력했을 때 에이전트가 build, fix 등등 여러 범주의 작업을 수행했다면 이를 하나의 덩어리로 보여줘. 즉, ai 에이전트의 행동 플로우를 단순 정리하는 게 아니라 사용자 프롬프트로부터 ai가 어떤 과정을 수행했는지 요약하는거지. \n\nui나 디테일적인 측면에서 애매하거나 디벨롭 할만한 게 있으면 나한테 다시 질문해. \n그리고 아마 이런 ai가 무슨 일을 하는지 요약해서 보여주는 실제 서비스가 아마 있을거야. 이거 참고해서 도움될만한 부분은 차용해서 해보자.",
+      "why": "Defines the core requirement: categorize by user prompt, not agent behavior, and fold multi-category work into one chunk per request."
+    }
+  ],
+  "decisions": [
+    {
+      "text": "Normalize free-form step types (test, debug, implement, etc.) onto the fixed set via a synonym map, keeping unknown types as-is",
+      "inferred": true
+    },
+    {
+      "text": "Collapse step lists longer than 8 to first 3 plus last 5 with a '… N more steps' line",
+      "inferred": true
+    },
+    {
+      "text": "Ask the PR synthesis LLM for one whole-request outcome per request and override the last-piece outcome in the flow; per-piece outcomes are kept in FlowTurn.outcomes",
+      "inferred": false
+    }
+  ],
+  "aiWork": [
+    "Added normalizeType and SYNONYMS in src/turns.ts, applied to model-provided step types",
+    "Added FlowTurn.outcomes and an outcomeOverrides parameter to renderFlow in src/flow.ts; outcome row width raised 80 to 110",
+    "Changed step rendering to bullets with long-list folding",
+    "Extended the synthesis prompt and parser in src/openai.ts with a requests array, stored as Synthesis.turnOutcomes (index bounded, outcome truncated to 160)",
+    "Wired syn.turnOutcomes into renderFlow in src/report.ts",
+    "Updated tests and the README test count (47 to 49)"
+  ],
+  "verification": [
+    {
+      "text": "Full test suite passes with 49 tests, including new tests for normalizeType and the outcome override",
+      "inferred": false
+    },
+    {
+      "text": "Rendered the Mermaid flow locally in a browser preview and checked it after a screenshot timing issue",
+      "inferred": false
+    },
+    {
+      "text": "Pushed the commit and waited for the GitHub workflow, then printed the flow nodes",
+      "inferred": true
+    }
+  ]
+}

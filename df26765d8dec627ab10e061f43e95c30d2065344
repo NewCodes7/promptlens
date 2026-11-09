@@ -1,0 +1,115 @@
+{
+  "version": 1,
+  "sha": "df26765d8dec627ab10e061f43e95c30d2065344",
+  "subject": "Strip pasted-content wrappers from captured prompts",
+  "files": [
+    {
+      "path": "README.md",
+      "aiEdited": true
+    },
+    {
+      "path": "src/sessions.ts",
+      "aiEdited": true
+    },
+    {
+      "path": "tests/sessions.test.ts",
+      "aiEdited": true
+    }
+  ],
+  "stats": {
+    "sessions": 1,
+    "prompts": 0,
+    "aiEdits": 3
+  },
+  "sessionIds": [
+    "c877fe14-a41f-4c6b-a9ca-5c7fba24b2ff"
+  ],
+  "generatedBy": "claude-cli",
+  "turns": [
+    {
+      "key": "c877fe14-a41f-4c6b-a9ca-5c7fba24b2ff@2026-11-09T03:25:34.622Z",
+      "title": "Show PR prompt-chunk flow and refine it",
+      "prompts": [],
+      "carried": true,
+      "steps": [
+        {
+          "type": "investigate",
+          "text": "Previewed the flow section locally; noticed wrapper tags in captured prompts"
+        },
+        {
+          "type": "fix",
+          "text": "Strip pasted_content tags from prompt text in parseSessionLog"
+        },
+        {
+          "type": "verify",
+          "text": "Added a test for wrapper stripping; ran the suite"
+        },
+        {
+          "type": "docs",
+          "text": "Bumped test count in README to 45"
+        },
+        {
+          "type": "ship",
+          "text": "Committed and regenerated affected notes"
+        }
+      ],
+      "outcome": "Wrappers stripped; 45 tests pass; flow preview showed 18 chunks from 8 commits.",
+      "decisions": [
+        {
+          "text": "Strip the tags in the session parser, not at render time.",
+          "why": "The cleaned text then feeds every downstream use, including summaries and flow grouping."
+        }
+      ],
+      "tips": {
+        "keep": [
+          "Explained the goal and the reasoning: summarize into categories so length stays predictable.",
+          "Invited the agent to ask clarifying questions before building."
+        ],
+        "improve": [
+          "Say how pasted or harness-wrapped text should be handled; the wrapper issue only appeared in the preview."
+        ]
+      },
+      "metrics": {
+        "start": "2026-11-09T03:25:34.622Z",
+        "end": "2026-11-09T03:35:50.423Z",
+        "aiSteps": 5,
+        "files": 3,
+        "reruns": 0
+      },
+      "sessionId": "c877fe14-a41f-4c6b-a9ca-5c7fba24b2ff"
+    }
+  ],
+  "intent": {
+    "text": "Strip pasted_content wrapper tags from captured prompts so reviewers see only what the developer wrote, as part of the prompt-flow feature work.",
+    "inferred": true
+  },
+  "keyPrompts": [
+    {
+      "text": "대화 자체는 길이가 너무 길어질 수 있지만, 그 대화를 특정 범주로 요약해서 덩어리의 플로우를 보여주는 건 어느 정도 길이를 예측할 수 있잖아. 너무 길다하면 덩어리 범주를 크게 잡으면 되고. 일단은 시각적으로 해당 pr을 만들기 위해 어떤 프롬프트 덩어리 범주 플로우로 이루어졌는지 보여주면 좋을 것 같아. 이거 좀 더 구체화해보자. 나한테 더 질문해도 좋아.",
+      "why": "Defines the goal: summarize the session into prompt-chunk categories and show the flow visually for a PR. This is the feature the fix serves."
+    }
+  ],
+  "decisions": [
+    {
+      "text": "Remove only the <pasted_content ...> open and close tags with a regex and keep the inner text, then trim.",
+      "inferred": true
+    }
+  ],
+  "aiWork": [
+    "Previewed the flow section locally on real session data",
+    "Edited parseSessionLog in src/sessions.ts to strip pasted_content tags before the noise check",
+    "Added a unit test for wrapper stripping in tests/sessions.test.ts",
+    "Updated test counts in README from 44 to 45",
+    "Ran tests, committed, and regenerated affected notes"
+  ],
+  "verification": [
+    {
+      "text": "New test checks that a prompt wrapped in pasted_content tags parses to the bare inner text.",
+      "inferred": false
+    },
+    {
+      "text": "Test suite run before commit; README now reports 45 passing tests.",
+      "inferred": true
+    }
+  ]
+}

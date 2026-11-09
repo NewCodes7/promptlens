@@ -1,0 +1,104 @@
+{
+  "version": 1,
+  "sha": "3c1dcc2ca477ed8a2b91ae1ced27924b718692dc",
+  "subject": "Add README with architecture, design decisions and test results",
+  "files": [
+    {
+      "path": "README.md",
+      "aiEdited": true
+    }
+  ],
+  "stats": {
+    "sessions": 1,
+    "prompts": 0,
+    "aiEdits": 3
+  },
+  "sessionIds": [
+    "c877fe14-a41f-4c6b-a9ca-5c7fba24b2ff"
+  ],
+  "generatedBy": "claude-cli",
+  "turns": [
+    {
+      "key": "c877fe14-a41f-4c6b-a9ca-5c7fba24b2ff@2026-11-09T02:27:57.501Z",
+      "title": "Implement PromptLens per Notion plan; write README",
+      "prompts": [],
+      "carried": true,
+      "steps": [
+        {
+          "type": "docs",
+          "text": "Wrote README with architecture diagram, differentiators, design decisions and test results"
+        },
+        {
+          "type": "docs",
+          "text": "Refined README in two further edits"
+        },
+        {
+          "type": "ship",
+          "text": "Committed README and previewed the PR report locally"
+        }
+      ],
+      "outcome": "README added documenting architecture, design decisions, privacy and 31 passing tests; PR report previewed.",
+      "decisions": [
+        {
+          "text": "Put architecture, differentiators, design decisions and test results in the README",
+          "why": "A demo video can't show all of them"
+        }
+      ],
+      "tips": {
+        "keep": [
+          "Asked for a survey to settle ambiguities in the plan before implementing"
+        ],
+        "improve": [
+          "State the README audience and the sections wanted, so the docs need fewer edit rounds"
+        ]
+      },
+      "metrics": {
+        "start": "2026-11-09T02:27:57.501Z",
+        "end": "2026-11-09T02:46:16.151Z",
+        "aiSteps": 4,
+        "files": 1,
+        "reruns": 0
+      },
+      "sessionId": "c877fe14-a41f-4c6b-a9ca-5c7fba24b2ff"
+    }
+  ],
+  "intent": {
+    "text": "Document PromptLens in a README: purpose, architecture, design decisions, privacy, usage and test results, since a demo video can't show all of it.",
+    "inferred": true
+  },
+  "keyPrompts": [
+    {
+      "text": "https://app.notion.com/p/compiled-41213d90e04c80c99a44ef1d88a9e75e?source=copy_link\n\n여기 노션에 기획된 것처럼 앞으로 구현하고자 해. 늦어도 1시까지는 구현을 마치면 좋을 것 같아. 실제 구현을 하기 전에 일단 기획서에서 애매한 부분이나 미리 정하면 좋은 부분 등이 있다면 우선 나에게 설문해서 구체적으로 정하고 들어가자.",
+      "why": "Only developer instruction in effect: implement PromptLens per the Notion plan, with a deadline, resolving ambiguities via a survey first."
+    }
+  ],
+  "decisions": [
+    {
+      "text": "Capture at commit time and store context in git notes (refs/notes/promptlens), because hooks can't see PR creation and notes survive amend/rebase.",
+      "inferred": true
+    },
+    {
+      "text": "Per-commit summarization runs locally (claude -p, then OpenAI, then heuristic); PR-level synthesis runs in Actions on already-redacted notes.",
+      "inferred": true
+    },
+    {
+      "text": "Show only key prompts verbatim, with secrets and emails redacted; raw session data stays in .git/promptlens/raw and is never pushed.",
+      "inferred": true
+    }
+  ],
+  "aiWork": [
+    "Created README.md (127 lines) with a mermaid architecture flow, a sample PR comment and a command table.",
+    "Wrote the design-decisions table, a PromptLens vs Git AI comparison, a privacy section, test results and a roadmap.",
+    "Committed the README and previewed the PR report locally."
+  ],
+  "verification": [
+    {
+      "text": "README reports 31 passing tests across 5 files, with coverage figures per module. These were written into the docs, not re-run in this commit.",
+      "inferred": true
+    },
+    {
+      "text": "Ran a local PR report preview after the commit (the agent's 'Commit README and preview PR report locally' step).",
+      "inferred": false
+    }
+  ]
+}

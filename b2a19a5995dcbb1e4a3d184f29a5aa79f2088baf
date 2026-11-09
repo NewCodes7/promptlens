@@ -1,0 +1,134 @@
+{
+  "version": 1,
+  "sha": "b2a19a5995dcbb1e4a3d184f29a5aa79f2088baf",
+  "subject": "Carry forward the instruction an agent is still acting on; clearer claude -p errors",
+  "files": [
+    {
+      "path": "src/capture.ts",
+      "aiEdited": true
+    },
+    {
+      "path": "src/cli.ts",
+      "aiEdited": true
+    },
+    {
+      "path": "src/summarize.ts",
+      "aiEdited": true
+    },
+    {
+      "path": "src/types.ts",
+      "aiEdited": true
+    },
+    {
+      "path": "tests/capture.test.ts",
+      "aiEdited": true
+    }
+  ],
+  "stats": {
+    "sessions": 1,
+    "prompts": 0,
+    "aiEdits": 6
+  },
+  "sessionIds": [
+    "c877fe14-a41f-4c6b-a9ca-5c7fba24b2ff"
+  ],
+  "generatedBy": "claude-cli",
+  "turns": [
+    {
+      "key": "c877fe14-a41f-4c6b-a9ca-5c7fba24b2ff@2026-11-09T02:27:57.501Z",
+      "title": "Carry forward still-active instructions into commit context",
+      "prompts": [],
+      "carried": true,
+      "steps": [
+        {
+          "type": "build",
+          "text": "Track last prompt before the window and attach it as carried in capture.ts"
+        },
+        {
+          "type": "build",
+          "text": "Add carried flag to types; label and exclude it from stats in summarize.ts"
+        },
+        {
+          "type": "test",
+          "text": "Add a capture test for carry-forward behavior"
+        },
+        {
+          "type": "fix",
+          "text": "Harden claude -p error handling; recapture on summarize --force"
+        },
+        {
+          "type": "ship",
+          "text": "Commit the fix and regenerate the stale note"
+        }
+      ],
+      "outcome": "Carried prompts shown in context, claude -p errors clearer, force summarize recaptures; test added.",
+      "decisions": [
+        {
+          "text": "Mark carried prompts with carried:true rather than counting them as new prompts",
+          "why": "Keeps stats accurate while still giving the reviewer the instruction's context."
+        }
+      ],
+      "tips": {
+        "keep": [
+          "Asked the agent to survey ambiguities before implementing, which settled the design up front."
+        ],
+        "improve": [
+          "State the deadline and priorities per commit so the agent can scope fixes like this one."
+        ]
+      },
+      "metrics": {
+        "start": "2026-11-09T02:27:57.501Z",
+        "end": "2026-11-09T02:45:21.490Z",
+        "aiSteps": 8,
+        "files": 5,
+        "reruns": 0
+      },
+      "sessionId": "c877fe14-a41f-4c6b-a9ca-5c7fba24b2ff"
+    }
+  ],
+  "intent": {
+    "text": "Make commit context include the earlier instruction an agent was still acting on, and make claude -p failures easier to diagnose.",
+    "inferred": true
+  },
+  "keyPrompts": [
+    {
+      "text": "https://app.notion.com/p/compiled-41213d90e04c80c99a44ef1d88a9e75e?source=copy_link\n\n여기 노션에 기획된 것처럼 앞으로 구현하고자 해. 늦어도 1시까지는 구현을 마치면 좋을 것 같아. 실제 구현을 하기 전에 일단 기획서에서 애매한 부분이나 미리 정하면 좋은 부분 등이 있다면 우선 나에게 설문해서 구체적으로 정하고 들어가자.",
+      "why": "Original long-running instruction (implement the Notion plan, survey first) that the agent was still carrying out; now carried forward into the commit context."
+    }
+  ],
+  "decisions": [
+    {
+      "text": "Carry forward the latest earlier prompt per session when no prompt falls inside the commit window, marked carried:true.",
+      "inferred": false
+    },
+    {
+      "text": "Carried prompts are excluded from the prompt count stats but labelled in the summary prompt and heuristic 'why'.",
+      "inferred": false
+    },
+    {
+      "text": "runClaude parses stdout JSON even on non-zero exit, and reports exit status, stderr or stdout when output is not JSON.",
+      "inferred": false
+    },
+    {
+      "text": "`summarize --force` now re-runs captureCommit so the regenerated note isn't stale.",
+      "inferred": false
+    }
+  ],
+  "aiWork": [
+    "capture.ts: track the last prompt before the window per session and attach it as a carried prompt",
+    "types.ts: add optional carried flag to PromptEvent",
+    "summarize.ts: filter carried prompts from stats, label them in the LLM prompt and heuristic why; harden runClaude error handling",
+    "cli.ts: recapture on summarize --force",
+    "tests/capture.test.ts: add a carry-forward test"
+  ],
+  "verification": [
+    {
+      "text": "Added a unit test asserting a carried prompt appears with carried:true when the session has no prompt in the window.",
+      "inferred": false
+    },
+    {
+      "text": "Agent ran a rebuild and the test suite after labelling carried prompts, and regenerated the stale note; results not shown.",
+      "inferred": true
+    }
+  ]
+}

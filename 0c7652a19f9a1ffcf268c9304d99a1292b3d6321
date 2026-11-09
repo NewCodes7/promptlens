@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "sha": "0c7652a19f9a1ffcf268c9304d99a1292b3d6321",
+  "subject": "Initial commit",
+  "files": [],
+  "stats": {
+    "sessions": 0,
+    "prompts": 0,
+    "aiEdits": 0
+  },
+  "sessionIds": [],
+  "generatedBy": "heuristic",
+  "intent": {
+    "text": "Initial commit",
+    "inferred": true
+  },
+  "keyPrompts": [],
+  "decisions": [],
+  "aiWork": [],
+  "verification": []
+}

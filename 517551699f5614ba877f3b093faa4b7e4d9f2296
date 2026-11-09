@@ -1,0 +1,169 @@
+{
+  "version": 1,
+  "sha": "517551699f5614ba877f3b093faa4b7e4d9f2296",
+  "subject": "Chunk the flow by developer prompt: one node per request with AI steps, outcome, metrics and prompt review",
+  "files": [
+    {
+      "path": "README.md",
+      "aiEdited": true
+    },
+    {
+      "path": "src/flow.ts",
+      "aiEdited": true
+    },
+    {
+      "path": "src/phases.ts",
+      "aiEdited": true
+    },
+    {
+      "path": "src/report.ts",
+      "aiEdited": true
+    },
+    {
+      "path": "src/summarize.ts",
+      "aiEdited": true
+    },
+    {
+      "path": "src/turns.ts",
+      "aiEdited": true
+    },
+    {
+      "path": "src/types.ts",
+      "aiEdited": true
+    },
+    {
+      "path": "tests/flow.test.ts",
+      "aiEdited": true
+    }
+  ],
+  "stats": {
+    "sessions": 1,
+    "prompts": 1,
+    "aiEdits": 8
+  },
+  "sessionIds": [
+    "c877fe14-a41f-4c6b-a9ca-5c7fba24b2ff"
+  ],
+  "generatedBy": "claude-cli",
+  "turns": [
+    {
+      "key": "c877fe14-a41f-4c6b-a9ca-5c7fba24b2ff@2026-11-09T03:52:33.945Z",
+      "title": "Chunk PR flow by developer prompt, not agent action",
+      "prompts": [
+        "fix, build 등 범주를 나눌 때 에이전트의 행동을 기준으로 삼지 않고 사용자 프롬프트를 기준으로 삼아줘. 사용자 프롬프트 입력했을 때 에이전트가 build, fix 등등 여러 범주의 작업을 수행했다면 이를 하나의 덩어리로 보여줘. 즉, ai 에이전트의 행동 플로우를 단순 정리하는 게 아니라 사용자 프롬프트로부터 ai가 어떤 과정을 수행했는지 요약하는거지. \n\nui나 디테일적인 측면에서 애매하거나 디벨롭 할만한 게 있으면 나한테 다시 질문해. \n그리고 아마 이런 ai가 무슨 일을 하는지 요약해서 보여주는 실제 서비스가 아마 있을거야. 이거 참고해서 도움될만한 부분은 차용해서 해보자."
+      ],
+      "carried": false,
+      "steps": [
+        {
+          "type": "investigate",
+          "text": "Researched services that summarize AI agent work and asked UI questions"
+        },
+        {
+          "type": "refactor",
+          "text": "Replaced Phase type with Turn; added turns.ts and removed phases.ts"
+        },
+        {
+          "type": "build",
+          "text": "Rewrote flow.ts to render one node per request with chips, metrics, tips"
+        },
+        {
+          "type": "verify",
+          "text": "Type-checked, rewrote flow tests, ran 47 passing tests"
+        },
+        {
+          "type": "ship",
+          "text": "Committed and regenerated all notes in the new turn structure"
+        }
+      ],
+      "outcome": "Flow is one node per prompt; 47 tests pass; GitHub PR render verified",
+      "decisions": [
+        {
+          "text": "Merge same-intent follow-up prompts into one turn",
+          "why": "Avoids a node per short nudge"
+        },
+        {
+          "text": "Step chips plus one-line outcome per turn",
+          "why": "Compact view of what the AI did"
+        },
+        {
+          "text": "English intent title, original prompt in details",
+          "why": "Report is English while prompts are Korean"
+        },
+        {
+          "text": "Adopt Devin-style prompt tips (including positives) and turn efficiency metrics",
+          "why": "Helps developers reinforce good prompting habits and see per-request effort"
+        }
+      ],
+      "tips": {
+        "keep": [
+          "Asked the agent to research real services and to ask back about ambiguous UI/detail choices before building.",
+          "Clearly contrasted the desired model (summarize AI work per user prompt) with the old action-based grouping."
+        ],
+        "improve": [
+          "Specify the desired layout (straight line, node width) up front; later rounds went to GitHub rendering tweaks."
+        ]
+      },
+      "metrics": {
+        "start": "2026-11-09T03:52:33.945Z",
+        "end": "2026-11-09T03:59:50.935Z",
+        "aiSteps": 16,
+        "files": 8,
+        "reruns": 0
+      },
+      "sessionId": "c877fe14-a41f-4c6b-a9ca-5c7fba24b2ff"
+    }
+  ],
+  "intent": {
+    "text": "Group the PR flow by developer prompt (one node per request) instead of by agent action category, showing AI steps, outcome, metrics and prompt tips.",
+    "inferred": false
+  },
+  "keyPrompts": [
+    {
+      "text": "fix, build 등 범주를 나눌 때 에이전트의 행동을 기준으로 삼지 않고 사용자 프롬프트를 기준으로 삼아줘. 사용자 프롬프트 입력했을 때 에이전트가 build, fix 등등 여러 범주의 작업을 수행했다면 이를 하나의 덩어리로 보여줘. 즉, ai 에이전트의 행동 플로우를 단순 정리하는 게 아니라 사용자 프롬프트로부터 ai가 어떤 과정을 수행했는지 요약하는거지. \n\nui나 디테일적인 측면에서 애매하거나 디벨롭 할만한 게 있으면 나한테 다시 질문해. \n그리고 아마 이런 ai가 무슨 일을 하는지 요약해서 보여주는 실제 서비스가 아마 있을거야. 이거 참고해서 도움될만한 부분은 차용해서 해보자.",
+      "why": "Defines the core redesign: chunk by user prompt, summarize what the AI did per request, borrow ideas from existing services."
+    }
+  ],
+  "decisions": [
+    {
+      "text": "Group short follow-up prompts with the same intent into one turn rather than one node per prompt.",
+      "inferred": false
+    },
+    {
+      "text": "Show each turn as step chips plus a one-line outcome.",
+      "inferred": false
+    },
+    {
+      "text": "Turn titles are English intent summaries; original Korean prompt text goes in the details.",
+      "inferred": false
+    },
+    {
+      "text": "Borrow from Devin: prompt tips (including positive things to keep, not just gaps) and per-turn efficiency metrics.",
+      "inferred": false
+    },
+    {
+      "text": "Replace Phase type and phases.ts with Turn/turns.ts; MAX_FLOW_PHASES becomes MAX_FLOW_TURNS; legacy contexts fall back to a single turn.",
+      "inferred": true
+    }
+  ],
+  "aiWork": [
+    "Researched existing services that summarize AI agent work, then asked the developer UI questions.",
+    "Replaced Phase with Turn types and added turns.ts to group prompts into requests and compute steps and metrics.",
+    "Rewrote flow.ts: merges pieces of one request across commits, renders chips, metrics line (duration, prompts, AI steps, files, re-runs) and tips.",
+    "Updated summarize.ts prompt/context, report.ts heading, and README; removed phases.ts and the duplicated agent-actions prompt section.",
+    "Rewrote flow tests for the turn-based structure and regenerated all commit notes with the new turn structure."
+  ],
+  "verification": [
+    {
+      "text": "Type check passed after the Phase-to-Turn refactor.",
+      "inferred": false
+    },
+    {
+      "text": "Test suite passed: 47 tests (up from 45).",
+      "inferred": false
+    },
+    {
+      "text": "Rendered Mermaid flow checked on a GitHub PR comment; layout widened and made a straight line.",
+      "inferred": false
+    }
+  ]
+}

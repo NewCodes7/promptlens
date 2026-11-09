@@ -1,0 +1,115 @@
+{
+  "version": 1,
+  "sha": "e00bcbf613d2e97dd15ff020de6f360b222e7615",
+  "subject": "Straighten the prompt flow: commits as arrow labels, wider chunk nodes",
+  "files": [
+    {
+      "path": "src/flow.ts",
+      "aiEdited": true
+    },
+    {
+      "path": "tests/flow.test.ts",
+      "aiEdited": true
+    }
+  ],
+  "stats": {
+    "sessions": 1,
+    "prompts": 1,
+    "aiEdits": 2
+  },
+  "sessionIds": [
+    "c877fe14-a41f-4c6b-a9ca-5c7fba24b2ff"
+  ],
+  "generatedBy": "claude-cli",
+  "turns": [
+    {
+      "key": "c877fe14-a41f-4c6b-a9ca-5c7fba24b2ff@2026-11-09T03:46:19.386Z",
+      "title": "Widen flow chunk nodes and straighten the layout",
+      "prompts": [
+        "Yes, widen them"
+      ],
+      "carried": false,
+      "steps": [
+        {
+          "type": "build",
+          "text": "Edited renderFlow: init config for wider wrapping, commit sha labels on arrows"
+        },
+        {
+          "type": "fix",
+          "text": "Corrected flow test expectation for which chunk commit aaaaaaa attaches to"
+        },
+        {
+          "type": "verify",
+          "text": "Ran 45 tests and previewed the Mermaid output on a local server"
+        },
+        {
+          "type": "ship",
+          "text": "Committed, pushed, and waited for PR workflows to pass"
+        }
+      ],
+      "outcome": "Straight flow with wide nodes; 45 tests pass; CI and PromptLens succeeded on PR.",
+      "decisions": [
+        {
+          "text": "Commits shown as arrow labels rather than side nodes",
+          "why": "Side nodes caused a staircase layout; labels keep the spine straight."
+        }
+      ],
+      "tips": {
+        "keep": [
+          "A short approval of a concrete proposal let the agent proceed without ambiguity."
+        ],
+        "improve": [
+          "Say up front that a straight layout is also wanted; the staircase issue was found only after widening."
+        ]
+      },
+      "metrics": {
+        "start": "2026-11-09T03:46:19.386Z",
+        "end": "2026-11-09T03:47:42.452Z",
+        "aiSteps": 9,
+        "files": 2,
+        "reruns": 0
+      },
+      "sessionId": "c877fe14-a41f-4c6b-a9ca-5c7fba24b2ff"
+    }
+  ],
+  "intent": {
+    "text": "Make the PR prompt-flow Mermaid chart straighter and more readable: commits as arrow labels instead of side nodes, wider chunk nodes.",
+    "inferred": false
+  },
+  "keyPrompts": [
+    {
+      "text": "Yes, widen them",
+      "why": "Approves the agent's proposal to widen the chunk nodes, which drove the layout change."
+    }
+  ],
+  "decisions": [
+    {
+      "text": "Moved commit shas from side nodes onto arrow labels so the chunk spine is a straight line; the last chunk keeps a terminal END node.",
+      "inferred": false
+    },
+    {
+      "text": "Widened nodes via Mermaid init config (wrappingWidth 460, tighter spacing, 15px font) and merged chunk title and label into one header line.",
+      "inferred": false
+    }
+  ],
+  "aiWork": [
+    "Rewrote renderFlow in src/flow.ts to emit an init directive, put commit labels on edges, and add a trailing END commit node.",
+    "Updated tests/flow.test.ts expectations for the new Mermaid output.",
+    "Fixed a wrong test expectation (commit aaaaaaa attaches to the 4th chunk, P3 to P4).",
+    "Rendered the chart locally with Mermaid via a temporary HTTP preview, then committed, pushed and waited on PR workflows."
+  ],
+  "verification": [
+    {
+      "text": "All 45 tests pass after fixing the flow test expectation.",
+      "inferred": false
+    },
+    {
+      "text": "Layout checked in a local Mermaid preview: straight flow, wide nodes, commit labels on arrows.",
+      "inferred": false
+    },
+    {
+      "text": "CI and PromptLens workflows succeeded on the pushed head; the agent reported viewing the PR comment render in a browser.",
+      "inferred": false
+    }
+  ]
+}

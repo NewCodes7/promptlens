@@ -1,0 +1,175 @@
+{
+  "version": 1,
+  "sha": "4cdc713b9f60633f5a815ed0076d0ea9556a3287",
+  "subject": "Add OpenAI fallback for commit summaries, fix worktree paths, add tests and CI",
+  "files": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "aiEdited": true
+    },
+    {
+      "path": "src/capture.ts",
+      "aiEdited": true
+    },
+    {
+      "path": "src/cli.ts",
+      "aiEdited": true
+    },
+    {
+      "path": "src/openai.ts",
+      "aiEdited": true
+    },
+    {
+      "path": "src/summarize.ts",
+      "aiEdited": true
+    },
+    {
+      "path": "src/types.ts",
+      "aiEdited": true
+    },
+    {
+      "path": "tests/capture.test.ts",
+      "aiEdited": true
+    },
+    {
+      "path": "tests/e2e.test.ts",
+      "aiEdited": true
+    },
+    {
+      "path": "tests/fixtures.ts",
+      "aiEdited": true
+    },
+    {
+      "path": "tests/redact.test.ts",
+      "aiEdited": true
+    },
+    {
+      "path": "tests/report.test.ts",
+      "aiEdited": true
+    },
+    {
+      "path": "tests/sessions.test.ts",
+      "aiEdited": true
+    },
+    {
+      "path": "vitest.config.ts",
+      "aiEdited": true
+    }
+  ],
+  "stats": {
+    "sessions": 1,
+    "prompts": 0,
+    "aiEdits": 13
+  },
+  "sessionIds": [
+    "c877fe14-a41f-4c6b-a9ca-5c7fba24b2ff"
+  ],
+  "generatedBy": "claude-cli",
+  "turns": [
+    {
+      "key": "c877fe14-a41f-4c6b-a9ca-5c7fba24b2ff@2026-11-09T02:27:57.501Z",
+      "title": "Implement the Notion-planned PromptLens features",
+      "prompts": [],
+      "carried": true,
+      "steps": [
+        {
+          "type": "investigate",
+          "text": "Diagnosed why `claude -p` summaries fell back to the heuristic"
+        },
+        {
+          "type": "build",
+          "text": "Added an OpenAI fallback to the summarize provider chain"
+        },
+        {
+          "type": "fix",
+          "text": "Reordered worktree path matching in toRepoPath"
+        },
+        {
+          "type": "verify",
+          "text": "Added unit and e2e tests and ran them with coverage"
+        },
+        {
+          "type": "ship",
+          "text": "Added a CI workflow for typecheck and coverage"
+        }
+      ],
+      "outcome": "OpenAI fallback, worktree path fix, tests and CI added; tests pass with coverage.",
+      "decisions": [
+        {
+          "text": "Fall back to OpenAI only when OPENAI_API_KEY is set, otherwise to the heuristic",
+          "why": "Keeps the tool working offline without a key."
+        },
+        {
+          "text": "Log background summarize stderr to the log file",
+          "why": "Failures were previously silent, which hid the claude -p problem."
+        }
+      ],
+      "tips": {
+        "keep": [
+          "Asked to resolve ambiguities through a survey before implementing.",
+          "Gave a clear deadline and a linked spec."
+        ],
+        "improve": [
+          "State the expected LLM provider order up front; the OpenAI fallback came out of debugging.",
+          "Name the test and coverage expectations in the prompt, since they were added unprompted."
+        ]
+      },
+      "metrics": {
+        "start": "2026-11-09T02:27:57.501Z",
+        "end": "2026-11-09T02:44:34.900Z",
+        "aiSteps": 22,
+        "files": 13,
+        "reruns": 0
+      },
+      "sessionId": "c877fe14-a41f-4c6b-a9ca-5c7fba24b2ff"
+    }
+  ],
+  "intent": {
+    "text": "Add an OpenAI fallback for commit-context summaries when `claude -p` fails, fix worktree path mapping, and add tests plus CI.",
+    "inferred": true
+  },
+  "keyPrompts": [
+    {
+      "text": "https://app.notion.com/p/compiled-41213d90e04c80c99a44ef1d88a9e75e?source=copy_link\n\n여기 노션에 기획된 것처럼 앞으로 구현하고자 해. 늦어도 1시까지는 구현을 마치면 좋을 것 같아. 실제 구현을 하기 전에 일단 기획서에서 애매한 부분이나 미리 정하면 좋은 부분 등이 있다면 우선 나에게 설문해서 구체적으로 정하고 들어가자.",
+      "why": "Sole developer prompt: the Notion-planned implementation with a 1pm deadline and a request to survey ambiguities first."
+    }
+  ],
+  "decisions": [
+    {
+      "text": "Provider chain is claude CLI, then OpenAI (if OPENAI_API_KEY is set), then heuristic; PROMPTLENS_PROVIDER=openai skips the CLI.",
+      "inferred": true
+    },
+    {
+      "text": "summarize() and ensureContext() became async. The background summarize child now logs stderr to the log file instead of discarding it.",
+      "inferred": true
+    },
+    {
+      "text": "Extracted a shared openaiJson() helper, reused by PR synthesis and the commit summary.",
+      "inferred": true
+    },
+    {
+      "text": "toRepoPath now checks the .claude/worktrees pattern before the root-relative path, because worktrees inside the repo were mis-mapped.",
+      "inferred": false
+    }
+  ],
+  "aiWork": [
+    "Found that `claude -p` failed and fell back to the heuristic; debugged it by running directly from a temp dir and without the desktop-app proxy env.",
+    "Added openaiJson, an OpenAI path in summarize, and the \"openai\" generatedBy type.",
+    "Added tests (capture, sessions, redact, report, e2e with a temp git repo) and a coverage config in vitest.config.ts.",
+    "Added a GitHub Actions CI workflow running typecheck and coverage."
+  ],
+  "verification": [
+    {
+      "text": "Ran the test suite with coverage several times; the agent reports 28 tests passing before the e2e test was added.",
+      "inferred": false
+    },
+    {
+      "text": "Added an E2E test using a temporary git repo to cover git/init/capture IO paths.",
+      "inferred": false
+    },
+    {
+      "text": "Reproduced the `claude -p` failure manually to find the cause.",
+      "inferred": false
+    }
+  ]
+}

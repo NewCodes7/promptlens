@@ -1,0 +1,201 @@
+{
+  "version": 1,
+  "sha": "67e86bb3747384a12e3dce13ac7298bf4cf18af8",
+  "subject": "Add PromptLens CLI: session capture, Commit Context notes, PR report",
+  "files": [
+    {
+      "path": ".github/workflows/promptlens.yml",
+      "aiEdited": false
+    },
+    {
+      "path": ".gitignore",
+      "aiEdited": true
+    },
+    {
+      "path": "package-lock.json",
+      "aiEdited": true
+    },
+    {
+      "path": "package.json",
+      "aiEdited": true
+    },
+    {
+      "path": "src/capture.ts",
+      "aiEdited": true
+    },
+    {
+      "path": "src/cli.ts",
+      "aiEdited": true
+    },
+    {
+      "path": "src/git.ts",
+      "aiEdited": true
+    },
+    {
+      "path": "src/github.ts",
+      "aiEdited": true
+    },
+    {
+      "path": "src/init.ts",
+      "aiEdited": true
+    },
+    {
+      "path": "src/openai.ts",
+      "aiEdited": true
+    },
+    {
+      "path": "src/redact.ts",
+      "aiEdited": true
+    },
+    {
+      "path": "src/report.ts",
+      "aiEdited": true
+    },
+    {
+      "path": "src/sessions.ts",
+      "aiEdited": true
+    },
+    {
+      "path": "src/summarize.ts",
+      "aiEdited": true
+    },
+    {
+      "path": "src/types.ts",
+      "aiEdited": true
+    },
+    {
+      "path": "tsconfig.json",
+      "aiEdited": true
+    }
+  ],
+  "stats": {
+    "sessions": 1,
+    "prompts": 1,
+    "aiEdits": 15
+  },
+  "sessionIds": [
+    "c877fe14-a41f-4c6b-a9ca-5c7fba24b2ff"
+  ],
+  "generatedBy": "claude-cli",
+  "turns": [
+    {
+      "key": "c877fe14-a41f-4c6b-a9ca-5c7fba24b2ff@2026-11-09T02:27:57.501Z",
+      "title": "Implement PromptLens CLI from Notion plan",
+      "prompts": [
+        "https://app.notion.com/p/compiled-41213d90e04c80c99a44ef1d88a9e75e?source=copy_link\n\n여기 노션에 기획된 것처럼 앞으로 구현하고자 해. 늦어도 1시까지는 구현을 마치면 좋을 것 같아. 실제 구현을 하기 전에 일단 기획서에서 애매한 부분이나 미리 정하면 좋은 부분 등이 있다면 우선 나에게 설문해서 구체적으로 정하고 들어가자."
+      ],
+      "carried": false,
+      "steps": [
+        {
+          "type": "investigate",
+          "text": "Checked installed tools, API keys, and Claude Code session log format"
+        },
+        {
+          "type": "plan",
+          "text": "Surveyed developer on nine design and scope questions"
+        },
+        {
+          "type": "build",
+          "text": "Wrote core modules: capture, summarize, report, github, init, cli"
+        },
+        {
+          "type": "verify",
+          "text": "Type-checked and built the CLI successfully"
+        },
+        {
+          "type": "ship",
+          "text": "Installed hooks and workflow; committed on feature branch"
+        }
+      ],
+      "outcome": "Core CLI built and committed with dogfooding hooks and a PR-report workflow.",
+      "decisions": [
+        {
+          "text": "Direct session-to-commit linking",
+          "why": "Git AI isn't installed on this machine."
+        },
+        {
+          "text": "Git notes plus pre-push auto-share",
+          "why": "Shares Commit Context without altering commit contents."
+        },
+        {
+          "text": "Background summarization, guaranteed at push",
+          "why": "`claude -p` takes 10-30s and shouldn't block commits."
+        },
+        {
+          "text": "OpenAI key for Actions summaries",
+          "why": "No Anthropic API key available to the developer for CI."
+        }
+      ],
+      "tips": {
+        "keep": [
+          "Asked the agent to survey ambiguities before coding, which settled architecture and scope in one round.",
+          "Gave a hard deadline, which let the agent trim scope to the core plus a few extras."
+        ],
+        "improve": [
+          "State required secrets and API providers up front; the OpenAI vs Anthropic key issue surfaced only mid-survey."
+        ]
+      },
+      "metrics": {
+        "start": "2026-11-09T02:27:57.501Z",
+        "end": "2026-11-09T02:42:01.605Z",
+        "aiSteps": 23,
+        "files": 15,
+        "reruns": 0
+      },
+      "sessionId": "c877fe14-a41f-4c6b-a9ca-5c7fba24b2ff"
+    }
+  ],
+  "intent": {
+    "text": "Implement the PromptLens CLI per the Notion plan: capture AI sessions, attach Commit Context via git notes, and post a PR report via GitHub Actions.",
+    "inferred": false
+  },
+  "keyPrompts": [
+    {
+      "text": "https://app.notion.com/p/compiled-41213d90e04c80c99a44ef1d88a9e75e?source=copy_link\n\n여기 노션에 기획된 것처럼 앞으로 구현하고자 해. 늦어도 1시까지는 구현을 마치면 좋을 것 같아. 실제 구현을 하기 전에 일단 기획서에서 애매한 부분이나 미리 정하면 좋은 부분 등이 있다면 우선 나에게 설문해서 구체적으로 정하고 들어가자.",
+      "why": "Sole request: sets scope from the Notion plan, the 1pm deadline, and asks to resolve ambiguities via survey before coding."
+    }
+  ],
+  "decisions": [
+    {
+      "text": "Link AI sessions to commits directly (Git AI not installed on the machine).",
+      "inferred": false
+    },
+    {
+      "text": "Summaries run locally via `claude -p`, and in Actions via the OpenAI API (OPENAI_API_KEY secret).",
+      "inferred": false
+    },
+    {
+      "text": "Share Commit Context via git notes (refs/notes/promptlens), pushed automatically by a pre-push hook.",
+      "inferred": false
+    },
+    {
+      "text": "Commit-time summary runs in the background, and push guarantees it completes.",
+      "inferred": false
+    },
+    {
+      "text": "PR comments show only key prompts verbatim, with secrets masked; demo PR lives in the promptlens repo itself.",
+      "inferred": false
+    },
+    {
+      "text": "Scope beyond the core 3: `promptlens init`, tests with coverage, README with architecture diagram, local preview command.",
+      "inferred": false
+    }
+  ],
+  "aiWork": [
+    "Asked nine survey questions to settle ambiguities before coding.",
+    "Inspected Claude Code session log format to design the capture parser.",
+    "Scaffolded the TypeScript project (package.json, tsconfig, vitest) and wrote modules: git, redact, sessions, capture, summarize, report, openai, github, init, cli.",
+    "Added a GitHub Actions workflow that builds the CLI and runs `pr-report --post` on PRs, fetching the notes ref.",
+    "Installed hooks, made an initial empty commit, and committed the core on a feature branch."
+  ],
+  "verification": [
+    {
+      "text": "Type-check and build of the CLI passed.",
+      "inferred": false
+    },
+    {
+      "text": "Captured output was inspected after the first commit.",
+      "inferred": true
+    }
+  ]
+}

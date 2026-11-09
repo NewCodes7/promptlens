@@ -1,0 +1,114 @@
+{
+  "version": 1,
+  "sha": "df684c69aa2374c73dea2f25a93e907961329b2c",
+  "subject": "Detect file edits the agent makes through shell commands",
+  "files": [
+    {
+      "path": "README.md",
+      "aiEdited": true
+    },
+    {
+      "path": "src/capture.ts",
+      "aiEdited": true
+    },
+    {
+      "path": "tests/capture.test.ts",
+      "aiEdited": true
+    }
+  ],
+  "stats": {
+    "sessions": 1,
+    "prompts": 0,
+    "aiEdits": 4
+  },
+  "sessionIds": [
+    "c877fe14-a41f-4c6b-a9ca-5c7fba24b2ff"
+  ],
+  "generatedBy": "claude-cli",
+  "turns": [
+    {
+      "key": "c877fe14-a41f-4c6b-a9ca-5c7fba24b2ff@2026-11-09T02:27:57.501Z",
+      "title": "Implement Notion plan: detect shell-made file edits",
+      "prompts": [],
+      "carried": true,
+      "steps": [
+        {
+          "type": "build",
+          "text": "Added SHELL_WRITE_RE and shell-edit detection loop in buildCapture"
+        },
+        {
+          "type": "verify",
+          "text": "Added test distinguishing cat reads from sed -i writes"
+        },
+        {
+          "type": "docs",
+          "text": "Bumped README test count to 32"
+        },
+        {
+          "type": "ship",
+          "text": "Ran tests, committed, regenerated the f84ff76 note"
+        }
+      ],
+      "outcome": "Shell write commands now count as edits; 32 tests documented; change committed.",
+      "decisions": [
+        {
+          "text": "Heuristic regex plus path substring match to detect shell edits",
+          "why": "Cheap and good enough to catch sed -i, heredocs and scripts without parsing shell syntax"
+        }
+      ],
+      "tips": {
+        "keep": [
+          "Asked the agent to resolve ambiguities by surveying the developer before coding."
+        ],
+        "improve": [
+          "State the time budget and scope (which plan items come first) so each commit maps to a plan item.",
+          "Specify the tolerance for false positives from shell heuristics, e.g. a command that mentions a file in an echo."
+        ]
+      },
+      "metrics": {
+        "start": "2026-11-09T02:27:57.501Z",
+        "end": "2026-11-09T02:47:18.813Z",
+        "aiSteps": 5,
+        "files": 3,
+        "reruns": 0
+      },
+      "sessionId": "c877fe14-a41f-4c6b-a9ca-5c7fba24b2ff"
+    }
+  ],
+  "intent": {
+    "text": "Make capture treat shell commands that write a committed file (sed -i, redirects, scripts, mv/cp) as AI edits, so shell-made changes are attributed to the agent.",
+    "inferred": true
+  },
+  "keyPrompts": [
+    {
+      "text": "https://app.notion.com/p/compiled-41213d90e04c80c99a44ef1d88a9e75e?source=copy_link\n\n여기 노션에 기획된 것처럼 앞으로 구현하고자 해. 늦어도 1시까지는 구현을 마치면 좋을 것 같아. 실제 구현을 하기 전에 일단 기획서에서 애매한 부분이나 미리 정하면 좋은 부분 등이 있다면 우선 나에게 설문해서 구체적으로 정하고 들어가자.",
+      "why": "Only developer instruction in the session: implement the Notion plan, with a survey of ambiguities first. Context for the whole commit."
+    }
+  ],
+  "decisions": [
+    {
+      "text": "Use a heuristic regex (SHELL_WRITE_RE) plus a substring match on the committed file path, rather than parsing the shell command.",
+      "inferred": true
+    },
+    {
+      "text": "Count at most one Bash edit per file, and skip files that already have an edit event.",
+      "inferred": true
+    },
+    {
+      "text": "Read-only commands such as cat are not counted as edits.",
+      "inferred": false
+    }
+  ],
+  "aiWork": [
+    "Added SHELL_WRITE_RE in src/capture.ts to flag commands that plausibly write files.",
+    "In buildCapture, added a Bash edit entry for each committed file named in a write-like command, skipping files that already have an edit.",
+    "Added a test: cat src/b.ts yields no edit, sed -i on src/c.ts yields one Bash edit.",
+    "Updated the README test count from 31 to 32."
+  ],
+  "verification": [
+    {
+      "text": "New unit test asserts the shell write is counted and the read is not; the agent ran the test suite before committing (RUN step).",
+      "inferred": true
+    }
+  ]
+}
