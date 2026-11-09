@@ -1,0 +1,140 @@
+{
+  "version": 1,
+  "sha": "205cd83f5543514dbb09b81105f0d8ab5f3d5d5b",
+  "subject": "Translate non-English prompts to English in the PR comment (notes keep the original)",
+  "files": [
+    {
+      "path": "README.md",
+      "aiEdited": true
+    },
+    {
+      "path": "src/cli.ts",
+      "aiEdited": true
+    },
+    {
+      "path": "src/flow.ts",
+      "aiEdited": true
+    },
+    {
+      "path": "src/openai.ts",
+      "aiEdited": true
+    },
+    {
+      "path": "src/report.ts",
+      "aiEdited": true
+    },
+    {
+      "path": "tests/translate.test.ts",
+      "aiEdited": true
+    }
+  ],
+  "stats": {
+    "sessions": 1,
+    "prompts": 1,
+    "aiEdits": 6
+  },
+  "sessionIds": [
+    "c877fe14-a41f-4c6b-a9ca-5c7fba24b2ff"
+  ],
+  "generatedBy": "claude-cli",
+  "turns": [
+    {
+      "key": "c877fe14-a41f-4c6b-a9ca-5c7fba24b2ff@2026-11-09T04:28:16.138Z",
+      "title": "Show Korean prompts in English in the PR comment",
+      "prompts": [
+        "그리고 pr에서 내가 프롬프트 했던 거 한국말로 했는데 이거 영어로 바꿔줘. github-actions bot이 단 거 말하는 거야."
+      ],
+      "carried": false,
+      "steps": [
+        {
+          "type": "investigate",
+          "text": "Located where prompts are rendered in the PR comment"
+        },
+        {
+          "type": "build",
+          "text": "Added OpenAI-based translation helper with redaction and fallback"
+        },
+        {
+          "type": "build",
+          "text": "Applied translations to flow, key prompts, titles, intents and decisions"
+        },
+        {
+          "type": "verify",
+          "text": "Added mocked translation tests; 60 tests pass"
+        },
+        {
+          "type": "ship",
+          "text": "Committed, pushed, checked the PR comment is in English"
+        }
+      ],
+      "outcome": "PR comment shows English prompts; notes keep originals; 60 tests pass",
+      "decisions": [
+        {
+          "text": "Translate at render time, not in stored notes",
+          "why": "Preserves original prompts and avoids regenerating notes"
+        },
+        {
+          "text": "Also translate titles, intents and decisions",
+          "why": "Korean still leaked through heuristic summaries after prompts were translated"
+        }
+      ],
+      "tips": {
+        "keep": [
+          "Named the exact target (the github-actions bot comment) and the problem (Korean prompts), which made the scope clear."
+        ],
+        "improve": [
+          "Say whether stored notes should stay in the original language, and whether titles and summaries should be translated too."
+        ]
+      },
+      "metrics": {
+        "start": "2026-11-09T04:28:16.138Z",
+        "end": "2026-11-09T04:29:54.516Z",
+        "aiSteps": 12,
+        "files": 6,
+        "reruns": 0
+      },
+      "sessionId": "c877fe14-a41f-4c6b-a9ca-5c7fba24b2ff"
+    }
+  ],
+  "intent": {
+    "text": "Show developer prompts written in Korean as English in the GitHub Actions PR comment, while keeping the original text in the stored notes.",
+    "inferred": false
+  },
+  "keyPrompts": [
+    {
+      "text": "그리고 pr에서 내가 프롬프트 했던 거 한국말로 했는데 이거 영어로 바꿔줘. github-actions bot이 단 거 말하는 거야.",
+      "why": "Sole request: PR comment from the github-actions bot should show the Korean prompts in English."
+    }
+  ],
+  "decisions": [
+    {
+      "text": "Translate at PR-comment render time via OpenAI; stored notes keep the original, so notes need no regeneration.",
+      "inferred": false
+    },
+    {
+      "text": "Only text with non-Latin letters is sent for translation; translations are redacted, and failures fall back to the original text.",
+      "inferred": false
+    },
+    {
+      "text": "Translated prompts get a 'Translated to English' marker; titles, intents and decisions that echo prompts are also swapped.",
+      "inferred": false
+    }
+  ],
+  "aiWork": [
+    "Added needsTranslation and translatePrompts (OpenAI, redacted output) in src/openai.ts.",
+    "Added translatableTexts and applyTranslations in src/report.ts; renderReport takes a translations map.",
+    "Threaded a translate callback into renderFlow and commitDetails, with a translated marker.",
+    "Ran translation in parallel with synthesis in src/cli.ts.",
+    "Added tests/translate.test.ts with a mocked fetch and updated the README test count to 60."
+  ],
+  "verification": [
+    {
+      "text": "Full test suite passes: 60 tests, including new translation tests with a mocked OpenAI response.",
+      "inferred": false
+    },
+    {
+      "text": "Type check passes; agent pushed and checked that the PR comment no longer contains Korean.",
+      "inferred": true
+    }
+  ]
+}
