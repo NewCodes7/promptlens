@@ -63,6 +63,24 @@ export interface Claim {
   inferred: boolean;
 }
 
+/** Fixed phase types; anything else is a free-form type the model chose because none fit. */
+export const PHASE_TYPES = ["plan", "build", "fix", "verify", "refactor", "docs", "ship"] as const;
+
+/** A chunk of the AI conversation with one purpose (e.g. "Plan: settle design via survey"). */
+export interface Phase {
+  /** One of PHASE_TYPES, or a short free-form type when none fit. */
+  type: string;
+  /** Short label of what happened in this chunk. */
+  label: string;
+  /** Redacted prompt that started the chunk; null when the AI carried on by itself. */
+  prompt: string | null;
+  decisions: { text: string; why: string }[];
+  prompts: number;
+  files: number;
+  commands: number;
+  sessionId: string;
+}
+
 /**
  * Commit Context: the shareable, reviewer-oriented summary of a commit's AI work.
  * Stored as a git note on refs/notes/promptlens and pushed alongside the branch.
@@ -80,4 +98,6 @@ export interface CommitContext {
   files: { path: string; aiEdited: boolean }[];
   stats: { sessions: number; prompts: number; aiEdits: number };
   sessionIds: string[];
+  /** Ordered conversation chunks for this commit (absent in notes written before v0.2). */
+  phases?: Phase[];
 }

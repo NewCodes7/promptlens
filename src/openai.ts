@@ -36,7 +36,7 @@ export function buildSynthesisPrompt(entries: CommitEntry[], diffStat: string): 
   ].join("\n");
 }
 
-const str = (v: unknown, max = 260) => redact(truncate(String(v ?? ""), max));
+const str = (v: unknown, max = 260) => truncate(redact(String(v ?? "")), max);
 
 export function synthesisFromModel(json: any, generatedBy: string, fallback: Synthesis): Synthesis {
   const arr = (v: unknown) => (Array.isArray(v) ? v : []);

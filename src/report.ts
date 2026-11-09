@@ -1,4 +1,5 @@
 import { commitInfo, git, readNote, revList } from "./git.js";
+import { renderFlow } from "./flow.js";
 import type { Claim, CommitContext } from "./types.js";
 
 export const REPORT_MARKER = "<!-- promptlens:report -->";
@@ -136,6 +137,8 @@ export function renderReport(entries: CommitEntry[], syn: Synthesis, opts: { now
     `| ${entries.length} | ${ctx.length} / ${entries.length} | ${sessions.size} | ${prompts} | ${aiFiles} / ${files.size} |`,
     "",
   );
+  const flow = renderFlow(entries);
+  if (flow) out.push("### 🧭 How this PR was built — prompt flow", "", flow, "");
   if (syn.why.length) out.push("### Why these changes", ...syn.why.map((w) => `- ${line(w)}`), "");
   if (syn.keyDecisions.length) out.push("### Key decisions", ...syn.keyDecisions.map((d) => `- ${claim(d)}`), "");
   if (syn.reviewFocus.length)

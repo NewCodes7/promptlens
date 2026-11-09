@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import { commitPatch } from "./git.js";
 import { redact, truncate } from "./redact.js";
 import { openaiJson } from "./openai.js";
+import { heuristicPhases, MAX_PHASES_PER_COMMIT, phasesFromModel, timelineForPrompt } from "./phases.js";
 import { SELF_MARKER } from "./sessions.js";
 import type { Claim, CommitContext, RawCapture } from "./types.js";
 
@@ -34,7 +35,7 @@ function baseContext(raw: RawCapture): Omit<CommitContext, "generatedBy" | "inte
   };
 }
 
-const clean = (s: string, max = 300) => redact(truncate(s, max));
+const clean = (s: string, max = 300) => truncate(redact(s), max);
 
 /** Deterministic Commit Context used when no LLM is available. */
 export function heuristicContext(raw: RawCapture): CommitContext {
@@ -49,6 +50,7 @@ export function heuristicContext(raw: RawCapture): CommitContext {
   return {
     ...base,
     generatedBy: "heuristic",
+    phases: heuristicPhases(raw),
     intent: { text: clean(prompts[0]?.text ?? raw.subject, 240), inferred: prompts.length === 0 },
     keyPrompts: prompts.slice(0, 4).map((p, i) => ({
       text: clean(p.text, PROMPT_MAX),
@@ -89,6 +91,9 @@ export function buildSummaryPrompt(raw: RawCapture, patch: string): string {
     "## Decisions the developer made when the agent asked",
     ...raw.sessions.flatMap((s) => s.decisions.map((d) => `- Q: ${truncate(d.question, 300)} A: ${truncate(d.answer, 300)}`)),
     "",
+    "## Timeline (numbered steps, time order)",
+    timelineForPrompt(raw),
+    "",
     "## Agent actions",
     ...raw.sessions.flatMap((s) => [
       ...s.edits.map((e) => `- ${e.tool} ${e.file}`),
@@ -102,7 +107,11 @@ export function buildSummaryPrompt(raw: RawCapture, patch: string): string {
     patch,
     "",
     "Return ONLY a JSON object, no prose, with this exact shape:",
-    `{"intent":{"text":string,"inferred":boolean},"keyPrompts":[{"index":number,"why":string}],"decisions":[{"text":string,"inferred":boolean}],"aiWork":[string],"verification":[{"text":string,"inferred":boolean}]}`,
+    `{"intent":{"text":string,"inferred":boolean},"keyPrompts":[{"index":number,"why":string}],"decisions":[{"text":string,"inferred":boolean}],"aiWork":[string],"verification":[{"text":string,"inferred":boolean}],"phases":[{"from":number,"to":number,"type":string,"label":string,"promptIndex":number|null,"decisions":[{"text":string,"why":string}]}]}`,
+    `phases: split the Timeline into 1-${MAX_PHASES_PER_COMMIT} contiguous chunks (from/to are T numbers, covering the whole timeline in order) that show HOW the work flowed.`,
+    "  type: one of plan | build | fix | verify | refactor | docs | ship. Only if none fits, use a short lowercase word of your own (e.g. research).",
+    "  label: <= 6 words, what this chunk achieved (e.g. 'Settle design via survey'). promptIndex: the PROMPT that started the chunk, or null if the agent continued on its own.",
+    "  decisions: choices made in this chunk with a short why (include the developer's answers to agent questions). [] if none.",
     "keyPrompts: pick at most 3 prompt indexes that a reviewer most needs to see verbatim. verification: [] if nothing was verified.",
   ];
   return lines.join("\n");
@@ -132,6 +141,7 @@ export function contextFromModel(raw: RawCapture, model: any, generatedBy: Commi
   return {
     ...baseContext(raw),
     generatedBy,
+    phases: phasesFromModel(raw, model?.phases),
     intent:
       model?.intent && typeof model.intent.text === "string"
         ? { text: clean(model.intent.text, 240), inferred: Boolean(model.intent.inferred) }
