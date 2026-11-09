@@ -108,9 +108,11 @@ describe("renderFlow", () => {
 
   it("draws a Mermaid flowchart with typed, numbered chunks and commit nodes", () => {
     const md = renderFlow(entries);
-    expect(md).toContain("```mermaid\nflowchart TD");
-    expect(md).toMatch(/P0\["<b>① 🧭 Plan<\/b>/);
-    expect(md).toContain('(["⎇ aaaaaaa"]):::commit');
+    expect(md).toContain("```mermaid\n%%{init:");
+    expect(md).toContain("\nflowchart TD\n");
+    expect(md).toMatch(/P0\["<b>① 🧭 Plan — /);
+    expect(md).toContain('P3 -->|"⎇ aaaaaaa"| P4');
+    expect(md).toContain('P4 --- END(["⎇ bbbbbbb"]):::commit');
     expect(md).toContain("✋ Manual");
     expect(md).toContain("classDef plan");
   });

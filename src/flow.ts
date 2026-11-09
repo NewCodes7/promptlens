@@ -130,16 +130,23 @@ export function renderFlow(entries: CommitEntry[], max = MAX_FLOW_PHASES): strin
   const sessionIds = [...new Set(phases.flatMap((p) => p.sessions))];
   const badge = (p: FlowPhase) => (sessionIds.length > 1 ? ` · ${p.sessions.map((s) => `S${sessionIds.indexOf(s) + 1}`).join("+")}` : "");
 
-  const lines = ["```mermaid", "flowchart TD"];
+  // Wide labels so chunks read in one or two lines; commits ride on the arrows so the spine stays straight.
+  const lines = [
+    "```mermaid",
+    `%%{init: {"flowchart": {"wrappingWidth": 460, "nodeSpacing": 24, "rankSpacing": 34}, "themeVariables": {"fontSize": "15px"}}}%%`,
+    "flowchart TD",
+  ];
+  const commitLabel = (p: FlowPhase) => `⎇ ${mm(p.commits.map((s) => s.slice(0, 7)).join(" · "), 60)}`;
   phases.forEach((p, i) => {
-    const head = `${CIRCLED[i] ?? i + 1} ${icon(p.type)} ${title(p.type)}`;
-    lines.push(`  P${i}["<b>${mm(head)}</b><br/>${mm(p.label)}<br/><small>${mm(stats(p).join(" · ") + badge(p), 60)}</small>"]:::${cls(p.type)}`);
-    if (i > 0) lines.push(`  P${i - 1} --> P${i}`);
-    if (p.commits.length) {
-      const label = p.commits.map((s) => s.slice(0, 7)).join(" · ");
-      lines.push(`  P${i} -.- C${i}(["⎇ ${mm(label, 60)}"]):::commit`);
+    const head = `${CIRCLED[i] ?? i + 1} ${icon(p.type)} ${title(p.type)} — ${mm(p.label, 60)}`;
+    lines.push(`  P${i}["<b>${head}</b><br/>${mm(stats(p).join(" · ") + badge(p), 60)}"]:::${cls(p.type)}`);
+    if (i > 0) {
+      const prev = phases[i - 1];
+      lines.push(prev.commits.length ? `  P${i - 1} -->|"${commitLabel(prev)}"| P${i}` : `  P${i - 1} --> P${i}`);
     }
   });
+  const last = phases[phases.length - 1];
+  if (last.commits.length) lines.push(`  P${phases.length - 1} --- END(["${commitLabel(last)}"]):::commit`);
   const used = new Set(phases.map((p) => cls(p.type)));
   for (const [k, v] of Object.entries(STYLE)) if (used.has(k) || k === "commit") lines.push(`  classDef ${k} ${v}`);
   lines.push("```");
