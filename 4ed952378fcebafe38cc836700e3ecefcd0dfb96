@@ -36,27 +36,27 @@
         },
         {
           "type": "docs",
-          "text": "Edited README header link and Proof paragraph to reference PR #2"
+          "text": "Edited header link to PR #2 and added PR #2 note to Proof section"
         },
         {
           "type": "ship",
-          "text": "Committed and pushed the README update"
+          "text": "Committed and pushed the README change"
         }
       ],
-      "outcome": "README header links to PR #2; Proof section cites both PR #1 and PR #2; pushed.",
+      "outcome": "README header links to PR #2; Proof section mentions both PR #1 and PR #2; pushed.",
       "decisions": [
         {
-          "text": "Switch header link to PR #2 and keep PR #1 in the Proof section",
-          "why": "PR #2 shows both the comment and the commentable review file, making it a better live demo."
+          "text": "Switch the live report link to PR #2 and keep PR #1 in the Proof section",
+          "why": "PR #2 shows both the comment and the commentable review file; PR #1 remains the build history."
         }
       ],
       "tips": {
         "keep": [
-          "A short, unambiguous confirmation of a specific agent proposal let the agent act without extra clarification."
+          "Short confirmation after the agent proposed a concrete change kept the work focused."
         ],
         "improve": [
-          "Say which links to change (header only vs. also the Proof section) to avoid the agent extending scope.",
-          "Ask to confirm PR #2's final bot run completed before pointing the README at it."
+          "Say whether PR #1 should stay referenced, so the agent need not guess.",
+          "Ask for a check that the PR #2 link and bot output are valid before pushing."
         ]
       },
       "metrics": {
@@ -70,33 +70,34 @@
     }
   ],
   "intent": {
-    "text": "Point the README's live PR report link at the new showcase PR #2 and mention it in the dogfooding section, keeping PR #1 as the build-history proof.",
+    "text": "Repoint the README's live PR report link to showcase PR #2 (which has the bot comment and review file) while keeping PR #1 as the build-history proof.",
     "inferred": false
   },
   "keyPrompts": [
     {
       "text": "Yes, change it",
-      "why": "Approves switching the README's live report link to PR #2, which triggered the whole README change."
+      "why": "Approves the agent's proposal to switch the README's live-report link from PR #1 to the new showcase PR #2."
     }
   ],
   "decisions": [
     {
-      "text": "Header 'Live PR report' link now targets PR #2 because it has both the bot comment and the line-commentable .promptlens/PR-2.md.",
+      "text": "Header 'Live PR report' link now targets PR #2, the showcase PR with the bot comment and line-commentable .promptlens/PR-2.md.",
       "inferred": false
     },
     {
-      "text": "Keep PR #1 linked in the 'Proof' section and add PR #2 beside it rather than replacing it.",
+      "text": "Kept PR #1 link in the 'Proof' section and added PR #2 alongside it rather than replacing it.",
       "inferred": true
     }
   ],
   "aiWork": [
-    "Pulled bot commits from the remote and located the PR links in README.md",
-    "Read the dogfooding paragraph and edited README.md to change the header link and extend the Proof paragraph",
-    "Committed and pushed the README update"
+    "Pulled bot commits and located PR links in README",
+    "Read the dogfooding paragraph",
+    "Edited two README spots: header link and Proof paragraph",
+    "Committed and pushed the update"
   ],
   "verification": [
     {
-      "text": "Agent noted it could not confirm the final bot re-run finished because of a GitHub connectivity loss. No tests or link checks were run for this docs-only change.",
+      "text": "No tests or checks run; the agent noted it could not confirm the final bot re-run finished because of GitHub connectivity issues.",
       "inferred": true
     }
   ]
