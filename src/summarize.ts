@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { commitPatch } from "./git.js";
 import { redact, truncate } from "./redact.js";
 import { openaiJson } from "./openai.js";
-import { heuristicPhases, MAX_PHASES_PER_COMMIT, phasesFromModel, timelineForPrompt } from "./phases.js";
+import { heuristicTurns, turnsForPrompt, turnsFromModel } from "./turns.js";
 import { SELF_MARKER } from "./sessions.js";
 import type { Claim, CommitContext, RawCapture } from "./types.js";
 
@@ -50,7 +50,7 @@ export function heuristicContext(raw: RawCapture): CommitContext {
   return {
     ...base,
     generatedBy: "heuristic",
-    phases: heuristicPhases(raw),
+    turns: heuristicTurns(raw),
     intent: { text: clean(prompts[0]?.text ?? raw.subject, 240), inferred: prompts.length === 0 },
     keyPrompts: prompts.slice(0, 4).map((p, i) => ({
       text: clean(p.text, PROMPT_MAX),
@@ -91,14 +91,8 @@ export function buildSummaryPrompt(raw: RawCapture, patch: string): string {
     "## Decisions the developer made when the agent asked",
     ...raw.sessions.flatMap((s) => s.decisions.map((d) => `- Q: ${truncate(d.question, 300)} A: ${truncate(d.answer, 300)}`)),
     "",
-    "## Timeline (numbered steps, time order)",
-    timelineForPrompt(raw),
-    "",
-    "## Agent actions",
-    ...raw.sessions.flatMap((s) => [
-      ...s.edits.map((e) => `- ${e.tool} ${e.file}`),
-      ...s.commands.map((c) => `- $ ${truncate(c.command, 200)}${c.description ? `  # ${c.description}` : ""}`),
-    ]).slice(0, 120),
+    "## Developer prompts with what the agent did after each",
+    turnsForPrompt(raw),
     "",
     "## Agent explanations (excerpts)",
     ...raw.sessions.flatMap((s) => s.assistantNotes.map((n) => `- ${truncate(n, 300)}`)).slice(-30),
@@ -107,11 +101,17 @@ export function buildSummaryPrompt(raw: RawCapture, patch: string): string {
     patch,
     "",
     "Return ONLY a JSON object, no prose, with this exact shape:",
-    `{"intent":{"text":string,"inferred":boolean},"keyPrompts":[{"index":number,"why":string}],"decisions":[{"text":string,"inferred":boolean}],"aiWork":[string],"verification":[{"text":string,"inferred":boolean}],"phases":[{"from":number,"to":number,"type":string,"label":string,"promptIndex":number|null,"decisions":[{"text":string,"why":string}]}]}`,
-    `phases: split the Timeline into 1-${MAX_PHASES_PER_COMMIT} contiguous chunks (from/to are T numbers, covering the whole timeline in order) that show HOW the work flowed.`,
-    "  type: one of plan | build | fix | verify | refactor | docs | ship. Only if none fits, use a short lowercase word of your own (e.g. research).",
-    "  label: <= 6 words, what this chunk achieved (e.g. 'Settle design via survey'). promptIndex: the PROMPT that started the chunk, or null if the agent continued on its own.",
-    "  decisions: choices made in this chunk with a short why (include the developer's answers to agent questions). [] if none.",
+    `{"intent":{"text":string,"inferred":boolean},"keyPrompts":[{"index":number,"why":string}],"decisions":[{"text":string,"inferred":boolean}],"aiWork":[string],"verification":[{"text":string,"inferred":boolean}],"turns":[{"prompts":[number],"title":string,"steps":[{"type":string,"text":string}],"outcome":string,"decisions":[{"text":string,"why":string}],"tips":{"keep":[string],"improve":[string]}}]}`,
+    "turns: group the developer PROMPTs into requests, in order. A new turn starts when the developer asks for something new;",
+    "  short confirmations, answers, status checks or nudges that continue the same request join the previous turn. Every prompt index belongs to exactly one turn.",
+    "  title: <= 10 words, English, the developer's intent (e.g. 'Make the PR report show the prompt flow').",
+    "  steps: 1-5 steps the agent took for this request, in order. type: investigate | plan | build | fix | verify | refactor | docs | ship (or one short word if none fits). text: <= 15 words, concrete.",
+    "  outcome: <= 15 words, what this request ended with (e.g. 'Regex narrowed; 33 tests pass; PR comment updated').",
+    "  decisions: choices made for this request with a short why (include the developer's answers to agent questions). [] if none.",
+    "  tips: prompt review of the developer's prompt(s) in this turn, specific to what happened (not generic advice).",
+    "    keep: 1-2 things the prompt did well that led to a good result and are worth repeating (e.g. 'Asked to resolve ambiguity via a survey before coding').",
+    "    improve: 0-2 concrete additions that would have saved iterations (e.g. 'State the target layout up front; two rounds went to node width').",
+    "    For a turn that only continues a carried prompt, tips may be empty.",
     "keyPrompts: pick at most 3 prompt indexes that a reviewer most needs to see verbatim. verification: [] if nothing was verified.",
   ];
   return lines.join("\n");
@@ -141,7 +141,7 @@ export function contextFromModel(raw: RawCapture, model: any, generatedBy: Commi
   return {
     ...baseContext(raw),
     generatedBy,
-    phases: phasesFromModel(raw, model?.phases),
+    turns: turnsFromModel(raw, model?.turns),
     intent:
       model?.intent && typeof model.intent.text === "string"
         ? { text: clean(model.intent.text, 240), inferred: Boolean(model.intent.inferred) }

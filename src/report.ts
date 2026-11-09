@@ -138,7 +138,7 @@ export function renderReport(entries: CommitEntry[], syn: Synthesis, opts: { now
     "",
   );
   const flow = renderFlow(entries);
-  if (flow) out.push("### 🧭 How this PR was built — prompt flow", "", flow, "");
+  if (flow) out.push("### 🧭 How this PR was built — prompt by prompt", "", flow, "");
   if (syn.why.length) out.push("### Why these changes", ...syn.why.map((w) => `- ${line(w)}`), "");
   if (syn.keyDecisions.length) out.push("### Key decisions", ...syn.keyDecisions.map((d) => `- ${claim(d)}`), "");
   if (syn.reviewFocus.length)

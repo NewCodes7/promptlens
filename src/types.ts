@@ -63,21 +63,33 @@ export interface Claim {
   inferred: boolean;
 }
 
-/** Fixed phase types; anything else is a free-form type the model chose because none fit. */
-export const PHASE_TYPES = ["plan", "build", "fix", "verify", "refactor", "docs", "ship"] as const;
+/** Step types for what the agent did inside a turn; anything else is a free-form type the model chose. */
+export const STEP_TYPES = ["investigate", "plan", "build", "fix", "verify", "refactor", "docs", "ship"] as const;
 
-/** A chunk of the AI conversation with one purpose (e.g. "Plan: settle design via survey"). */
-export interface Phase {
-  /** One of PHASE_TYPES, or a short free-form type when none fit. */
+export interface TurnStep {
   type: string;
-  /** Short label of what happened in this chunk. */
-  label: string;
-  /** Redacted prompt that started the chunk; null when the AI carried on by itself. */
-  prompt: string | null;
+  text: string;
+}
+
+/**
+ * A turn: one developer request (plus same-intent follow-ups like "yes, do it") and what the agent did for it.
+ * A request whose work spans several commits appears as one piece per commit, sharing the same `key`.
+ */
+export interface Turn {
+  /** `${sessionId}@${ts of the anchoring prompt}` — identical across the commits a request spans. */
+  key: string;
+  /** English one-line intent of the request. */
+  title: string;
+  /** Redacted, verbatim prompts that belong to this turn (empty when this piece only continues an earlier request). */
+  prompts: string[];
+  /** true when this piece continues a request made before the commit window. */
+  carried: boolean;
+  steps: TurnStep[];
+  outcome: string;
   decisions: { text: string; why: string }[];
-  prompts: number;
-  files: number;
-  commands: number;
+  /** Prompt review: what to keep doing and what to add next time. */
+  tips: { keep: string[]; improve: string[] };
+  metrics: { start: string; end: string; aiSteps: number; files: number; reruns: number };
   sessionId: string;
 }
 
@@ -98,6 +110,6 @@ export interface CommitContext {
   files: { path: string; aiEdited: boolean }[];
   stats: { sessions: number; prompts: number; aiEdits: number };
   sessionIds: string[];
-  /** Ordered conversation chunks for this commit (absent in notes written before v0.2). */
-  phases?: Phase[];
+  /** Developer requests and what the agent did for each, in order (absent in notes written before v0.2). */
+  turns?: Turn[];
 }
