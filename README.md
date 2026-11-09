@@ -115,6 +115,15 @@ npm run coverage
 
 The end-to-end test builds a real git repo with a fake Claude Code session log, commits, captures, writes the note, and renders the PR report. Network adapters (`github.ts`, `openai.ts`) and the CLI entrypoint are exercised by dogfooding: this repository's own PRs are reviewed by PromptLens.
 
+## PromptLens Hub — the bigger picture
+
+PromptLens starts where AI work is already reviewed: the pull request. But every profession now works through prompts, and the process vanishes into private chats. **[PromptLens Hub](https://newcodes7.github.io/promptlens/)** ([`docs/`](docs/)) shows where this goes: a place where developers, designers, marketers, lawyers and founders share prompt flows, get a prompt review, and learn what knowledge and prompting habits made the work succeed.
+
+- **Developer** tab — the *real* prompt flow of this repo's PR #1, exported from `refs/notes/promptlens` with `npm run build && npm run hub:data`.
+- **Designer / Marketer / Professional / Founder** tabs — hand-written, clearly labeled samples of the same flow format for non-code work.
+
+Preview locally with `python3 -m http.server 4173 --directory docs`.
+
 ## Limitations & roadmap
 
 - Claude Code only for now; Codex / Cursor / Git AI adapters next.
