@@ -1,0 +1,28 @@
+name: PromptLens
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Fetch Commit Context notes
+        run: git fetch origin "+refs/notes/promptlens:refs/notes/promptlens" || echo "no PromptLens notes yet"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Post PromptLens report
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: npm ci && npm run build && node dist/cli.js pr-report --post
