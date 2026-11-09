@@ -8,6 +8,8 @@ import type { RawCapture, SessionSlice } from "./types.js";
 const SLACK_MS = 5_000;
 /** For a root commit there is no parent time; look back this far. */
 const ROOT_LOOKBACK_MS = 24 * 60 * 60 * 1000;
+/** Shell commands that plausibly write files. */
+const SHELL_WRITE_RE = /(>|\btee\b|\bsed\s+-i|\bperl\s+-i|\bpython3?\b|\bnode\s+-e|writeFile|open\(|\bmv\b|\bcp\b|\bpatch\b|\bgit\s+apply\b)/;
 
 export function toRepoPath(root: string, file: string): string {
   if (!path.isAbsolute(file)) return file.replace(/^\.\//, "");
@@ -71,6 +73,13 @@ export function buildCapture(events: SessionEvent[], input: CaptureInput): RawCa
       else if (e.kind === "command") slice.commands.push({ ts: e.ts, command: e.command, description: e.description });
       else if (e.kind === "decision") slice.decisions.push({ ts: e.ts, question: e.question, answer: e.answer });
       else if (e.kind === "note") slice.assistantNotes.push(e.text);
+    }
+    // Agents also edit through the shell (sed -i, heredocs, scripts): count commands that name a committed file and write.
+    for (const c of slice.commands) {
+      if (!SHELL_WRITE_RE.test(c.command)) continue;
+      for (const f of input.filesChanged) {
+        if (c.command.includes(f) && !slice.edits.some((e) => e.file === f)) slice.edits.push({ ts: c.ts, tool: "Bash", file: f });
+      }
     }
     // The agent kept working on an earlier instruction: carry that instruction forward as context.
     const carried = lastPromptBefore.get(sessionId);

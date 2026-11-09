@@ -59,6 +59,18 @@ describe("buildCapture", () => {
     expect(cap.sessions[0].prompts).toEqual([{ ts: "2026-11-09T01:00:00Z", text: "implement feature a", carried: true }]);
   });
 
+  it("counts shell commands that write a committed file as AI edits, but not reads", () => {
+    const ev = parseSessionLog(
+      [
+        userPrompt("S", "2026-11-09T01:00:00Z", "tweak config"),
+        toolUse("S", "2026-11-09T01:00:10Z", "Bash", { command: "cat src/b.ts" }),
+        toolUse("S", "2026-11-09T01:00:20Z", "Bash", { command: "sed -i '' 's/a/b/' src/c.ts" }),
+      ].join("\n"),
+    );
+    const cap = buildCapture(ev, { root: ROOT, sha: "x", subject: "x", from: "2026-11-09T00:30:00Z", to: "2026-11-09T01:30:00Z", filesChanged: ["src/b.ts", "src/c.ts"] });
+    expect(cap.sessions[0].edits).toEqual([{ ts: "2026-11-09T01:00:20Z", tool: "Bash", file: "src/c.ts" }]);
+  });
+
   it("uses a 24h lookback for root commits", () => {
     const root = buildCapture(events, {
       root: ROOT,
