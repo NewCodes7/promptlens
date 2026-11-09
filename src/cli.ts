@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { spawn } from "node:child_process";
-import { appendFileSync, mkdirSync, readFileSync, realpathSync } from "node:fs";
+import { appendFileSync, mkdirSync, openSync, readFileSync, realpathSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { captureCommit, readRaw } from "./capture.js";
@@ -40,10 +40,10 @@ function log(msg: string) {
 }
 
 /** Capture (or reuse) the raw record and write the Commit Context note. */
-function ensureContext(sha: string): "exists" | "written" {
+async function ensureContext(sha: string): Promise<"exists" | "written"> {
   if (readNote(sha)) return "exists";
   const raw = readRaw(sha) ?? captureCommit(sha);
-  const ctx = summarize(raw);
+  const ctx = await summarize(raw);
   writeNote(sha, JSON.stringify(ctx, null, 2));
   log(`context ${sha.slice(0, 7)} sessions=${ctx.stats.sessions} prompts=${ctx.stats.prompts} by=${ctx.generatedBy}`);
   return "written";
@@ -82,9 +82,10 @@ async function main() {
       const prompts = raw.sessions.reduce((n, s) => n + s.prompts.length, 0);
       log(`capture ${raw.sha.slice(0, 7)} sessions=${raw.sessions.length} prompts=${prompts}`);
       if (opt.sync) {
-        console.log(`${raw.sha.slice(0, 7)}: ${ensureContext(raw.sha)}`);
+        console.log(`${raw.sha.slice(0, 7)}: ${await ensureContext(raw.sha)}`);
       } else {
-        const child = spawn(process.execPath, [CLI, "summarize", raw.sha], { detached: true, stdio: "ignore" });
+        const err = openSync(logFile(), "a");
+        const child = spawn(process.execPath, [CLI, "summarize", raw.sha], { detached: true, stdio: ["ignore", "ignore", err] });
         child.unref();
       }
       console.log(`[promptlens] captured ${raw.sessions.length} AI session(s), ${prompts} prompt(s) for ${raw.sha.slice(0, 7)}`);
@@ -94,7 +95,7 @@ async function main() {
     case "summarize": {
       const sha = resolveSha(pos[0] ?? "HEAD");
       if (opt.force) git(["notes", `--ref=${NOTES_REF}`, "remove", "--ignore-missing", sha], { allowFail: true });
-      console.log(`${sha.slice(0, 7)}: ${ensureContext(sha)}`);
+      console.log(`${sha.slice(0, 7)}: ${await ensureContext(sha)}`);
       return;
     }
 
@@ -117,7 +118,7 @@ async function main() {
         ? ranges.flatMap((r) => (r.includes("--not") ? git(["rev-list", ...r.split(" ")], { allowFail: true }).split("\n").filter(Boolean) : revList(r)))
         : revList(`@{u}..HEAD`);
       let written = 0;
-      for (const sha of shas) if (ensureContext(sha) === "written") written++;
+      for (const sha of shas) if ((await ensureContext(sha)) === "written") written++;
       try {
         pushNotes(remote);
         console.error(`[promptlens] synced Commit Context for ${shas.length} commit(s) (${written} new) → ${remote} ${NOTES_REF}`);

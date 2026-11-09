@@ -2,6 +2,7 @@ import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { commitPatch } from "./git.js";
 import { redact, truncate } from "./redact.js";
+import { openaiJson } from "./openai.js";
 import { SELF_MARKER } from "./sessions.js";
 import type { Claim, CommitContext, RawCapture } from "./types.js";
 
@@ -116,7 +117,7 @@ const asClaims = (v: unknown): Claim[] =>
     : [];
 
 /** Merge a model response into a Commit Context. Prompts are always quoted from the capture, never from the model. */
-export function contextFromModel(raw: RawCapture, model: any): CommitContext {
+export function contextFromModel(raw: RawCapture, model: any, generatedBy: CommitContext["generatedBy"] = "claude-cli"): CommitContext {
   const prompts = allPrompts(raw);
   const fallback = heuristicContext(raw);
   const picked: number[] = Array.isArray(model?.keyPrompts) ? model.keyPrompts.map((k: any) => Number(k.index)) : [];
@@ -126,7 +127,7 @@ export function contextFromModel(raw: RawCapture, model: any): CommitContext {
     .map((k: any) => ({ text: clean(prompts[Number(k.index)].text, PROMPT_MAX), why: clean(String(k.why ?? ""), 200) }));
   return {
     ...baseContext(raw),
-    generatedBy: "claude-cli",
+    generatedBy,
     intent:
       model?.intent && typeof model.intent.text === "string"
         ? { text: clean(model.intent.text, 240), inferred: Boolean(model.intent.inferred) }
@@ -154,15 +155,26 @@ function runClaude(prompt: string): string {
   return String(outer.result ?? "");
 }
 
-/** Build the shareable Commit Context. Uses the local Claude Code CLI when available, otherwise a heuristic. */
-export function summarize(raw: RawCapture, cwd?: string): CommitContext {
-  if (raw.sessions.length === 0) return heuristicContext(raw);
-  if (process.env.PROMPTLENS_NO_LLM === "1") return heuristicContext(raw);
-  try {
-    const out = runClaude(buildSummaryPrompt(raw, commitPatch(raw.sha, 12_000, cwd)));
-    return contextFromModel(raw, extractJson(out));
-  } catch (err) {
-    process.stderr.write(`[promptlens] LLM summary failed, using heuristic: ${(err as Error).message}\n`);
-    return heuristicContext(raw);
+/**
+ * Build the shareable Commit Context.
+ * Provider chain: local Claude Code CLI → OpenAI (if OPENAI_API_KEY is set) → deterministic heuristic.
+ */
+export async function summarize(raw: RawCapture, cwd?: string): Promise<CommitContext> {
+  if (raw.sessions.length === 0 || process.env.PROMPTLENS_NO_LLM === "1") return heuristicContext(raw);
+  const prompt = buildSummaryPrompt(raw, commitPatch(raw.sha, 12_000, cwd));
+  if (process.env.PROMPTLENS_PROVIDER !== "openai") {
+    try {
+      return contextFromModel(raw, extractJson(runClaude(prompt)), "claude-cli");
+    } catch (err) {
+      process.stderr.write(`[promptlens] claude -p summary failed: ${(err as Error).message}\n`);
+    }
   }
+  if (process.env.OPENAI_API_KEY) {
+    try {
+      return contextFromModel(raw, await openaiJson(prompt), "openai");
+    } catch (err) {
+      process.stderr.write(`[promptlens] OpenAI summary failed: ${(err as Error).message}\n`);
+    }
+  }
+  return heuristicContext(raw);
 }

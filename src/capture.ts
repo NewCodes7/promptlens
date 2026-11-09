@@ -11,10 +11,11 @@ const ROOT_LOOKBACK_MS = 24 * 60 * 60 * 1000;
 
 export function toRepoPath(root: string, file: string): string {
   if (!path.isAbsolute(file)) return file.replace(/^\.\//, "");
-  const rel = path.relative(root, file);
-  if (!rel.startsWith("..")) return rel;
+  // Claude Code worktrees live inside the repo (.claude/worktrees/<name>/...) — map back to repo paths.
   const wt = file.match(/\/\.claude\/worktrees\/[^/]+\/(.+)$/);
-  return wt ? wt[1] : file;
+  if (wt) return wt[1];
+  const rel = path.relative(root, file);
+  return rel.startsWith("..") ? file : rel;
 }
 
 export interface CaptureInput {

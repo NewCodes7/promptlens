@@ -69,7 +69,7 @@ export interface CommitContext {
   version: 1;
   sha: string;
   subject: string;
-  generatedBy: "claude-cli" | "heuristic";
+  generatedBy: "claude-cli" | "openai" | "heuristic";
   intent: Claim;
   keyPrompts: KeyPrompt[];
   decisions: Claim[];

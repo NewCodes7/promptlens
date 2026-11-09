@@ -54,27 +54,34 @@ export function synthesisFromModel(json: any, generatedBy: string, fallback: Syn
   };
 }
 
+export const openaiModel = () => process.env.OPENAI_MODEL || "gpt-5-mini";
+
+/** Call OpenAI Chat Completions in JSON mode and return the parsed object. */
+export async function openaiJson(prompt: string): Promise<any> {
+  const key = process.env.OPENAI_API_KEY;
+  if (!key) throw new Error("OPENAI_API_KEY is not set");
+  const baseUrl = (process.env.OPENAI_BASE_URL || "https://api.openai.com/v1").replace(/\/$/, "");
+  const res = await fetch(`${baseUrl}/chat/completions`, {
+    method: "POST",
+    headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
+    body: JSON.stringify({
+      model: openaiModel(),
+      response_format: { type: "json_object" },
+      messages: [{ role: "user", content: prompt }],
+    }),
+  });
+  if (!res.ok) throw new Error(`OpenAI ${res.status}: ${(await res.text()).slice(0, 300)}`);
+  const data: any = await res.json();
+  return JSON.parse(data.choices?.[0]?.message?.content ?? "{}");
+}
+
 /** PR-level synthesis via the OpenAI Chat Completions API. Falls back to the template on any failure. */
 export async function synthesize(entries: CommitEntry[], diffStat: string): Promise<Synthesis> {
   const fallback = templateSynthesis(entries);
-  const key = process.env.OPENAI_API_KEY;
-  if (!key || entries.every((e) => !e.context)) return fallback;
-  const model = process.env.OPENAI_MODEL || "gpt-5-mini";
-  const baseUrl = (process.env.OPENAI_BASE_URL || "https://api.openai.com/v1").replace(/\/$/, "");
+  if (!process.env.OPENAI_API_KEY || entries.every((e) => !e.context)) return fallback;
   try {
-    const res = await fetch(`${baseUrl}/chat/completions`, {
-      method: "POST",
-      headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
-      body: JSON.stringify({
-        model,
-        response_format: { type: "json_object" },
-        messages: [{ role: "user", content: buildSynthesisPrompt(entries, diffStat) }],
-      }),
-    });
-    if (!res.ok) throw new Error(`OpenAI ${res.status}: ${(await res.text()).slice(0, 300)}`);
-    const data: any = await res.json();
-    const content = data.choices?.[0]?.message?.content ?? "{}";
-    return synthesisFromModel(JSON.parse(content), `OpenAI ${model}`, fallback);
+    const json = await openaiJson(buildSynthesisPrompt(entries, diffStat));
+    return synthesisFromModel(json, `OpenAI ${openaiModel()}`, fallback);
   } catch (err) {
     process.stderr.write(`[promptlens] OpenAI synthesis failed, using template: ${(err as Error).message}\n`);
     return fallback;
