@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PromptLens Hub</title>
+<meta name="description" content="Learn from how people actually work with AI. Real prompt flows, reviewed, across professions." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #f7f7f5;
+    --surface: #ffffff;
+    --surface-2: #f2f2ef;
+    --border: #e4e4df;
+    --text: #18181b;
+    --muted: #63636b;
+    --faint: #9a9aa2;
+    --accent: #4f46e5;
+    --accent-soft: #eef0ff;
+    --live: #059669;
+    --sample: #b45309;
+    --shadow: 0 1px 2px rgba(0,0,0,.04), 0 6px 24px rgba(0,0,0,.05);
+    /* step types */
+    --t-investigate: #64748b; --t-plan: #2563eb; --t-build: #16a34a; --t-fix: #dc2626;
+    --t-verify: #ca8a04; --t-refactor: #7c3aed; --t-docs: #0284c7; --t-ship: #ea580c;
+    --t-revise: #db2777; --t-custom: #6b7280;
+    --tint: 12%;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f0f12; --surface: #17171c; --surface-2: #1f1f26; --border: #2b2b33;
+      --text: #ececf1; --muted: #a1a1aa; --faint: #6b6b75; --accent: #818cf8; --accent-soft: #1e1e3a;
+      --live: #34d399; --sample: #fbbf24; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 6px 24px rgba(0,0,0,.25);
+      --t-investigate: #94a3b8; --t-plan: #60a5fa; --t-build: #4ade80; --t-fix: #f87171;
+      --t-verify: #facc15; --t-refactor: #a78bfa; --t-docs: #38bdf8; --t-ship: #fb923c; --t-revise: #f472b6;
+      --tint: 16%;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0f0f12; --surface: #17171c; --surface-2: #1f1f26; --border: #2b2b33;
+    --text: #ececf1; --muted: #a1a1aa; --faint: #6b6b75; --accent: #818cf8; --accent-soft: #1e1e3a;
+    --live: #34d399; --sample: #fbbf24; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 6px 24px rgba(0,0,0,.25);
+    --t-investigate: #94a3b8; --t-plan: #60a5fa; --t-build: #4ade80; --t-fix: #f87171;
+    --t-verify: #facc15; --t-refactor: #a78bfa; --t-docs: #38bdf8; --t-ship: #fb923c; --t-revise: #f472b6;
+    --tint: 16%;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.55 Inter, system-ui, -apple-system, "Segoe UI", sans-serif; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .86em; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
+
+  /* nav */
+  nav { position: sticky; top: 0; z-index: 10; background: color-mix(in srgb, var(--bg) 85%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); }
+  nav .wrap { display: flex; align-items: center; justify-content: space-between; height: 56px; gap: 12px; }
+  .logo { font-weight: 800; letter-spacing: -.02em; font-size: 17px; color: var(--text); display: flex; align-items: center; gap: 8px; }
+  .logo span { color: var(--muted); font-weight: 500; }
+  .navlinks { display: flex; gap: 18px; align-items: center; font-size: 14px; }
+  .navlinks a { color: var(--muted); }
+  .theme-btn { border: 1px solid var(--border); background: var(--surface); border-radius: 8px; width: 32px; height: 32px; display: grid; place-items: center; }
+
+  /* hero */
+  header.hero { padding-top: 56px; padding-bottom: 28px; }
+  .eyebrow { display: inline-flex; gap: 8px; align-items: center; font-size: 13px; font-weight: 600; color: var(--accent); background: var(--accent-soft); padding: 5px 12px; border-radius: 999px; }
+  h1 { font-size: clamp(30px, 5vw, 50px); line-height: 1.08; letter-spacing: -.035em; margin: 18px 0 14px; font-weight: 800; max-width: 820px; }
+  h1 em { font-style: normal; color: var(--accent); }
+  .lede { font-size: 18px; color: var(--muted); max-width: 720px; margin: 0; }
+  .roadmap { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; font-size: 13.5px; }
+  .roadmap div { display: flex; align-items: center; gap: 8px; padding: 7px 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: none; }
+
+  /* patterns */
+  section.patterns { padding-top: 18px; padding-bottom: 8px; }
+  .section-title { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--faint); font-weight: 700; margin: 0 0 12px; }
+  .pattern-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .pattern { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; box-shadow: var(--shadow); }
+  .pattern h3 { font-size: 15px; margin: 0 0 4px; letter-spacing: -.01em; }
+  .pattern p { margin: 0 0 10px; color: var(--muted); font-size: 13.5px; }
+  .pattern .refs { display: flex; flex-wrap: wrap; gap: 6px; }
+  .ref { border: 1px solid var(--border); background: var(--surface-2); border-radius: 999px; padding: 3px 10px; font-size: 12.5px; }
+  .ref:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* tabs */
+  .tabs { display: flex; gap: 8px; overflow-x: auto; padding: 26px 0 16px; scrollbar-width: none; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab { flex: none; display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--surface); border-radius: 999px; padding: 8px 14px; font-weight: 600; font-size: 14px; }
+  .tab[aria-selected="true"] { background: var(--text); color: var(--bg); border-color: var(--text); }
+  .badge { font-size: 10.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; padding: 2px 7px; border-radius: 999px; }
+  .badge.live { color: var(--live); background: color-mix(in srgb, var(--live) 14%, transparent); }
+  .badge.sample { color: var(--sample); background: color-mix(in srgb, var(--sample) 14%, transparent); }
+  .tab[aria-selected="true"] .badge { background: color-mix(in srgb, var(--bg) 18%, transparent); color: inherit; }
+
+  /* main layout */
+  main.layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 20px; align-items: start; padding-bottom: 64px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; box-shadow: var(--shadow); }
+  .story { padding: 26px 28px 30px; }
+  .author { display: flex; align-items: center; gap: 10px; font-size: 13.5px; color: var(--muted); }
+  .avatar { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; color: #fff; font-size: 14px; flex: none; }
+  .author b { color: var(--text); font-weight: 600; }
+  .story h2 { font-size: 26px; letter-spacing: -.025em; line-height: 1.2; margin: 16px 0 8px; }
+  .goal { color: var(--muted); margin: 0; font-size: 15.5px; }
+  .note { margin-top: 10px; font-size: 13px; color: var(--muted); background: var(--surface-2); border-radius: 10px; padding: 8px 12px; }
+  .stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin: 20px 0 6px; }
+  .stat { background: var(--surface); padding: 10px 12px; }
+  .stat b { display: block; font-size: 20px; letter-spacing: -.02em; }
+  .stat span { font-size: 12px; color: var(--muted); }
+  .source { font-size: 13px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; }
+
+  /* minimap */
+  .flow-head { display: flex; justify-content: space-between; align-items: baseline; margin: 26px 0 10px; gap: 12px; flex-wrap: wrap; }
+  .flow-head h3 { margin: 0; font-size: 18px; letter-spacing: -.015em; }
+  .legend { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--muted); }
+  .legend span { display: inline-flex; align-items: center; gap: 5px; }
+  .minimap { display: flex; gap: 4px; margin-bottom: 18px; }
+  .seg { flex: 1; min-width: 0; height: 30px; border-radius: 7px; border: 0; font-size: 12px; font-weight: 700; color: var(--c); background: color-mix(in srgb, var(--c) calc(var(--tint) + 6%), var(--surface)); box-shadow: inset 0 -3px 0 var(--c); }
+  .seg:hover, .seg.on { background: color-mix(in srgb, var(--c) 32%, var(--surface)); }
+
+  /* flow */
+  .flow { position: relative; }
+  .node { position: relative; display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 14px; }
+  .rail { display: flex; flex-direction: column; align-items: center; }
+  .num { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: 14px; color: #fff; background: var(--c); flex: none; box-shadow: 0 0 0 4px var(--surface); z-index: 1; }
+  .line { flex: 1; width: 2px; background: var(--border); margin-top: 2px; }
+  .node:last-child .line { background: linear-gradient(var(--border), transparent); }
+  .box { border: 1px solid var(--border); border-left: 4px solid var(--c); border-radius: 12px; background: color-mix(in srgb, var(--c) 5%, var(--surface)); margin-bottom: 8px; scroll-margin-top: 80px; transition: border-color .15s; }
+  .box:hover { border-color: color-mix(in srgb, var(--c) 45%, var(--border)); border-left-color: var(--c); }
+  .box-top { width: 100%; text-align: left; background: none; border: 0; padding: 14px 16px; display: block; }
+  .box-title { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+  .box-title h4 { margin: 0; font-size: 16px; letter-spacing: -.01em; line-height: 1.35; }
+  .who { font-size: 12px; color: var(--muted); white-space: nowrap; }
+  .chips { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin: 8px 0 6px; font-size: 12.5px; }
+  .chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; font-weight: 600; color: var(--c); background: color-mix(in srgb, var(--c) var(--tint), transparent); }
+  .arrow { color: var(--faint); }
+  .outcome { margin: 0; font-size: 14px; }
+  .metrics { margin-top: 6px; font-size: 12.5px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 12px; }
+  .caret { color: var(--faint); transition: transform .15s; display: inline-block; }
+  .box.open .caret { transform: rotate(90deg); }
+  .detail { display: none; padding: 0 16px 16px; border-top: 1px dashed var(--border); }
+  .box.open .detail { display: block; }
+  .detail h5 { margin: 16px 0 8px; font-size: 12px; letter-spacing: .07em; text-transform: uppercase; color: var(--faint); }
+  .prompt { border-radius: 10px; background: var(--surface); border: 1px solid var(--border); padding: 12px 14px; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 14px; }
+  .prompt + .prompt { margin-top: 8px; }
+  .prompt .tr { display: block; margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border); color: var(--muted); font-size: 13px; }
+  .prompt .tr::before { content: "EN · "; font-weight: 700; color: var(--faint); font-size: 11px; letter-spacing: .05em; }
+  .steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 13.5px; }
+  .steps li { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 6px; }
+  .more { border: 0; background: none; color: var(--accent); padding: 2px 0; font-size: 13px; text-align: left; }
+  .decisions { margin: 0; padding-left: 18px; font-size: 13.5px; }
+  .decisions li { margin-bottom: 4px; }
+  .decisions span { color: var(--muted); }
+  .review { display: grid; gap: 6px; }
+  .tip { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 6px; padding: 8px 10px; border-radius: 10px; font-size: 13.5px; }
+  .tip.keep { background: color-mix(in srgb, var(--t-build) 10%, transparent); }
+  .tip.try { background: color-mix(in srgb, var(--accent) 10%, transparent); }
+  .tip b { font-weight: 700; }
+  .link { display: flex; align-items: center; min-height: 26px; margin: -2px 0 6px; }
+  .link span { font-size: 12px; font-family: "JetBrains Mono", ui-monospace, monospace; padding: 2px 9px; border-radius: 6px; background: var(--surface-2); border: 1px solid var(--border); color: var(--muted); overflow-wrap: anywhere; }
+
+  /* sidebar */
+  aside { display: grid; gap: 16px; position: sticky; top: 76px; }
+  .panel { padding: 18px 18px 20px; }
+  .panel h3 { margin: 0 0 12px; font-size: 15px; letter-spacing: -.01em; display: flex; align-items: center; gap: 8px; }
+  .panel ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; font-size: 13.5px; }
+  .panel li { display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 6px; }
+  .sub { font-size: 12px; font-weight: 700; color: var(--faint); text-transform: uppercase; letter-spacing: .07em; margin: 14px 0 8px; }
+  .sub:first-of-type { margin-top: 0; }
+  .reacts { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+  .react { border: 1px solid var(--border); background: var(--surface-2); border-radius: 999px; padding: 4px 11px; font-size: 13px; }
+  .react.on { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+  .comment { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 10px; font-size: 13.5px; margin-bottom: 12px; }
+  .comment .avatar { width: 30px; height: 30px; font-size: 12px; }
+  .comment .meta { font-size: 12px; color: var(--muted); }
+  .comment .meta b { color: var(--text); }
+  .comment p { margin: 2px 0 0; }
+  .compose { display: flex; gap: 8px; margin-top: 4px; }
+  .compose input { flex: 1; min-width: 0; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); border-radius: 10px; padding: 8px 11px; font: inherit; font-size: 13.5px; }
+  .compose button { border: 0; background: var(--accent); color: #fff; border-radius: 10px; padding: 0 14px; font-weight: 600; font-size: 13.5px; }
+  .hint { font-size: 11.5px; color: var(--faint); margin-top: 8px; }
+
+  footer { border-top: 1px solid var(--border); padding-top: 28px; padding-bottom: 40px; color: var(--muted); font-size: 13.5px; }
+  footer p { margin: 0 0 6px; max-width: 780px; }
+
+  @media (max-width: 1020px) {
+    main.layout { grid-template-columns: minmax(0, 1fr); }
+    aside { position: static; grid-template-columns: 1fr 1fr; }
+    .pattern-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 640px) {
+    .wrap { padding: 0 16px; }
+    header.hero { padding-top: 36px; }
+    .lede { font-size: 16px; }
+    .navlinks a.hide-sm { display: none; }
+    .pattern-grid, aside { grid-template-columns: minmax(0, 1fr); }
+    .story { padding: 20px 16px 22px; }
+    .story h2 { font-size: 22px; }
+    .stats { grid-template-columns: repeat(3, 1fr); }
+    .stat:nth-child(n+4) { display: none; }
+    .node { grid-template-columns: 30px minmax(0, 1fr); gap: 10px; }
+    .num { width: 28px; height: 28px; font-size: 12px; }
+    .seg { font-size: 0; height: 14px; }
+  }
+</style>
+</head>
+<body>
+<nav>
+  <div class="wrap">
+    <a class="logo" href="#">🔍 PromptLens <span>Hub</span></a>
+    <div class="navlinks">
+      <a class="hide-sm" href="#how">How it works</a>
+      <a href="https://github.com/NewCodes7/promptlens">GitHub</a>
+      <button class="theme-btn" id="theme" aria-label="Toggle color theme">◐</button>
+    </div>
+  </div>
+</nav>
+
+<header class="hero wrap">
+  <div class="eyebrow">✦ Prompting is the new professional skill</div>
+  <h1>See how people <em>actually</em> work with AI — and learn from it.</h1>
+  <p class="lede">Developers, designers, marketers, lawyers, founders: everyone now works through prompts, but the process disappears into private chat logs. PromptLens turns real prompt histories into flows anyone can review, learn from, and discuss.</p>
+  <div class="roadmap">
+    <div><span class="dot" style="background:var(--live)"></span><b>Today</b>&nbsp;Developers — captured from Claude Code, reviewed on GitHub PRs</div>
+    <div><span class="dot" style="background:var(--sample)"></span><b>Next</b>&nbsp;Every profession — the same flow for any AI work</div>
+  </div>
+</header>
+
+<section class="patterns wrap" aria-labelledby="patterns-title">
+  <h2 class="section-title" id="patterns-title">Prompt patterns that travel across professions</h2>
+  <div class="pattern-grid" id="patterns"></div>
+</section>
+
+<div class="wrap">
+  <div class="tabs" role="tablist" id="tabs"></div>
+</div>
+
+<main class="layout wrap" id="main">
+  <article class="card story" id="story"></article>
+  <aside id="aside"></aside>
+</main>
+
+<footer class="wrap" id="how">
+  <p><b>How the Developer flow is made.</b> The PromptLens CLI links local Claude Code sessions to each commit, summarizes every developer request (prompt → what the AI did → outcome → prompt review) into a git note, and the GitHub Action posts the flow on the pull request. This page shows that same data for <a href="https://github.com/NewCodes7/promptlens/pull/1">NewCodes7/promptlens#1</a>, exported with <code>scripts/export-hub-data.mjs</code>. Prompts are quoted verbatim after secret redaction; English translations are added for this page.</p>
+  <p><b>Samples.</b> Designer, Marketer, Professional and Founder flows are illustrative, hand-written examples of where PromptLens goes next. Their people, comments and reactions are not real. The discussion box is a demo and does not save.</p>
+</footer>
+
+<script src="data/developer.js"></script>
+<script src="data/samples.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
