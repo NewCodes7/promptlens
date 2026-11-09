@@ -51,7 +51,7 @@ That context exists, but it's buried in a long private chat log. Sharing the who
 
 Developers keep working as usual: `git commit`, `git push`, then open a PR from the web, `gh`, or an AI agent.
 
-> **About the review file:** it is committed by the Actions bot, so run `git pull` before your next push. It is only rewritten when the commits change (no timestamps or LLM synthesis inside), so line comments don't go stale on every push. Commits made with `GITHUB_TOKEN` don't start new workflow runs, so there is no loop, but CI doesn't run on that bot commit either. Fork PRs get a read-only token and keep the comment only. Pass `--no-review-file` to turn it off.
+> **About the review file:** it is committed by the Actions bot, so run `git pull` before your next push. It is only rewritten when the commits change (no timestamps or LLM synthesis inside), so line comments don't go stale on every push. GitHub holds the workflow runs on that bot commit as *Action required* instead of starting them, so there is no loop. Approving them is safe: the file is unchanged, so nothing is committed again. Fork PRs get a read-only token and keep the comment only. Pass `--no-review-file` to turn it off.
 
 ### What the reviewer gets
 

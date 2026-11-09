@@ -34,7 +34,8 @@ export async function upsertComment(token: string, repo: string, pr: number, bod
 /**
  * Commit `content` to `path` on `branch` through the Contents API (no checkout or push needed).
  * Skips the commit when the file already has exactly this content, so line comments on it aren't made outdated.
- * Commits made with the Actions GITHUB_TOKEN don't trigger new workflow runs, so this can't loop.
+ * GitHub holds runs on a GITHUB_TOKEN commit as "action required"; even when approved, the unchanged file
+ * is not committed again, so this can't loop.
  */
 export async function upsertFile(
   token: string,
