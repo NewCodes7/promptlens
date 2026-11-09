@@ -71,6 +71,19 @@ describe("buildCapture", () => {
     expect(cap.sessions[0].edits).toEqual([{ ts: "2026-11-09T01:00:20Z", tool: "Bash", file: "src/c.ts" }]);
   });
 
+  it.each([
+    ["cat src/c.ts 2>/dev/null | head -60", false],
+    ["npx vitest run src/c.ts 2>&1 | tail", false],
+    ["python3 -c \"print(open('src/c.ts').read())\"", false],
+    ["echo x > src/c.ts", true],
+    ["cat a >> src/c.ts", true],
+    ["python3 -c \"open('src/c.ts','w').write('x')\"", true],
+  ])("shell write detection: %s → %s", (command, writes) => {
+    const ev = parseSessionLog(toolUse("S", "2026-11-09T01:00:20Z", "Bash", { command }));
+    const cap = buildCapture(ev, { root: ROOT, sha: "x", subject: "x", from: "2026-11-09T00:30:00Z", to: "2026-11-09T01:30:00Z", filesChanged: ["src/c.ts"] });
+    expect(cap.sessions.length > 0).toBe(writes);
+  });
+
   it("uses a 24h lookback for root commits", () => {
     const root = buildCapture(events, {
       root: ROOT,

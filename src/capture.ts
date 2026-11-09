@@ -9,7 +9,9 @@ const SLACK_MS = 5_000;
 /** For a root commit there is no parent time; look back this far. */
 const ROOT_LOOKBACK_MS = 24 * 60 * 60 * 1000;
 /** Shell commands that plausibly write files. */
-const SHELL_WRITE_RE = /(>|\btee\b|\bsed\s+-i|\bperl\s+-i|\bpython3?\b|\bnode\s+-e|writeFile|open\(|\bmv\b|\bcp\b|\bpatch\b|\bgit\s+apply\b)/;
+// A redirect to a real file (not `2>/dev/null` or `2>&1`), in-place editors, or explicit write calls.
+const SHELL_WRITE_RE =
+  /((?:^|[^0-9&>])>{1,2}\s*(?!\/dev\/null|&)[^\s|&;]|\btee\b|\bsed\s+-i|\bperl\s+-i|writeFile|\.write\(|open\([^)]*,\s*['"][wa]|\bmv\b|\bcp\b|\bpatch\b|\bgit\s+apply\b)/;
 
 export function toRepoPath(root: string, file: string): string {
   if (!path.isAbsolute(file)) return file.replace(/^\.\//, "");
