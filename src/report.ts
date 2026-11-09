@@ -17,6 +17,8 @@ export interface Synthesis {
   keyDecisions: Claim[];
   reviewFocus: { file?: string; text: string }[];
   openQuestions: string[];
+  /** Whole-request outcomes for the prompt flow, by request index (LLM only). */
+  turnOutcomes?: (string | undefined)[];
   generatedBy: string;
 }
 
@@ -137,7 +139,7 @@ export function renderReport(entries: CommitEntry[], syn: Synthesis, opts: { now
     `| ${entries.length} | ${ctx.length} / ${entries.length} | ${sessions.size} | ${prompts} | ${aiFiles} / ${files.size} |`,
     "",
   );
-  const flow = renderFlow(entries);
+  const flow = renderFlow(entries, undefined, syn.turnOutcomes);
   if (flow) out.push("### 🧭 How this PR was built — prompt by prompt", "", flow, "");
   if (syn.why.length) out.push("### Why these changes", ...syn.why.map((w) => `- ${line(w)}`), "");
   if (syn.keyDecisions.length) out.push("### Key decisions", ...syn.keyDecisions.map((d) => `- ${claim(d)}`), "");

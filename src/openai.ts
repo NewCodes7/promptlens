@@ -1,5 +1,6 @@
 import type { CommitEntry, Synthesis } from "./report.js";
 import { templateSynthesis } from "./report.js";
+import { collectTurns, mergeToMax } from "./flow.js";
 import { redact, truncate } from "./redact.js";
 
 export function buildSynthesisPrompt(entries: CommitEntry[], diffStat: string): string {
@@ -17,6 +18,13 @@ export function buildSynthesisPrompt(entries: CommitEntry[], diffStat: string): 
         }
       : null,
   }));
+  const requests = mergeToMax(collectTurns(entries)).map((t, index) => ({
+    index,
+    title: t.title,
+    steps: t.steps.map((st) => `${st.type}: ${st.text}`).slice(0, 12),
+    pieceOutcomes: t.outcomes,
+    commits: t.commits.map((c) => c.slice(0, 7)),
+  }));
   return [
     "You write the PR-level summary of PromptLens, a tool that adds AI coding context to code review.",
     "Input: per-commit Commit Context (already summarized from the developer's AI sessions) and the final diff stat.",
@@ -24,12 +32,16 @@ export function buildSynthesisPrompt(entries: CommitEntry[], diffStat: string): 
     "Rules: English only. Terse (each string <= 220 chars). Do not invent facts; mark guesses with inferred=true.",
     "reviewFocus: up to 5 concrete places (file + reason) where human judgment matters most (unverified, risky, or non-obvious choices).",
     "openQuestions: things the reviewer should ask the author (e.g. commits with no context, unverified claims). [] if none.",
+    "requests: for EVERY developer request listed under Requests, one outcome (<= 15 words) describing what the whole request ended with, across all its commits (pieceOutcomes are per-commit, oldest first).",
     "",
     "Return ONLY JSON:",
-    `{"overview":string,"why":[string],"keyDecisions":[{"text":string,"inferred":boolean}],"reviewFocus":[{"file":string,"text":string}],"openQuestions":[string]}`,
+    `{"overview":string,"why":[string],"keyDecisions":[{"text":string,"inferred":boolean}],"reviewFocus":[{"file":string,"text":string}],"openQuestions":[string],"requests":[{"index":number,"outcome":string}]}`,
     "",
     "## Diff stat",
     truncate(diffStat, 4000),
+    "",
+    "## Requests (developer prompts, in order)",
+    truncate(JSON.stringify(requests, null, 1), 20_000),
     "",
     "## Commits",
     truncate(JSON.stringify(commits, null, 1), 60_000),
@@ -50,6 +62,11 @@ export function synthesisFromModel(json: any, generatedBy: string, fallback: Syn
       .filter((f: any) => f?.text)
       .map((f: any) => ({ file: f.file ? str(f.file, 200) : undefined, text: str(f.text) })),
     openQuestions: [...new Set([...arr(json?.openQuestions).map((q) => str(q)), ...fallback.openQuestions])],
+    turnOutcomes: arr(json?.requests).reduce((acc: (string | undefined)[], r: any) => {
+      const i = Number(r?.index);
+      if (Number.isInteger(i) && i >= 0 && i < 50 && r?.outcome) acc[i] = str(r.outcome, 160);
+      return acc;
+    }, []),
     generatedBy,
   };
 }

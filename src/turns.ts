@@ -82,6 +82,34 @@ export interface TurnGroup {
 
 const cleanStr = (v: unknown, max: number) => truncate(redact(String(v ?? "")).replace(/\s+/g, " "), max);
 
+const SYNONYMS: Record<string, string> = {
+  test: "verify",
+  testing: "verify",
+  validate: "verify",
+  check: "verify",
+  debug: "fix",
+  bugfix: "fix",
+  research: "investigate",
+  explore: "investigate",
+  analyze: "investigate",
+  implement: "build",
+  code: "build",
+  document: "docs",
+  doc: "docs",
+  design: "plan",
+  clarify: "plan",
+  deploy: "ship",
+  release: "ship",
+  push: "ship",
+  cleanup: "refactor",
+};
+
+/** Map free-form step types onto the fixed set when they mean the same thing. */
+export function normalizeType(t: string): string {
+  const k = t.toLowerCase().trim();
+  return SYNONYMS[k] ?? k;
+}
+
 /** Group prompts into turns without an LLM: every prompt starts a turn unless it is a short follow-up. */
 export function heuristicGroups(raw: RawCapture): TurnGroup[] {
   const groups: TurnGroup[] = [];
@@ -130,7 +158,7 @@ export function buildTurns(raw: RawCapture, groups: TurnGroup[]): Turn[] {
     const files = new Set(acts.filter((a) => a.file).map((a) => a.file));
     const cmds = acts.filter((a) => a.kind === "command").map((a) => a.text.trim());
     const ends = [anchor.ts, ...acts.map((a) => a.ts), ...g.prompts.map((i) => prompts[i].ts)].sort();
-    const modelSteps = (g.steps ?? []).filter((s) => s?.type).slice(0, 5).map((s) => ({ type: cleanStr(s.type, 20).toLowerCase(), text: cleanStr(s.text, 140) }));
+    const modelSteps = (g.steps ?? []).filter((s) => s?.type).slice(0, 5).map((s) => ({ type: normalizeType(cleanStr(s.type, 20)), text: cleanStr(s.text, 140) }));
     const decisions = (g.decisions ?? []).filter((d) => d?.text).map((d) => ({ text: cleanStr(d.text, 200), why: cleanStr(d.why, 200) }));
     const firstText = (own[0] ?? anchor).text;
     return {

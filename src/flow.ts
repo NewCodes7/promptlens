@@ -33,6 +33,8 @@ export interface FlowTurn extends Omit<Turn, "sessionId" | "carried"> {
   sessions: string[];
   /** Commits finished while working on this request. */
   commits: string[];
+  /** Outcome of every piece, oldest first — input for a whole-request outcome rewrite. */
+  outcomes: string[];
   manual?: boolean;
 }
 
@@ -59,7 +61,7 @@ function mergeMetrics(a: Turn["metrics"], b: Turn["metrics"]): Turn["metrics"] {
 
 function fromTurn(t: Turn): FlowTurn {
   const { sessionId, carried: _c, ...rest } = t;
-  return { ...rest, sessions: [sessionId], commits: [] };
+  return { ...rest, sessions: [sessionId], commits: [], outcomes: t.outcome ? [t.outcome] : [] };
 }
 
 /** Pieces of one request (same key) that continue across commits become one FlowTurn. */
@@ -68,7 +70,10 @@ function absorb(into: FlowTurn, piece: Turn): void {
   if (real || !into.title) into.title = piece.title;
   into.prompts.push(...piece.prompts);
   into.steps = mergeSteps(into.steps, piece.steps);
-  if (piece.outcome) into.outcome = piece.outcome;
+  if (piece.outcome) {
+    into.outcome = piece.outcome;
+    into.outcomes.push(piece.outcome);
+  }
   into.decisions.push(...piece.decisions);
   if (piece.tips.keep.length || piece.tips.improve.length) {
     if (real || (!into.tips.keep.length && !into.tips.improve.length)) into.tips = piece.tips;
@@ -110,6 +115,7 @@ export function collectTurns(entries: CommitEntry[]): FlowTurn[] {
         metrics: { start: "", end: "", aiSteps: 0, files: 0, reruns: 0 },
         sessions: [],
         commits: [e.sha],
+        outcomes: [],
         manual: true,
       };
       out.push(manual);
@@ -155,6 +161,7 @@ export function mergeToMax(turns: FlowTurn[], max = MAX_FLOW_TURNS): FlowTurn[] 
       metrics: a.metrics.start && b.metrics.start ? mergeMetrics(a.metrics, b.metrics) : big.metrics,
       sessions: [...new Set([...a.sessions, ...b.sessions])],
       commits: [...a.commits, ...b.commits],
+      outcomes: [...a.outcomes, ...b.outcomes],
       manual: a.manual && b.manual,
     });
   }
@@ -208,8 +215,8 @@ function esc(text: string): string {
 const one = (s: string) => esc(s.replace(/\s+/g, " ").trim());
 
 /** Mermaid flowchart of developer requests + per-request details (prompts, AI steps, decisions, prompt review). */
-export function renderFlow(entries: CommitEntry[], max = MAX_FLOW_TURNS): string {
-  const turns = mergeToMax(collectTurns(entries), max);
+export function renderFlow(entries: CommitEntry[], max = MAX_FLOW_TURNS, outcomeOverrides: (string | undefined)[] = []): string {
+  const turns = mergeToMax(collectTurns(entries), max).map((t, i) => (outcomeOverrides[i] ? { ...t, outcome: outcomeOverrides[i]! } : t));
   if (!turns.length) return "";
   const sessionIds = [...new Set(turns.flatMap((t) => t.sessions))];
   const badge = (t: FlowTurn) => (sessionIds.length > 1 && t.sessions.length ? ` · ${t.sessions.map((s) => `S${sessionIds.indexOf(s) + 1}`).join("+")}` : "");
@@ -225,7 +232,7 @@ export function renderFlow(entries: CommitEntry[], max = MAX_FLOW_TURNS): string
     const rows = [`<b>${CIRCLED[i] ?? i + 1} ${who} ${mm(t.title, 80)}</b>`];
     const chips = chipTypes(t);
     if (chips.length && !t.manual) rows.push(mm(chips.map((c) => `${icon(c)} ${title(c)}`).join(" → "), 90));
-    if (t.outcome) rows.push(`✅ ${mm(t.outcome, 80)}`);
+    if (t.outcome) rows.push(`✅ ${mm(t.outcome, 110)}`);
     rows.push(mm(metricsLine(t) + badge(t), 90));
     lines.push(`  T${i}["${rows.join("<br/>")}"]:::${dominant(t)}`);
     if (i > 0) {
@@ -255,7 +262,10 @@ export function renderFlow(entries: CommitEntry[], max = MAX_FLOW_TURNS): string
       }
     } else if (!t.manual) out.push("> 🤖 _Continued an earlier request without a new prompt._", "");
     if (t.steps.length) {
-      out.push("**🤖 What the AI did**", ...t.steps.map((s, k) => `${k + 1}. ${icon(s.type)} **${one(title(s.type))}**${s.text ? ` — ${one(s.text)}` : ""}`), "");
+      const step = (s: TurnStep) => `${icon(s.type)} **${one(title(s.type))}**${s.text ? ` — ${one(s.text)}` : ""}`;
+      // Long requests (spanning many commits) keep the beginning and the end; the middle collapses.
+      const shown = t.steps.length > 8 ? [...t.steps.slice(0, 3).map(step), `… ${t.steps.length - 8} more steps`, ...t.steps.slice(-5).map(step)] : t.steps.map(step);
+      out.push("**🤖 What the AI did**", ...shown.map((s) => `- ${s}`), "");
     }
     if (t.outcome) out.push(`✅ **Outcome:** ${one(t.outcome)}`, "");
     if (t.decisions.length) {

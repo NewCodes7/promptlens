@@ -161,7 +161,7 @@ describe("renderFlow", () => {
 
   it("details each request with verbatim prompts, AI steps and a two-sided prompt review", () => {
     expect(md).toContain("> 로그인에 rate limit 추가해줘");
-    expect(md).toContain("1. 🧭 **Plan**");
+    expect(md).toContain("- 🧭 **Plan**");
     expect(md).toContain("- 👍 **Keep:** Precise target");
     expect(md).toContain("- 💡 **Try:** Give numbers");
     expect(md).toContain("✋ chore: manual tweak");
@@ -171,5 +171,24 @@ describe("renderFlow", () => {
     expect(duration("2026-11-09T01:00:00Z", "2026-11-09T02:12:00Z")).toBe("1h12m");
     expect(duration("2026-11-09T01:00:00Z", "2026-11-09T01:00:20Z")).toBe("20s");
     expect(duration("", "")).toBe("");
+  });
+});
+
+describe("normalizeType", () => {
+  it("maps synonyms onto the fixed step types and keeps unknown ones", async () => {
+    const { normalizeType } = await import("../src/turns.js");
+    expect(["Test", "debug", "implement", "research", "migrate"].map(normalizeType)).toEqual(["verify", "fix", "build", "investigate", "migrate"]);
+  });
+});
+
+describe("whole-request outcomes", () => {
+  it("parses per-request outcomes from the PR synthesis and overrides the piece outcome", async () => {
+    const { synthesisFromModel } = await import("../src/openai.js");
+    const { templateSynthesis } = await import("../src/report.js");
+    const syn = synthesisFromModel({ overview: "x", requests: [{ index: 0, outcome: "Whole request done" }, { index: "bad", outcome: "y" }] }, "t", templateSynthesis([]));
+    expect(syn.turnOutcomes).toEqual(["Whole request done"]);
+    const entries: CommitEntry[] = [{ sha: "c1", subject: "a", context: ctx([turn("A", { prompts: ["p"], outcome: "last piece only" })]) }];
+    expect(renderFlow(entries, 10, syn.turnOutcomes)).toContain("✅ Whole request done");
+    expect(collectTurns(entries)[0].outcomes).toEqual(["last piece only"]);
   });
 });
