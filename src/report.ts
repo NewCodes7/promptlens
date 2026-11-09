@@ -32,14 +32,25 @@ export function parseContext(note: string | null): CommitContext | null {
   }
 }
 
+/** Folder the PR workflow commits the line-commentable review file into (see review.ts). */
+export const REVIEW_DIR = ".promptlens";
+
+/** true for commits that only touch the review file folder — the bot's own commits, never part of the report. */
+function isReviewFileCommit(sha: string, cwd?: string): boolean {
+  const files = git(["diff-tree", "--no-commit-id", "--name-only", "-r", "--root", sha], { cwd, allowFail: true }).split("\n").filter(Boolean);
+  return files.length > 0 && files.every((f) => f.startsWith(`${REVIEW_DIR}/`));
+}
+
 export function collectCommits(base: string, head: string, cwd?: string): { entries: CommitEntry[]; diffStat: string } {
   const mergeBase = git(["merge-base", base, head], { cwd, allowFail: true }) || base;
-  const entries = revList(`${mergeBase}..${head}`, cwd).map((sha) => ({
-    sha,
-    subject: commitInfo(sha, cwd).subject,
-    context: parseContext(readNote(sha, cwd)),
-  }));
-  const diffStat = git(["diff", "--stat", mergeBase, head], { cwd, allowFail: true });
+  const entries = revList(`${mergeBase}..${head}`, cwd)
+    .filter((sha) => !isReviewFileCommit(sha, cwd))
+    .map((sha) => ({
+      sha,
+      subject: commitInfo(sha, cwd).subject,
+      context: parseContext(readNote(sha, cwd)),
+    }));
+  const diffStat = git(["diff", "--stat", mergeBase, head, "--", ".", `:(exclude)${REVIEW_DIR}`], { cwd, allowFail: true });
   return { entries, diffStat };
 }
 
@@ -138,7 +149,7 @@ export function translatableTexts(entries: CommitEntry[]): string[] {
 }
 
 /** Swap translated texts into titles, intents and decisions (prompts are swapped at render time so they can be marked). */
-function applyTranslations(entries: CommitEntry[], syn: Synthesis, map: Map<string, string>): [CommitEntry[], Synthesis] {
+export function applyTranslations(entries: CommitEntry[], syn: Synthesis, map: Map<string, string>): [CommitEntry[], Synthesis] {
   if (!map.size) return [entries, syn];
   const sub = (s: string) => {
     let out = map.get(s) ?? s;
@@ -162,7 +173,11 @@ function applyTranslations(entries: CommitEntry[], syn: Synthesis, map: Map<stri
   return [tEntries, tSyn];
 }
 
-export function renderReport(rawEntries: CommitEntry[], rawSyn: Synthesis, opts: { now?: Date; translations?: Map<string, string> } = {}): string {
+export function renderReport(
+  rawEntries: CommitEntry[],
+  rawSyn: Synthesis,
+  opts: { now?: Date; translations?: Map<string, string>; reviewFile?: { path: string; url: string } } = {},
+): string {
   const tr = (s: string) => opts.translations?.get(s) ?? s;
   const [entries, syn] = applyTranslations(rawEntries, rawSyn, opts.translations ?? new Map());
   const ctx = entries.map((e) => e.context).filter((c): c is CommitContext => c !== null);
@@ -180,6 +195,8 @@ export function renderReport(rawEntries: CommitEntry[], rawSyn: Synthesis, opts:
     `| ${entries.length} | ${ctx.length} / ${entries.length} | ${sessions.size} | ${prompts} | ${aiFiles} / ${files.size} |`,
     "",
   );
+  if (opts.reviewFile)
+    out.push(`> 💬 **Comment on a specific prompt:** open [\`${esc(opts.reviewFile.path)}\`](${opts.reviewFile.url}) in *Files changed* and select lines.`, "");
   const flow = renderFlow(entries, undefined, syn.turnOutcomes, tr);
   if (flow) out.push("### 🧭 How this PR was built — prompt by prompt", "", flow, "");
   if (syn.why.length) out.push("### Why these changes", ...syn.why.map((w) => `- ${line(w)}`), "");

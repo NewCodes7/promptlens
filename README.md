@@ -47,8 +47,11 @@ That context exists, but it's buried in a long private chat log. Sharing the who
 | ① | **Capture at commit** | A `post-commit` hook links the commit to the Claude Code sessions that actually edited its files. |
 | ② | **Preserve intent per commit** | A background job distills each capture into a small *Commit Context* (intent, key prompts, decisions, AI work, verification) and attaches it to the commit SHA with `git notes`. |
 | ③ | **Report on the PR** | GitHub Actions merges every commit's context with the final diff and posts **one** PR comment, updated on every push. |
+| ④ | **Comment on a prompt** | The same run commits `.promptlens/PR-<n>.md`, the prompt flow as plain Markdown, to the PR branch. Reviewers select lines in *Files changed* and comment on a specific prompt, step or decision. |
 
 Developers keep working as usual: `git commit`, `git push`, then open a PR from the web, `gh`, or an AI agent.
+
+> **About the review file:** it is committed by the Actions bot, so run `git pull` before your next push. It is only rewritten when the commits change (no timestamps or LLM synthesis inside), so line comments don't go stale on every push. Commits made with `GITHUB_TOKEN` don't start new workflow runs, so there is no loop, but CI doesn't run on that bot commit either. Fork PRs get a read-only token and keep the comment only. Pass `--no-review-file` to turn it off.
 
 ### What the reviewer gets
 
@@ -215,7 +218,8 @@ Then work as usual: commit, push, and open a PR.
 | `promptlens summarize [rev] --force` | manual | Re-captures a commit and regenerates its context |
 | `promptlens show [rev]` | manual | Prints a commit's Commit Context |
 | `promptlens report --base main` | manual | Previews the PR comment locally |
-| `promptlens pr-report --post` | GitHub Actions | Builds the PR comment and creates or updates it |
+| `promptlens report --file` | manual | Previews the line-commentable review file |
+| `promptlens pr-report --post` | GitHub Actions | Commits `.promptlens/PR-<n>.md` to the PR branch, then creates or updates the PR comment |
 
 Environment variables:
 - `OPENAI_API_KEY`

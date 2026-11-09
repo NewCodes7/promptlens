@@ -176,7 +176,7 @@ export function duration(start: string, end: string): string {
   return m >= 60 ? `${Math.floor(m / 60)}h${String(m % 60).padStart(2, "0")}m` : `${m}m`;
 }
 
-function metricsLine(t: FlowTurn): string {
+export function metricsLine(t: FlowTurn): string {
   const parts: string[] = [];
   const d = duration(t.metrics.start, t.metrics.end);
   if (d) parts.push(`⏱ ${d}`);

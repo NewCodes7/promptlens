@@ -7,6 +7,7 @@ import { captureCommit, readRaw } from "../src/capture.js";
 import { readNote, writeNote } from "../src/git.js";
 import { init } from "../src/init.js";
 import { collectCommits, parseContext, renderReport, templateSynthesis } from "../src/report.js";
+import { renderReviewFile, reviewFilePath } from "../src/review.js";
 import { projectDirName } from "../src/sessions.js";
 import { summarize } from "../src/summarize.js";
 
@@ -84,5 +85,20 @@ describe("end to end: session log → commit → note → PR report", () => {
     const md = renderReport(entries, templateSynthesis(entries));
     expect(md).toContain("Add a greet() helper with tests");
     expect(md).toContain("| 1 | 1 / 1 | 1 | 1 | 1 / 1 |");
+  });
+
+  it("ignores the bot's review-file commits when building the report", () => {
+    const { entries: before } = collectCommits("main", "HEAD", repo);
+    const file = reviewFilePath(7);
+    mkdirSync(path.join(repo, ".promptlens"), { recursive: true });
+    writeFileSync(path.join(repo, file), renderReviewFile(before, 7));
+    sh(repo, "add", file);
+    sh(repo, "commit", "-q", "-m", "chore(promptlens): update prompt flow review file for PR #7");
+
+    const { entries, diffStat } = collectCommits("main", "HEAD", repo);
+    expect(entries.map((e) => e.sha)).toEqual(before.map((e) => e.sha));
+    expect(diffStat).not.toContain(".promptlens");
+    // Same commits in → byte-identical file out, so a re-run doesn't commit again.
+    expect(renderReviewFile(entries, 7)).toBe(readFileSync(path.join(repo, file), "utf8"));
   });
 });

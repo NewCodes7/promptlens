@@ -30,3 +30,33 @@ export async function upsertComment(token: string, repo: string, pr: number, bod
   const c = await gh(token, "POST", `/repos/${repo}/issues/${pr}/comments`, { body });
   return { id: c.id, action: "created", url: c.html_url };
 }
+
+/**
+ * Commit `content` to `path` on `branch` through the Contents API (no checkout or push needed).
+ * Skips the commit when the file already has exactly this content, so line comments on it aren't made outdated.
+ * Commits made with the Actions GITHUB_TOKEN don't trigger new workflow runs, so this can't loop.
+ */
+export async function upsertFile(
+  token: string,
+  repo: string,
+  branch: string,
+  path: string,
+  content: string,
+  message: string,
+): Promise<{ action: "created" | "updated" | "unchanged"; sha?: string }> {
+  const url = `/repos/${repo}/contents/${path.split("/").map(encodeURIComponent).join("/")}`;
+  let existing: { sha: string; content: string } | null = null;
+  try {
+    existing = await gh(token, "GET", `${url}?ref=${encodeURIComponent(branch)}`);
+  } catch (err) {
+    if (!/→ 404:/.test((err as Error).message)) throw err;
+  }
+  if (existing && Buffer.from(existing.content, "base64").toString("utf8") === content) return { action: "unchanged" };
+  const res = await gh(token, "PUT", url, {
+    message,
+    content: Buffer.from(content, "utf8").toString("base64"),
+    branch,
+    ...(existing ? { sha: existing.sha } : {}),
+  });
+  return { action: existing ? "updated" : "created", sha: res?.commit?.sha };
+}
