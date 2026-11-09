@@ -1,0 +1,103 @@
+{
+  "version": 1,
+  "sha": "4ed952378fcebafe38cc836700e3ecefcd0dfb96",
+  "subject": "Point the README's live PR report at the showcase PR #2",
+  "files": [
+    {
+      "path": "README.md",
+      "aiEdited": true
+    }
+  ],
+  "stats": {
+    "sessions": 1,
+    "prompts": 1,
+    "aiEdits": 1
+  },
+  "sessionIds": [
+    "5ee12de4-0b35-48e7-8123-7af43185e2f5"
+  ],
+  "generatedBy": "claude-cli",
+  "turns": [
+    {
+      "key": "5ee12de4-0b35-48e7-8123-7af43185e2f5@2026-11-09T05:34:44.214Z",
+      "title": "Point README live report at showcase PR #2",
+      "prompts": [
+        "Yes, change it"
+      ],
+      "carried": false,
+      "steps": [
+        {
+          "type": "investigate",
+          "text": "Pulled bot commits and found PR links in README"
+        },
+        {
+          "type": "investigate",
+          "text": "Read the dogfooding paragraph"
+        },
+        {
+          "type": "docs",
+          "text": "Edited README header link and Proof paragraph to reference PR #2"
+        },
+        {
+          "type": "ship",
+          "text": "Committed and pushed the README update"
+        }
+      ],
+      "outcome": "README header links to PR #2; Proof section cites both PR #1 and PR #2; pushed.",
+      "decisions": [
+        {
+          "text": "Switch header link to PR #2 and keep PR #1 in the Proof section",
+          "why": "PR #2 shows both the comment and the commentable review file, making it a better live demo."
+        }
+      ],
+      "tips": {
+        "keep": [
+          "A short, unambiguous confirmation of a specific agent proposal let the agent act without extra clarification."
+        ],
+        "improve": [
+          "Say which links to change (header only vs. also the Proof section) to avoid the agent extending scope.",
+          "Ask to confirm PR #2's final bot run completed before pointing the README at it."
+        ]
+      },
+      "metrics": {
+        "start": "2026-11-09T05:34:44.214Z",
+        "end": "2026-11-09T05:35:07.425Z",
+        "aiSteps": 4,
+        "files": 1,
+        "reruns": 0
+      },
+      "sessionId": "5ee12de4-0b35-48e7-8123-7af43185e2f5"
+    }
+  ],
+  "intent": {
+    "text": "Point the README's live PR report link at the new showcase PR #2 and mention it in the dogfooding section, keeping PR #1 as the build-history proof.",
+    "inferred": false
+  },
+  "keyPrompts": [
+    {
+      "text": "Yes, change it",
+      "why": "Approves switching the README's live report link to PR #2, which triggered the whole README change."
+    }
+  ],
+  "decisions": [
+    {
+      "text": "Header 'Live PR report' link now targets PR #2 because it has both the bot comment and the line-commentable .promptlens/PR-2.md.",
+      "inferred": false
+    },
+    {
+      "text": "Keep PR #1 linked in the 'Proof' section and add PR #2 beside it rather than replacing it.",
+      "inferred": true
+    }
+  ],
+  "aiWork": [
+    "Pulled bot commits from the remote and located the PR links in README.md",
+    "Read the dogfooding paragraph and edited README.md to change the header link and extend the Proof paragraph",
+    "Committed and pushed the README update"
+  ],
+  "verification": [
+    {
+      "text": "Agent noted it could not confirm the final bot re-run finished because of a GitHub connectivity loss. No tests or link checks were run for this docs-only change.",
+      "inferred": true
+    }
+  ]
+}
