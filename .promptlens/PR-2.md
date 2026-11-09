@@ -23,7 +23,7 @@ The full summary is in the PromptLens comment on the PR conversation.
 
 > https://app.notion.com/p/compiled-41213d90e04c80c99a44ef1d88a9e75e?source=copy_link
 >
-> Implement this going forward exactly as planned in the Notion linked here. I'd like it to be finished by 1:00 at the latest. Before actually implementing, if there are ambiguous parts in the spec or things that are better decided in advance, survey me first so we can decide them concretely before starting.
+> I want to implement this as planned in the Notion linked above. It would be good to finish the implementation by 1:00 at the latest. Before actually implementing, if there are ambiguous parts in the spec or things that should be decided beforehand, first ask me (survey me) so we can define them concretely before starting.
 
 ### 🤖 What the AI did
 
@@ -92,8 +92,8 @@ The full summary is in the PromptLens comment on the PR conversation.
 
 🌐 English:
 
-> 1. logged into claude cli
-> 2. registered openapi key
+> 1. Logged into claude cli
+> 2. Registered OpenAPI key
 
 > 워크플로 됐나?
 
@@ -114,9 +114,9 @@ The full summary is in the PromptLens comment on the PR conversation.
 
 > * The PR result is a bit disappointing…
 > * Is there a way to show the prompt process more vividly?
-> * We can't create interactive behavior inside the PR comments, right?
->    * It's markdown…
-> * I don't know how many sessions there will be, or how long the conversation within each session will be
+> * We can't create interactive behavior inside a PR comment, right?
+>    * It's markdown, after all…
+> * I don't know how many sessions there will be, or how long each session's conversation will be
 > * For now, are commits being recorded properly?
 
 ### 🤖 What the AI did
@@ -153,7 +153,7 @@ The full summary is in the PromptLens comment on the PR conversation.
 
 🌐 English:
 
-> The conversation itself can get very long, but if you summarize that conversation into specific categories and show the flow of chunks, you can predict the length to some extent. If it's too long, make the chunk categories larger. For now, it would be good to visually show what prompt-chunk-category flow comprised that PR. Let's make this more concrete. Feel free to ask me more questions.
+> The conversation itself can get very long, but summarizing that conversation into specific categories to show chunked flows lets you roughly predict the length. If it's too long, make the chunk categories broader. For now, it would be good to visually show what prompt-chunk-category flow made up that pr. Let's make this more concrete. Feel free to ask me more questions.
 
 ### 🤖 What the AI did
 
@@ -224,9 +224,11 @@ The full summary is in the PromptLens comment on the PR conversation.
 
 🌐 English:
 
-> When dividing categories like fix, build, etc., don't base it on the agent's actions — base it on the user's prompt. If the agent performed multiple kinds of tasks like build, fix, etc. in response to a single user prompt, show that as one chunk. In other words, don't simply list the ai agent's action flow; summarize what processes the ai performed starting from the user's prompt.
+> When splitting categories like fix, build, etc., don't base them on the agent's actions — base them on the user's prompt. If the user prompt caused the agent to perform multiple categories of work (build, fix, etc.), show that as a single chunk. In other words, don't just simplify the AI agent's action flow; summarize what processes the AI performed starting from the user's prompt.
 >
-> If there are ambiguous UI or detailed aspects worth developing, ask me again. Also, there are probably actual services that summarize what such an ai does — refer to those and we can borrow helpful parts.
+> If there are ambiguous UI or detailed aspects worth developing, ask me again.
+>
+> Also, there are probably actual services that summarize what this kind of AI does. Let's refer to those and borrow any helpful parts.
 
 ### 🤖 What the AI did
 
@@ -307,13 +309,13 @@ The full summary is in the PromptLens comment on the PR conversation.
 
 🌐 English:
 
-> Also, in the PR I prompted in Korean — change that to English. I'm talking about the github-actions bot's messages.
+> Also, in the PR I wrote my prompts in Korean — change those to English. I'm referring to the ones the github-actions bot posted.
 
 > 지금껏 한 걸 바탕으로 리드미 작성하자. 리드미 작성계획부터 세우자. 어떤 항목부터 채울지. 어떻게 해야 해커톤에서 높은 점수 받을 수 있을지. 내가 문제를 해결한 방식을 어떻게 해야 더 잘 어필할 수 있을지. 참고로 yc에서는 market, polish, presentation을 본다네.
 
 🌐 English:
 
-> Based on what we've done so far, let's write a README. Let's start by planning the README: which sections to fill first, how to get a high score at the hackathon, and how to better present the way I solved the problem. For reference, yc looks at market, polish, and presentation.
+> Let's write the README based on what we've done so far. Start by planning the README: which sections to fill first. How to get a high score at the hackathon. How to better showcase the way I solved the problem. For reference, yc pays attention to market, polish, and presentation.
 
 ### 🤖 What the AI did
 
@@ -349,13 +351,13 @@ The full summary is in the PromptLens comment on the PR conversation.
 
 🌐 English:
 
-> Also refer to the plan that was in my Notion and write it up in English.
+> Also refer to the plan in my Notion and draft it in English.
 
 > 작업 트리 변경 사항을 적절한 메시지와 함께 커밋하세요.
 
 🌐 English:
 
-> Commit the working-tree changes with an appropriate message.
+> Commit the changes in your working tree with an appropriate message.
 
 ### 🤖 What the AI did
 
@@ -387,13 +389,13 @@ The full summary is in the PromptLens comment on the PR conversation.
 
 🌐 English:
 
-> Right now the bot posts replies, but instead I'd like to upload a single file so people can drag it and easily add comments — is that possible?
+> Right now the bot replies, but instead I'd like to upload a single file so we can drag it and easily add comments directly — is that possible?
 
 > 응 일단 그것도 함께 하자. 기존 봇 코멘트를 없애는 게 아니라
 
 🌐 English:
 
-> Yes, let's do that too for now. Not removing the existing bot comments.
+> Yeah, let's include that too for now. Not removing the existing bot comments.
 
 ### 🤖 What the AI did
 
@@ -425,7 +427,7 @@ The full summary is in the PromptLens comment on the PR conversation.
 
 🌐 English:
 
-> Commit the working-tree changes with an appropriate message.
+> Commit the changes in your working tree with an appropriate message.
 
 ### 🤖 What the AI did
 
