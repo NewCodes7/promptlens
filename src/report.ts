@@ -60,11 +60,12 @@ export function templateSynthesis(entries: CommitEntry[]): Synthesis {
   );
   for (const c of ctx) if (c.verification.length) c.files.forEach((f) => verifiedFiles.add(f.path));
   const missing = entries.filter((e) => !e.context);
+  const intents = dedupe(ctx.map((c) => c.intent.text.replace(/\s+/g, " ").trim()), (t) => t);
   return {
     overview: ctx.length
-      ? ctx.map((c) => c.intent.text).slice(0, 3).join(" ")
+      ? `${ctx.length} commit(s) with AI context across ${new Set(ctx.flatMap((c) => c.sessionIds)).size} session(s). Main request: ${intents[0]}`
       : "No AI work context was recorded for the commits in this PR.",
-    why: ctx.map((c) => c.intent.text),
+    why: intents,
     keyDecisions: dedupe(ctx.flatMap((c) => c.decisions), (d) => d.text).slice(0, 8),
     reviewFocus: aiFiles
       .filter((f) => !verifiedFiles.has(f))
@@ -79,6 +80,11 @@ function esc(text: string): string {
   return text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
+/** Single-line, escaped text for list items, headings and table cells. */
+function line(text: string): string {
+  return esc(text.replace(/\s+/g, " ").trim());
+}
+
 function quote(text: string): string {
   return esc(text)
     .split("\n")
@@ -86,24 +92,24 @@ function quote(text: string): string {
     .join("\n");
 }
 
-const claim = (c: Claim) => `${esc(c.text)}${c.inferred ? " _(inferred)_" : ""}`;
+const claim = (c: Claim) => `${line(c.text)}${c.inferred ? " _(inferred)_" : ""}`;
 
 function commitDetails(e: CommitEntry): string {
   const short = e.sha.slice(0, 7);
   const c = e.context;
   if (!c) {
-    return `<details><summary><code>${short}</code> ${esc(e.subject)} — <i>no AI context</i></summary>\n\nNo PromptLens context recorded for this commit.\n\n</details>`;
+    return `<details><summary><code>${short}</code> ${line(e.subject)} — <i>no AI context</i></summary>\n\nNo PromptLens context recorded for this commit.\n\n</details>`;
   }
   const meta = c.stats.sessions
     ? `${c.stats.sessions} AI session${c.stats.sessions > 1 ? "s" : ""} · ${c.stats.prompts} prompt${c.stats.prompts === 1 ? "" : "s"}`
     : "no AI session";
-  const out: string[] = [`<details><summary><code>${short}</code> ${esc(e.subject)} — ${meta}</summary>`, ""];
+  const out: string[] = [`<details><summary><code>${short}</code> ${line(e.subject)} — ${meta}</summary>`, ""];
   out.push(`**Intent:** ${claim(c.intent)}`, "");
   if (c.keyPrompts.length) {
     out.push("**Key prompts**", "");
-    for (const p of c.keyPrompts) out.push(quote(p.text), "", `<sub>↳ ${esc(p.why)}</sub>`, "");
+    for (const p of c.keyPrompts) out.push(quote(p.text), "", `<sub>↳ ${line(p.why)}</sub>`, "");
   }
-  if (c.aiWork.length) out.push("**What the AI did**", ...c.aiWork.map((w) => `- ${esc(w)}`), "");
+  if (c.aiWork.length) out.push("**What the AI did**", ...c.aiWork.map((w) => `- ${line(w)}`), "");
   if (c.decisions.length) out.push("**Decisions**", ...c.decisions.map((d) => `- ${claim(d)}`), "");
   out.push(
     "**Verification**",
@@ -123,22 +129,22 @@ export function renderReport(entries: CommitEntry[], syn: Synthesis, opts: { now
   const aiFiles = [...files.values()].filter(Boolean).length;
 
   const out: string[] = [REPORT_MARKER, "## 🔍 PromptLens — AI work context for this PR", ""];
-  out.push(`> ${esc(syn.overview)}`, "");
+  out.push(`> ${line(syn.overview)}`, "");
   out.push(
     "| Commits | With AI context | AI sessions | Prompts | AI-edited files |",
     "|:-:|:-:|:-:|:-:|:-:|",
     `| ${entries.length} | ${ctx.length} / ${entries.length} | ${sessions.size} | ${prompts} | ${aiFiles} / ${files.size} |`,
     "",
   );
-  if (syn.why.length) out.push("### Why these changes", ...syn.why.map((w) => `- ${esc(w)}`), "");
+  if (syn.why.length) out.push("### Why these changes", ...syn.why.map((w) => `- ${line(w)}`), "");
   if (syn.keyDecisions.length) out.push("### Key decisions", ...syn.keyDecisions.map((d) => `- ${claim(d)}`), "");
   if (syn.reviewFocus.length)
     out.push(
       "### Where to focus your review",
-      ...syn.reviewFocus.map((f) => `- ${f.file ? `\`${esc(f.file)}\` — ` : ""}${esc(f.text)}`),
+      ...syn.reviewFocus.map((f) => `- ${f.file ? `\`${line(f.file)}\` — ` : ""}${line(f.text)}`),
       "",
     );
-  if (syn.openQuestions.length) out.push("### Open questions", ...syn.openQuestions.map((q) => `- ${esc(q)}`), "");
+  if (syn.openQuestions.length) out.push("### Open questions", ...syn.openQuestions.map((q) => `- ${line(q)}`), "");
   out.push("### Commit timeline", "", ...entries.map(commitDetails).flatMap((d) => [d, ""]));
   const now = (opts.now ?? new Date()).toISOString().replace(/\.\d+Z$/, "Z");
   out.push(
