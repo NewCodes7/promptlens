@@ -41,6 +41,24 @@ describe("buildCapture", () => {
     expect(capture.sessions[1].edits[0].file).toBe("tests/a.test.ts");
   });
 
+  it("carries forward the last earlier instruction when a session had no new prompt in the window", () => {
+    const later = buildCapture(events, {
+      root: ROOT,
+      sha: "def",
+      subject: "fix: a",
+      from: "2026-11-09T01:05:00Z",
+      to: "2026-11-09T01:30:00Z",
+      filesChanged: ["src/a.ts"],
+    });
+    expect(later.sessions).toHaveLength(0); // A's edit was before this window
+
+    const followUp = parseSessionLog(
+      [userPrompt("A", "2026-11-09T01:00:00Z", "implement feature a"), toolUse("A", "2026-11-09T01:20:00Z", "Edit", { file_path: `${ROOT}/src/a.ts` })].join("\n"),
+    );
+    const cap = buildCapture(followUp, { root: ROOT, sha: "x", subject: "x", from: "2026-11-09T01:05:00Z", to: "2026-11-09T01:30:00Z", filesChanged: ["src/a.ts"] });
+    expect(cap.sessions[0].prompts).toEqual([{ ts: "2026-11-09T01:00:00Z", text: "implement feature a", carried: true }]);
+  });
+
   it("uses a 24h lookback for root commits", () => {
     const root = buildCapture(events, {
       root: ROOT,

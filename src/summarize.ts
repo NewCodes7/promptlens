@@ -27,7 +27,7 @@ function baseContext(raw: RawCapture): Omit<CommitContext, "generatedBy" | "inte
     files,
     stats: {
       sessions: raw.sessions.length,
-      prompts: allPrompts(raw).length,
+      prompts: allPrompts(raw).filter((p) => !p.carried).length,
       aiEdits: raw.sessions.reduce((n, s) => n + s.edits.length, 0),
     },
     sessionIds: raw.sessions.map((s) => s.sessionId),
@@ -52,7 +52,11 @@ export function heuristicContext(raw: RawCapture): CommitContext {
     intent: { text: clean(prompts[0]?.text ?? raw.subject, 240), inferred: prompts.length === 0 },
     keyPrompts: prompts.slice(0, 4).map((p, i) => ({
       text: clean(p.text, PROMPT_MAX),
-      why: i === 0 ? "Initial request that started this change." : "Follow-up instruction during the session.",
+      why: p.carried
+        ? "Earlier instruction the agent was still carrying out in this commit."
+        : i === 0
+          ? "Initial request that started this change."
+          : "Follow-up instruction during the session.",
     })),
     decisions: raw.sessions
       .flatMap((s) => s.decisions)
@@ -80,7 +84,7 @@ export function buildSummaryPrompt(raw: RawCapture, patch: string): string {
     `Commit subject: ${raw.subject}`,
     "",
     "## Developer prompts (indexed)",
-    ...prompts.map((p, i) => `[${i}] ${truncate(p.text, 1500)}`),
+    ...prompts.map((p, i) => `[${i}]${p.carried ? " (given before this commit, still in effect)" : ""} ${truncate(p.text, 1500)}`),
     "",
     "## Decisions the developer made when the agent asked",
     ...raw.sessions.flatMap((s) => s.decisions.map((d) => `- Q: ${truncate(d.question, 300)} A: ${truncate(d.answer, 300)}`)),
@@ -149,8 +153,13 @@ function runClaude(prompt: string): string {
     timeout: 240_000,
     maxBuffer: 16 * 1024 * 1024,
   });
-  if (res.status !== 0) throw new Error(`claude -p failed: ${res.stderr || res.error?.message}`);
-  const outer = JSON.parse(res.stdout);
+  let outer: any = null;
+  try {
+    outer = JSON.parse(res.stdout);
+  } catch {
+    /* non-JSON output */
+  }
+  if (res.status !== 0 && !outer) throw new Error(`claude -p exited ${res.status}: ${res.stderr || res.error?.message || res.stdout}`);
   if (outer.is_error) throw new Error(`claude -p error: ${outer.result}`);
   return String(outer.result ?? "");
 }

@@ -94,7 +94,10 @@ async function main() {
 
     case "summarize": {
       const sha = resolveSha(pos[0] ?? "HEAD");
-      if (opt.force) git(["notes", `--ref=${NOTES_REF}`, "remove", "--ignore-missing", sha], { allowFail: true });
+      if (opt.force) {
+        git(["notes", `--ref=${NOTES_REF}`, "remove", "--ignore-missing", sha], { allowFail: true });
+        captureCommit(sha);
+      }
       console.log(`${sha.slice(0, 7)}: ${await ensureContext(sha)}`);
       return;
     }

@@ -40,8 +40,13 @@ export function buildCapture(events: SessionEvent[], input: CaptureInput): RawCa
   const changed = new Set(input.filesChanged);
 
   const bySession = new Map<string, SessionEvent[]>();
+  const lastPromptBefore = new Map<string, SessionEvent>();
   for (const e of events) {
     const t = Date.parse(e.ts);
+    if (e.kind === "prompt" && t <= fromMs) {
+      const prev = lastPromptBefore.get(e.sessionId);
+      if (!prev || Date.parse(prev.ts) < t) lastPromptBefore.set(e.sessionId, e);
+    }
     if (!(t > fromMs && t <= toMs)) continue;
     const list = bySession.get(e.sessionId) ?? [];
     list.push(e);
@@ -66,6 +71,11 @@ export function buildCapture(events: SessionEvent[], input: CaptureInput): RawCa
       else if (e.kind === "command") slice.commands.push({ ts: e.ts, command: e.command, description: e.description });
       else if (e.kind === "decision") slice.decisions.push({ ts: e.ts, question: e.question, answer: e.answer });
       else if (e.kind === "note") slice.assistantNotes.push(e.text);
+    }
+    // The agent kept working on an earlier instruction: carry that instruction forward as context.
+    const carried = lastPromptBefore.get(sessionId);
+    if (slice.prompts.length === 0 && carried?.kind === "prompt") {
+      slice.prompts.push({ ts: carried.ts, text: carried.text, carried: true });
     }
     if (slice.edits.some((ed) => changed.has(ed.file))) sessions.push(slice);
   }

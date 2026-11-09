@@ -2,6 +2,8 @@
 export interface PromptEvent {
   ts: string;
   text: string;
+  /** true when the prompt was given before this commit's window but the agent was still acting on it. */
+  carried?: boolean;
 }
 
 /** A file-modifying tool call made by the AI (Edit, Write, MultiEdit, ...). */
