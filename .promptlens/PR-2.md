@@ -7,7 +7,7 @@ The full summary is in the PromptLens comment on the PR conversation.
 
 | Commits | With AI context | AI sessions | Prompts |
 |:-:|:-:|:-:|:-:|
-| 17 | 17 / 17 | 4 | 17 |
+| 18 | 18 / 18 | 4 | 17 |
 
 ## ① Implement PromptLens CLI from Notion plan
 
@@ -23,7 +23,7 @@ The full summary is in the PromptLens comment on the PR conversation.
 
 > https://app.notion.com/p/compiled-41213d90e04c80c99a44ef1d88a9e75e?source=copy_link
 >
-> I want to implement this going forward as planned in this Notion. It would be good to finish the implementation by 1:00 at the latest. Before doing the actual implementation, if there are ambiguous parts in the plan or things that would be good to decide in advance, first ask me about them and concretely decide before starting.
+> Implement this going forward exactly as planned in the Notion linked here. I'd like it to be finished by 1:00 at the latest. Before actually implementing, if there are ambiguous parts in the spec or things that are better decided in advance, survey me first so we can decide them concretely before starting.
 
 ### 🤖 What the AI did
 
@@ -92,8 +92,8 @@ The full summary is in the PromptLens comment on the PR conversation.
 
 🌐 English:
 
-> 1. Logged into claude cli
-> 2. Registered OpenAPI key
+> 1. logged into claude cli
+> 2. registered openapi key
 
 > 워크플로 됐나?
 
@@ -114,10 +114,10 @@ The full summary is in the PromptLens comment on the PR conversation.
 
 > * The PR result is a bit disappointing…
 > * Is there a way to show the prompt process more vividly?
-> * We can't create interactive behavior inside PR comments, right?
->    * Because it's markdown…
-> * We don't know how many sessions there will be, and how long the conversations within those sessions will be
-> * For now, are the commits being recorded properly?
+> * We can't create interactive behavior inside the PR comments, right?
+>    * It's markdown…
+> * I don't know how many sessions there will be, or how long the conversation within each session will be
+> * For now, are commits being recorded properly?
 
 ### 🤖 What the AI did
 
@@ -153,7 +153,7 @@ The full summary is in the PromptLens comment on the PR conversation.
 
 🌐 English:
 
-> The conversation itself can get very long, but if you summarize that conversation into specific categories and show the flow of chunks, you can somewhat predict the length. If it's too long, make the chunk categories larger. For now, visually showing which prompt-chunk category flows were used to create that PR would be good. Let's make this more concrete. Feel free to ask me more questions.
+> The conversation itself can get very long, but if you summarize that conversation into specific categories and show the flow of chunks, you can predict the length to some extent. If it's too long, make the chunk categories larger. For now, it would be good to visually show what prompt-chunk-category flow comprised that PR. Let's make this more concrete. Feel free to ask me more questions.
 
 ### 🤖 What the AI did
 
@@ -224,10 +224,9 @@ The full summary is in the PromptLens comment on the PR conversation.
 
 🌐 English:
 
-> When dividing categories like fix, build, etc., don't base them on the agent's actions—base them on the user's prompt. If the agent performed multiple categories of work such as build, fix, etc. in response to a single user prompt, show them as a single chunk. In other words, don't simply summarize the AI agent's action flow; summarize what process the AI performed starting from the user's prompt.
+> When dividing categories like fix, build, etc., don't base it on the agent's actions — base it on the user's prompt. If the agent performed multiple kinds of tasks like build, fix, etc. in response to a single user prompt, show that as one chunk. In other words, don't simply list the ai agent's action flow; summarize what processes the ai performed starting from the user's prompt.
 >
-> If there are ambiguous or developable UI or detailed aspects, ask me again.
-> Also, there are probably actual services that summarize and show what this kind of AI does. Refer to those and adopt any helpful parts.
+> If there are ambiguous UI or detailed aspects worth developing, ask me again. Also, there are probably actual services that summarize what such an ai does — refer to those and we can borrow helpful parts.
 
 ### 🤖 What the AI did
 
@@ -308,13 +307,13 @@ The full summary is in the PromptLens comment on the PR conversation.
 
 🌐 English:
 
-> Also, in the PR I wrote my prompts in Korean—please translate those into English. I'm talking about the ones posted by the github-actions bot.
+> Also, in the PR I prompted in Korean — change that to English. I'm talking about the github-actions bot's messages.
 
 > 지금껏 한 걸 바탕으로 리드미 작성하자. 리드미 작성계획부터 세우자. 어떤 항목부터 채울지. 어떻게 해야 해커톤에서 높은 점수 받을 수 있을지. 내가 문제를 해결한 방식을 어떻게 해야 더 잘 어필할 수 있을지. 참고로 yc에서는 market, polish, presentation을 본다네.
 
 🌐 English:
 
-> Let's write a README based on what we've done so far. Start by planning the README. Which sections should we fill first. How can we get high scores in the hackathon. How should I present the way I solved the problem to better appeal. For reference, YC evaluates market, polish, and presentation.
+> Based on what we've done so far, let's write a README. Let's start by planning the README: which sections to fill first, how to get a high score at the hackathon, and how to better present the way I solved the problem. For reference, yc looks at market, polish, and presentation.
 
 ### 🤖 What the AI did
 
@@ -350,13 +349,13 @@ The full summary is in the PromptLens comment on the PR conversation.
 
 🌐 English:
 
-> Also refer to the plan I had in my Notion and write it in English.
+> Also refer to the plan that was in my Notion and write it up in English.
 
 > 작업 트리 변경 사항을 적절한 메시지와 함께 커밋하세요.
 
 🌐 English:
 
-> Commit the working tree changes with an appropriate message.
+> Commit the working-tree changes with an appropriate message.
 
 ### 🤖 What the AI did
 
@@ -388,13 +387,13 @@ The full summary is in the PromptLens comment on the PR conversation.
 
 🌐 English:
 
-> Right now the bot replies, but instead I'd like to upload it as a single file so it can be dragged and commented on easily—would that be possible?
+> Right now the bot posts replies, but instead I'd like to upload a single file so people can drag it and easily add comments — is that possible?
 
 > 응 일단 그것도 함께 하자. 기존 봇 코멘트를 없애는 게 아니라
 
 🌐 English:
 
-> Yeah, let's do that as well. Not removing the existing bot comments though.
+> Yes, let's do that too for now. Not removing the existing bot comments.
 
 ### 🤖 What the AI did
 
@@ -416,9 +415,9 @@ The full summary is in the PromptLens comment on the PR conversation.
 - 👍 **Keep:** Asked a feasibility question first, then confirmed scope explicitly (keep the existing bot comment).
 - 💡 **Try:** State up front the constraints that matter, such as fork PRs and the write permission, so the design is settled earlier.
 
-## ⑩ Commit the changes
+## ⑩ Verify review-file bot on a real PR and fix docs (+ Commit the changes)
 
-⏱ 12s · 💬 1 prompt · 🤖 1 AI steps · commits `02dcc08`
+⏱ 8m · 💬 1 prompt · 🤖 10 AI steps · 📄 2 files · commits `02dcc08` `2cc5251`
 
 ### 🧑‍💻 Prompt
 
@@ -426,17 +425,27 @@ The full summary is in the PromptLens comment on the PR conversation.
 
 🌐 English:
 
-> Commit the working tree changes with an appropriate message.
+> Commit the working-tree changes with an appropriate message.
 
 ### 🤖 What the AI did
 
 - 🚀 **Ship** — Committed the review file feature changes with a descriptive message
+- 🧪 **Verify** — Waited for PromptLens workflow on PR #2 and read run logs
+- 🔍 **Investigate** — Checked bot commit, PR files, and runs triggered on bot commit
+- 📝 **Docs** — Corrected README note about workflow runs on bot commit
+- 🐛 **Fix** — Updated upsertFile comment in src/github.ts to match
+- 🚀 **Ship** — Committed, rebased on bot commit, pushed
 
-✅ **Outcome:** Working tree changes committed.
+✅ **Outcome:** Docs and comment now match GitHub's 'Action required' behavior; feature confirmed working on PR #2.
+
+### Decisions
+
+- **Explain the no-loop guarantee via the unchanged-file skip** — Approved runs on the bot commit would not recommit since content is identical.
 
 ### 🎯 Prompt review
 
-- 👍 **Keep:** Explicit commit request kept the commit separate from the implementation.
+- 👍 **Keep:** Short 'Go ahead' let the agent run an end-to-end check and fix what it found.
+- 💡 **Try:** Say whether doc/comment fixes found during the test should be in scope, to avoid ambiguity.
 
 ---
 
