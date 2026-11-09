@@ -1,0 +1,216 @@
+{
+  "version": 1,
+  "sha": "71dad8d1f7b66cab77a79065f3446e09d410dca8",
+  "subject": "Rewrite README for judges: real PR output, market data, problem-solving story",
+  "files": [
+    {
+      "path": "README.md",
+      "aiEdited": true
+    },
+    {
+      "path": "docs/assets/hub.png",
+      "aiEdited": false
+    },
+    {
+      "path": "docs/assets/pr-report-decisions.png",
+      "aiEdited": false
+    },
+    {
+      "path": "docs/assets/pr-report-flow.png",
+      "aiEdited": false
+    }
+  ],
+  "stats": {
+    "sessions": 1,
+    "prompts": 3,
+    "aiEdits": 3
+  },
+  "sessionIds": [
+    "a425efe7-b196-44a0-9eb7-ccde8850c64e"
+  ],
+  "generatedBy": "claude-cli",
+  "turns": [
+    {
+      "key": "a425efe7-b196-44a0-9eb7-ccde8850c64e@2026-11-09T04:33:47.289Z",
+      "title": "Plan a README that scores well with judges",
+      "prompts": [
+        "지금껏 한 걸 바탕으로 리드미 작성하자. 리드미 작성계획부터 세우자. 어떤 항목부터 채울지. 어떻게 해야 해커톤에서 높은 점수 받을 수 있을지. 내가 문제를 해결한 방식을 어떻게 해야 더 잘 어필할 수 있을지. 참고로 yc에서는 market, polish, presentation을 본다네."
+      ],
+      "carried": false,
+      "steps": [
+        {
+          "type": "investigate",
+          "text": "Read existing README, git history, memory, PR list and hub page"
+        },
+        {
+          "type": "investigate",
+          "text": "Fetched PromptLens comment on PR 1 and ran tests"
+        },
+        {
+          "type": "verify",
+          "text": "Checked Hub page is live and recent CI runs"
+        },
+        {
+          "type": "plan",
+          "text": "Diagnosed README against YC market/polish/presentation and proposed a plan"
+        }
+      ],
+      "outcome": "README diagnosis and rewrite plan produced; no files changed yet.",
+      "decisions": [],
+      "tips": {
+        "keep": [
+          "Named the judging criteria (market, polish, presentation) so the plan targeted them."
+        ],
+        "improve": [
+          "Say which sections or length limits you want, to avoid a broad plan."
+        ]
+      },
+      "metrics": {
+        "start": "2026-11-09T04:33:47.289Z",
+        "end": "2026-11-09T04:34:32.429Z",
+        "aiSteps": 4,
+        "files": 0,
+        "reruns": 0
+      },
+      "sessionId": "a425efe7-b196-44a0-9eb7-ccde8850c64e"
+    },
+    {
+      "key": "a425efe7-b196-44a0-9eb7-ccde8850c64e@2026-11-09T04:36:47.367Z",
+      "title": "Write the English README using Notion plan",
+      "prompts": [
+        "내 노션에 있던 기획도 참고해서 영어로 작성해보자"
+      ],
+      "carried": false,
+      "steps": [
+        {
+          "type": "build",
+          "text": "Cropped PR comment and Hub screenshots into docs/assets"
+        },
+        {
+          "type": "verify",
+          "text": "Ran coverage; checked translation and carry-forward code claims"
+        },
+        {
+          "type": "docs",
+          "text": "Rewrote README with problem, market data, proof and solution story"
+        },
+        {
+          "type": "verify",
+          "text": "Checked README local links and images exist"
+        }
+      ],
+      "outcome": "New English README with real screenshots and sourced market stats written; GitHub rendering unchecked.",
+      "decisions": [
+        {
+          "text": "Use real PR #1 output as proof instead of a mockup",
+          "why": "Makes the demo credible and shows dogfooding to judges."
+        },
+        {
+          "text": "Label Hub sample tabs as samples",
+          "why": "Avoids passing off sample data as real flows."
+        }
+      ],
+      "tips": {
+        "keep": [
+          "Pointed the agent to the Notion plan as source for the problem framing."
+        ],
+        "improve": [
+          "Supply the demo video link up front; it remains a TODO."
+        ]
+      },
+      "metrics": {
+        "start": "2026-11-09T04:36:47.367Z",
+        "end": "2026-11-09T04:40:59.305Z",
+        "aiSteps": 10,
+        "files": 1,
+        "reruns": 0
+      },
+      "sessionId": "a425efe7-b196-44a0-9eb7-ccde8850c64e"
+    },
+    {
+      "key": "a425efe7-b196-44a0-9eb7-ccde8850c64e@2026-11-09T04:44:13.509Z",
+      "title": "Commit README and assets",
+      "prompts": [
+        "작업 트리 변경 사항을 적절한 메시지와 함께 커밋하세요."
+      ],
+      "carried": false,
+      "steps": [
+        {
+          "type": "ship",
+          "text": "Committed README and screenshot assets with a descriptive message"
+        }
+      ],
+      "outcome": "README and screenshot assets committed.",
+      "decisions": [],
+      "tips": {
+        "keep": [],
+        "improve": []
+      },
+      "metrics": {
+        "start": "2026-11-09T04:44:13.509Z",
+        "end": "2026-11-09T04:44:18.381Z",
+        "aiSteps": 1,
+        "files": 0,
+        "reruns": 0
+      },
+      "sessionId": "a425efe7-b196-44a0-9eb7-ccde8850c64e"
+    }
+  ],
+  "intent": {
+    "text": "Rewrite the README in English for hackathon judges (YC criteria: market, polish, presentation), using real PR #1 output, sourced market data, and a problem-solving narrative drawn from the Notion plan.",
+    "inferred": false
+  },
+  "keyPrompts": [
+    {
+      "text": "지금껏 한 걸 바탕으로 리드미 작성하자. 리드미 작성계획부터 세우자. 어떤 항목부터 채울지. 어떻게 해야 해커톤에서 높은 점수 받을 수 있을지. 내가 문제를 해결한 방식을 어떻게 해야 더 잘 어필할 수 있을지. 참고로 yc에서는 market, polish, presentation을 본다네.",
+      "why": "Sets the goal: plan the README to score well with YC criteria and showcase the problem-solving approach."
+    },
+    {
+      "text": "내 노션에 있던 기획도 참고해서 영어로 작성해보자",
+      "why": "Directs use of the Notion plan and requires English output."
+    }
+  ],
+  "decisions": [
+    {
+      "text": "Lead with the problem and sourced market stats (Sonar, Anthropic studies) to address the YC 'market' criterion.",
+      "inferred": true
+    },
+    {
+      "text": "Use real screenshots of PromptLens's own PR #1 comment and Hub page instead of mockups, labeling Hub sample tabs as samples.",
+      "inferred": false
+    },
+    {
+      "text": "Add a 'hard problems and how I solved them' section from the Notion design reasoning, plus dogfooding bug fixes.",
+      "inferred": false
+    },
+    {
+      "text": "Leave a TODO placeholder for the 90-second demo video link.",
+      "inferred": false
+    }
+  ],
+  "aiWork": [
+    "Reviewed existing README, git history, PR #1 comment, Hub page, CI runs, and test status",
+    "Cropped screenshots with sips and saved them under docs/assets",
+    "Verified market figures against their sources and measured test coverage",
+    "Rewrote README.md with problem, solution, proof, market, architecture and quick start sections",
+    "Checked README local links and images exist, then committed README and assets"
+  ],
+  "verification": [
+    {
+      "text": "Ran tests and coverage to back the README's test-count badge and claims.",
+      "inferred": true
+    },
+    {
+      "text": "Checked that README local links and image files exist.",
+      "inferred": false
+    },
+    {
+      "text": "Confirmed the Hub page is live and reviewed recent CI runs.",
+      "inferred": false
+    },
+    {
+      "text": "Rendering on GitHub was not verified.",
+      "inferred": false
+    }
+  ]
+}
