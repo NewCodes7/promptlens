@@ -1,0 +1,110 @@
+{
+  "version": 1,
+  "sha": "2cc5251d54328305d4aae7dab4b42b41c8cf707f",
+  "subject": "Correct how GitHub treats workflow runs on the review-file bot commit",
+  "files": [
+    {
+      "path": "README.md",
+      "aiEdited": true
+    },
+    {
+      "path": "src/github.ts",
+      "aiEdited": true
+    }
+  ],
+  "stats": {
+    "sessions": 1,
+    "prompts": 0,
+    "aiEdits": 2
+  },
+  "sessionIds": [
+    "5ee12de4-0b35-48e7-8123-7af43185e2f5"
+  ],
+  "generatedBy": "claude-cli",
+  "turns": [
+    {
+      "key": "5ee12de4-0b35-48e7-8123-7af43185e2f5@2026-11-09T05:16:19.007Z",
+      "title": "Verify review-file bot on a real PR and fix docs",
+      "prompts": [],
+      "carried": true,
+      "steps": [
+        {
+          "type": "verify",
+          "text": "Waited for PromptLens workflow on PR #2 and read run logs"
+        },
+        {
+          "type": "investigate",
+          "text": "Checked bot commit, PR files, and runs triggered on bot commit"
+        },
+        {
+          "type": "docs",
+          "text": "Corrected README note about workflow runs on bot commit"
+        },
+        {
+          "type": "fix",
+          "text": "Updated upsertFile comment in src/github.ts to match"
+        },
+        {
+          "type": "ship",
+          "text": "Committed, rebased on bot commit, pushed"
+        }
+      ],
+      "outcome": "Docs and comment now match GitHub's 'Action required' behavior; feature confirmed working on PR #2.",
+      "decisions": [
+        {
+          "text": "Explain the no-loop guarantee via the unchanged-file skip",
+          "why": "Approved runs on the bot commit would not recommit since content is identical."
+        }
+      ],
+      "tips": {
+        "keep": [
+          "Short 'Go ahead' let the agent run an end-to-end check and fix what it found."
+        ],
+        "improve": [
+          "Say whether doc/comment fixes found during the test should be in scope, to avoid ambiguity."
+        ]
+      },
+      "metrics": {
+        "start": "2026-11-09T05:16:19.007Z",
+        "end": "2026-11-09T05:22:09.509Z",
+        "aiSteps": 9,
+        "files": 2,
+        "reruns": 0
+      },
+      "sessionId": "5ee12de4-0b35-48e7-8123-7af43185e2f5"
+    }
+  ],
+  "intent": {
+    "text": "Fix the README and code comment that wrongly said GITHUB_TOKEN bot commits don't trigger CI; GitHub actually holds those runs as 'Action required'.",
+    "inferred": false
+  },
+  "keyPrompts": [
+    {
+      "text": "Go ahead",
+      "why": "Only developer instruction; 'Go ahead' authorized running the PR test and fixing the doc discrepancy found."
+    }
+  ],
+  "decisions": [
+    {
+      "text": "Document the real behavior: runs on the bot commit wait as 'Action required'; approving them is safe because the unchanged file is not recommitted.",
+      "inferred": true
+    },
+    {
+      "text": "Keep the no-loop guarantee but base it on the idempotent upsertFile skip, not on runs not being triggered.",
+      "inferred": true
+    }
+  ],
+  "aiWork": [
+    "Opened PR #2 and waited for the PromptLens workflow run to finish.",
+    "Inspected run logs, the bot commit, PR files and runs triggered on the bot commit.",
+    "Confirmed the bot committed .promptlens/PR-2.md, but found runs were held for approval rather than skipped.",
+    "Edited README.md note and the upsertFile JSDoc in src/github.ts to match.",
+    "Committed, rebased onto the bot commit and pushed."
+  ],
+  "verification": [
+    {
+      "text": "Observed a real workflow run on PR #2: the bot committed .promptlens/PR-2.md and runs on that commit showed as Action required.",
+      "inferred": false
+    }
+  ]
+}
