@@ -19,6 +19,14 @@ PromptLens is a CLI that links each commit to the Claude Code sessions that prod
 
 ## Why
 
+### Where this came from
+
+On a team project at NAVER Boostcamp, one teammate wrote most of their code with AI. Their PRs were too large to read in full, and the PR descriptions were AI-written summaries as well, so I couldn't tell what they had meant to do, or why.
+
+At the time it was just a frustration. Now that coding with AI is everyday work, I think code review has to grow into prompt review: the reasoning behind the code lives in the prompts, so that's what a reviewer needs to see. And I suspect developers are curious how other people prompt, too. Seeing a colleague's real prompts, and what they led to, is one of the best ways to get better at working with AI.
+
+### The problem
+
 **Code review is where a team discusses design.** Why this approach, what was ruled out, and whether it was tested all get settled in PR comments, and that's how context spreads through a team.
 
 **With an AI agent, that discussion happens before the PR, in a conversation the reviewer never sees.** By the time the PR opens, these decisions are already made:
@@ -180,7 +188,7 @@ PromptLens also writes `.git/promptlens/` (raw captures and a log) and the `refs
 
 **3. The work is chunked by developer prompt, not by agent action.** One request can trigger 60+ agent actions. Each request becomes one node, with its steps normalized into eight types (Investigate · Plan · Build · Fix · Verify · Refactor · Docs · Ship) and long step lists folded. The result is a Mermaid chart that GitHub renders natively.
 
-**4. The LLM summary is not trusted to quote.** The model picks key prompts **by index**, and PromptLens quotes them verbatim from the log, so they are never paraphrased. Inferred claims are tagged _(inferred)_. Translations are labeled; the notes keep the original language.
+**4. The LLM summary is not trusted to quote.** The model picks key prompts **by index**, and PromptLens quotes them verbatim from the log, so they are never paraphrased. Inferred claims are tagged _(inferred)_. Translations are labeled; the notes keep the original language. This comes straight from [the PRs that started this project](#where-this-came-from): an AI summary told me what had changed, not what the author meant.
 
 **5. Prompts can contain secrets, so raw logs never leave the machine.** The raw capture stays in `.git/promptlens/raw/` and is never pushed. Everything that does leave goes through `redact()` (OpenAI, Anthropic, GitHub, AWS and Slack keys, JWTs, bearer tokens, private keys, credential assignments, emails). The per-commit summary runs locally with `claude -p`; CI only sees already-redacted notes. PromptLens marks its own summarizer prompts so they are never captured as your work.
 
