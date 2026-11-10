@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "sha": "06f76d40fdb91826c2d4c7b52e54e0c6728b189e",
+  "subject": "chore(promptlens): update prompt flow review file for PR #4",
+  "files": [
+    {
+      "path": ".promptlens/PR-4.md",
+      "aiEdited": false
+    }
+  ],
+  "stats": {
+    "sessions": 0,
+    "prompts": 0,
+    "aiEdits": 0
+  },
+  "sessionIds": [],
+  "generatedBy": "heuristic",
+  "turns": [],
+  "intent": {
+    "text": "chore(promptlens): update prompt flow review file for PR #4",
+    "inferred": true
+  },
+  "keyPrompts": [],
+  "decisions": [],
+  "aiWork": [],
+  "verification": []
+}
