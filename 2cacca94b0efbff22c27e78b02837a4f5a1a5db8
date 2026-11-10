@@ -22,7 +22,7 @@
   ],
   "stats": {
     "sessions": 1,
-    "prompts": 2,
+    "prompts": 1,
     "aiEdits": 4
   },
   "sessionIds": [
@@ -30,38 +30,6 @@
   ],
   "generatedBy": "claude-cli",
   "turns": [
-    {
-      "key": "dbd93610-cc14-4d44-9b04-d73e8fde942f@2026-11-10T01:08:22.956Z",
-      "title": "Ask for remaining priorities before the deadline",
-      "prompts": [
-        "또 이제 남은 우선순위 뭐가 있지?"
-      ],
-      "carried": false,
-      "steps": [
-        {
-          "type": "plan",
-          "text": "Listed remaining tasks ranked by impact: npm publish, v0.2.0 tag/Release, `any` cleanup, resume, `--json`."
-        }
-      ],
-      "outcome": "Prioritized list given; npm publish flagged as first, with a warning that the scope might need renaming.",
-      "decisions": [],
-      "tips": {
-        "keep": [
-          "Asked for prioritization relative to the deadline, which surfaced npm publish as the blocker"
-        ],
-        "improve": [
-          "Mention the npm username up front so the scope risk is resolved earlier"
-        ]
-      },
-      "metrics": {
-        "start": "2026-11-10T01:08:22.956Z",
-        "end": "2026-11-10T01:08:22.956Z",
-        "aiSteps": 0,
-        "files": 0,
-        "reruns": 0
-      },
-      "sessionId": "dbd93610-cc14-4d44-9b04-d73e8fde942f"
-    },
     {
       "key": "dbd93610-cc14-4d44-9b04-d73e8fde942f@2026-11-10T01:15:24.618Z",
       "title": "Fix npm publish by changing package scope",
