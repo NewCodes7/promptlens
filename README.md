@@ -19,9 +19,24 @@ PromptLens is a CLI that links each commit to the Claude Code sessions that prod
 
 ## Why
 
-AI now writes code faster than people can review it. In [Sonar's State of Code 2026](https://www.sonarsource.com/blog/state-of-code-developer-survey-report-the-current-reality-of-ai-coding/) survey of 1,100+ developers, **42%** of committed code is already AI-generated or AI-assisted, **38%** say reviewing it takes _more_ effort than reviewing a colleague's code, and only **48%** always check it before committing.
+**Code review is where a team discusses design.** Why this approach, what was ruled out, and whether it was tested all get settled in PR comments, and that's how context spreads through a team.
 
-A diff shows **what** changed, not **why**: what the developer actually asked for, which alternatives they rejected, whether anyone ran the tests. That context exists, but it is buried in a long private chat log. Sharing the whole log is noise, and nobody writes the summary by hand. PromptLens extracts the parts a reviewer needs and puts them on the PR.
+**With an AI agent, that discussion happens before the PR, in a conversation the reviewer never sees.** By the time the PR opens, these decisions are already made:
+
+- how the developer framed the request, and what they told the agent to avoid
+- which alternatives the agent proposed, and which ones the developer rejected
+- what the developer answered when the agent asked a question
+- whether anyone ran the tests
+
+The reviewer gets only the result. To review the design, they have to reverse-engineer intent from the diff or ask the author to recall a conversation from hours ago. Sharing the whole chat log is noise, and nobody writes the summary by hand.
+
+**Existing tools look at the output.** Linters, rule checks and AI review bots read the diff, and the best of them can infer *why* from it. But the reasoning was never in the diff. It was in the conversation that produced it. So PromptLens records that conversation as it happens: at each commit, it stores the developer's own prompts verbatim, the decisions, and the verification. Then it puts on the PR what a reviewer needs to discuss the design, and marks AI-edited files that have no recorded verification.
+
+This matters more as AI writes more of the code. In [Sonar's State of Code 2026](https://www.sonarsource.com/blog/state-of-code-developer-survey-report-the-current-reality-of-ai-coding/) survey of 1,100+ developers:
+
+- **42%** of committed code is already AI-generated or AI-assisted.
+- **38%** say reviewing it takes _more_ effort than reviewing a colleague's code.
+- Only **48%** always check it before committing.
 
 ## How it works
 
@@ -161,7 +176,7 @@ PromptLens also writes `.git/promptlens/` (raw captures and a log) and the `refs
 | AI code-review bots               | _Is this diff correct?_                                | The diff                                                |
 | **PromptLens**                    | _**Why** was it written this way, and was it checked?_ | The prompts, decisions and verification behind the diff |
 
-They complement each other: PromptLens supplies the context that the code alone can't show.
+They complement each other. The other tools check the output; PromptLens records the process behind it, so the reviewer can spend their time on design instead of reconstructing intent.
 
 ## Dogfooding
 
