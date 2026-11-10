@@ -1,0 +1,115 @@
+{
+  "version": 1,
+  "sha": "ba0c06a3152375cea942641cb29c57b5865f1bcc",
+  "subject": "Show how PromptLens is run and what happens inside in the README",
+  "files": [
+    {
+      "path": "README.md",
+      "aiEdited": true
+    }
+  ],
+  "stats": {
+    "sessions": 1,
+    "prompts": 0,
+    "aiEdits": 3
+  },
+  "sessionIds": [
+    "46f65f54-67b3-4fdb-ba70-064ffe35290c"
+  ],
+  "generatedBy": "claude-cli",
+  "turns": [
+    {
+      "key": "46f65f54-67b3-4fdb-ba70-064ffe35290c@2026-11-10T04:37:46.482Z",
+      "title": "Show run paths and internal flow in README",
+      "prompts": [],
+      "carried": true,
+      "steps": [
+        {
+          "type": "docs",
+          "text": "Replaced the How it works table with a run-paths table and sequence diagram."
+        },
+        {
+          "type": "verify",
+          "text": "Rendered the Mermaid diagram in a local HTML page."
+        },
+        {
+          "type": "fix",
+          "text": "Widened an overflowing diagram note and regenerated the preview."
+        },
+        {
+          "type": "verify",
+          "text": "Checked git status and in-page anchor links."
+        },
+        {
+          "type": "ship",
+          "text": "Committed the README change on docs/run-flow."
+        }
+      ],
+      "outcome": "README now has a run-paths table and sequence diagram; the diagram renders and the change is committed.",
+      "decisions": [
+        {
+          "text": "Used a sequence diagram instead of the previous flowchart.",
+          "why": "It shows the order of steps across actors (developer, local CLI, notes, GitHub, CI) more clearly."
+        }
+      ],
+      "tips": {
+        "keep": [
+          "Asked for both entry paths and the internal flow, which gave a clear two-part structure.",
+          "Asked for a simple visualization, which kept the diagram focused."
+        ],
+        "improve": [
+          "Name the preferred diagram type (e.g. Mermaid sequence vs flowchart) to avoid choosing between them.",
+          "Say whether to commit and on which branch so the agent does not have to assume."
+        ]
+      },
+      "metrics": {
+        "start": "2026-11-10T04:37:46.482Z",
+        "end": "2026-11-10T04:43:20.009Z",
+        "aiSteps": 9,
+        "files": 2,
+        "reruns": 0
+      },
+      "sessionId": "46f65f54-67b3-4fdb-ba70-064ffe35290c"
+    }
+  ],
+  "intent": {
+    "text": "Show in the README how users can run PromptLens and the internal flow when it runs, via a simple visualization.",
+    "inferred": false
+  },
+  "keyPrompts": [
+    {
+      "text": "이 프로젝트를 어떤 경로로 사용자가 실행할 수 있고 실행 시 내부에서 어떤 흐름으로 동작하는지 간단히 시각화해서 리드미에 보여주자.",
+      "why": "The only request; defines the goal of showing run paths and internal flow visually in the README."
+    }
+  ],
+  "decisions": [
+    {
+      "text": "Replaced the 4-step table and flowchart with a 'Ways to run it' table plus a Mermaid sequence diagram.",
+      "inferred": true
+    },
+    {
+      "text": "Added a note that hooks fail soft and that summaries fall back to a heuristic without an LLM.",
+      "inferred": false
+    },
+    {
+      "text": "Widened an overflowing diagram note to span two participants after seeing the rendered preview.",
+      "inferred": false
+    }
+  ],
+  "aiWork": [
+    "Rewrote the README 'How it works' section into an entry-point table and a sequence diagram.",
+    "Built a local HTML page to render the Mermaid diagram and checked it.",
+    "Fixed a note that overflowed the diagram edge and re-rendered.",
+    "Checked git status and in-page anchor links, then committed on a docs/run-flow branch."
+  ],
+  "verification": [
+    {
+      "text": "Rendered the Mermaid diagram in a local HTML preview; fixed the overflowing note and rechecked.",
+      "inferred": false
+    },
+    {
+      "text": "Checked git status and in-page anchor links before committing.",
+      "inferred": false
+    }
+  ]
+}
