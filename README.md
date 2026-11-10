@@ -40,32 +40,50 @@ This matters more as AI writes more of the code. In [Sonar's State of Code 2026]
 
 ## How it works
 
-|    Step     | Where              | What happens                                                                                                                                                                                                   |
-| :---------: | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-|  ① Capture  | `post-commit` hook | Links the commit to the Claude Code sessions that edited its files, and saves a private raw capture.                                                                                                           |
-| ② Summarize | background job     | Distills the capture into a small _Commit Context_ (intent, key prompts, decisions, AI work, verification) and attaches it to the commit with `git notes`.                                                     |
-|   ③ Sync    | `pre-push` hook    | Fills in any missing context and pushes `refs/notes/promptlens` before the branch.                                                                                                                             |
-|  ④ Report   | GitHub Actions     | Merges every commit's context with the final diff, posts **one** PR comment (updated on each push), and commits `.promptlens/PR-<n>.md` so reviewers can leave line comments on a specific prompt or decision. |
+### Ways to run it
+
+You run `init` once. After that, git and GitHub Actions run PromptLens for you; the other commands are optional local previews.
+
+| Starts when                 | Run by             | Command                                                | Result                                                                 |
+| --------------------------- | ------------------ | ------------------------------------------------------ | ---------------------------------------------------------------------- |
+| You set up a repo (once)    | you                | `promptlens init`                                      | Hooks, notes config and `.github/workflows/promptlens.yml`             |
+| `git commit`                | `post-commit` hook | `promptlens capture`, then `summarize` in background   | A _Commit Context_ note attached to the commit                         |
+| `git push`                  | `pre-push` hook    | `promptlens sync`                                      | Missing notes filled in; `refs/notes/promptlens` pushed before the branch |
+| A PR is opened or updated   | GitHub Actions     | `promptlens pr-report --post`                          | One PR comment, plus `.promptlens/PR-<n>.md` for line comments         |
+| Any time                    | you                | `promptlens show` · `report` · `report --file`         | A local preview; nothing is posted                                     |
+
+### What happens inside
 
 ```mermaid
-flowchart LR
-  subgraph Dev["Developer machine"]
-    CC["Claude Code sessions<br/>~/.claude/projects/*.jsonl"]
-    PC["post-commit hook<br/><code>promptlens capture</code>"]
-    RAW[".git/promptlens/raw/&lt;sha&gt;.json<br/>(private, never pushed)"]
-    SUM["background summarizer<br/>claude -p → OpenAI → heuristic"]
-    NOTE["git note<br/>refs/notes/promptlens"]
-    PP["pre-push hook<br/><code>promptlens sync</code>"]
-    CC --> PC --> RAW --> SUM --> NOTE --> PP
-  end
-  subgraph GH["GitHub"]
-    REM["origin: branch + notes ref"]
-    ACT["Actions: pull_request<br/>opened / synchronize"]
-    CMT["One PR comment<br/>created or updated"]
-    REM --> ACT --> CMT
-  end
-  PP -->|"push notes first, then branch"| REM
+sequenceDiagram
+  autonumber
+  actor Dev as Developer
+  participant CLI as promptlens<br/>(local, via git hooks)
+  participant Logs as Claude Code logs<br/>~/.claude/projects
+  participant Notes as git notes<br/>refs/notes/promptlens
+  participant Origin as GitHub repo
+  participant CI as GitHub Actions<br/>(promptlens pr-report)
+
+  Dev->>CLI: git commit → post-commit runs capture
+  CLI->>Logs: read sessions active since the parent commit
+  Note over CLI,Logs: keep sessions that edited a file in this commit<br/>save the raw capture in .git/promptlens/raw (never pushed)
+  CLI-->>CLI: start summarize in the background (commit returns now)
+  Note over CLI,Logs: summarize: claude -p → OpenAI → heuristic<br/>redact secrets, quote prompts verbatim by index
+  CLI->>Notes: attach the Commit Context to the commit SHA
+
+  Dev->>CLI: git push → pre-push runs sync
+  CLI->>Notes: write any note still missing for the pushed commits
+  CLI->>Origin: push refs/notes/promptlens (merge on conflict)
+  Dev->>Origin: git pushes the branch
+
+  Origin->>CI: pull_request opened / synchronize
+  CI->>Origin: fetch notes, read the commits in base..head
+  Note over Origin,CI: merge every Commit Context with the diff stat<br/>PR summary via OpenAI (or a template), translate prompts
+  CI->>Origin: commit .promptlens/PR-N.md to the PR branch (skipped for forks)
+  CI->>Origin: create or update the single PR comment
 ```
+
+The hooks fail soft: an error never blocks a commit or a push. Without an LLM, summaries fall back to a heuristic, and `sync` fills in any note the background job didn't finish.
 
 **What the reviewer gets:**
 
