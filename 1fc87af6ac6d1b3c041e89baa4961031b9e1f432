@@ -1,0 +1,134 @@
+{
+  "version": 1,
+  "sha": "1fc87af6ac6d1b3c041e89baa4961031b9e1f432",
+  "subject": "Rewrite the README for people installing the tool",
+  "files": [
+    {
+      "path": "README.md",
+      "aiEdited": true
+    },
+    {
+      "path": "biome.json",
+      "aiEdited": true
+    },
+    {
+      "path": "docs/vision.md",
+      "aiEdited": true
+    }
+  ],
+  "stats": {
+    "sessions": 1,
+    "prompts": 0,
+    "aiEdits": 6
+  },
+  "sessionIds": [
+    "dbd93610-cc14-4d44-9b04-d73e8fde942f"
+  ],
+  "generatedBy": "claude-cli",
+  "turns": [
+    {
+      "key": "dbd93610-cc14-4d44-9b04-d73e8fde942f@2026-11-10T00:13:07.878Z",
+      "title": "Rewrite README for people installing the tool",
+      "prompts": [],
+      "carried": true,
+      "steps": [
+        {
+          "type": "investigate",
+          "text": "Measured coverage and verified env vars, flags and regression tests in code"
+        },
+        {
+          "type": "docs",
+          "text": "Rewrote README.md and moved product vision to docs/vision.md"
+        },
+        {
+          "type": "fix",
+          "text": "Disabled Biome Markdown formatting after it oscillated on a centered table"
+        },
+        {
+          "type": "verify",
+          "text": "Ran lint, typecheck, tests, build and init smoke test in a temp repo"
+        },
+        {
+          "type": "ship",
+          "text": "Committed the README rewrite locally"
+        }
+      ],
+      "outcome": "README rewritten; all checks pass; init smoke test succeeds; committed locally.",
+      "decisions": [
+        {
+          "text": "Turn off Biome Markdown formatting",
+          "why": "Formatter never converged on the centered table, which would break CI."
+        },
+        {
+          "text": "Move product vision to docs/vision.md",
+          "why": "Keeps the README focused on installation and use."
+        }
+      ],
+      "tips": {
+        "keep": [
+          "Short priority pointer ('Start with P0') let the agent proceed through the plan without extra questions."
+        ],
+        "improve": [
+          "Say what P0 contains in the prompt; the reviewer can't tell what scope or goal was intended from it alone."
+        ]
+      },
+      "metrics": {
+        "start": "2026-11-10T00:13:07.878Z",
+        "end": "2026-11-10T00:22:52.590Z",
+        "aiSteps": 22,
+        "files": 3,
+        "reruns": 0
+      },
+      "sessionId": "dbd93610-cc14-4d44-9b04-d73e8fde942f"
+    }
+  ],
+  "intent": {
+    "text": "Rewrite the README to be install-and-use oriented for people adopting PromptLens, with accurate claims, and keep lint/CI passing.",
+    "inferred": true
+  },
+  "keyPrompts": [
+    {
+      "text": "Start with P0",
+      "why": "Only developer instruction: 'Start with P0' sets the priority order for this work, which led to the README rewrite."
+    }
+  ],
+  "decisions": [
+    {
+      "text": "Disabled Biome Markdown formatting (TS/JSON still formatted) because the formatter flip-flopped on the centered table and would break CI.",
+      "inferred": false
+    },
+    {
+      "text": "Moved the product-vision section out of the README into docs/vision.md.",
+      "inferred": false
+    },
+    {
+      "text": "Pinned workflow in docs to the exact version that ran init and recommended global install over npx.",
+      "inferred": true
+    },
+    {
+      "text": "Dropped the --workflow-run flag from the run-from-source example after checking the code.",
+      "inferred": false
+    }
+  ],
+  "aiWork": [
+    "Rewrote README.md: shorter intro, Why, How it works table and mermaid diagram, Quick start, Reference, Design decisions.",
+    "Added docs/vision.md with the moved product-vision content.",
+    "Changed biome.json to turn off Markdown formatting.",
+    "Measured per-module coverage and checked env vars, defaults, flags and regression-test claims against the code.",
+    "Replaced static badges with dynamic npm, node and license badges."
+  ],
+  "verification": [
+    {
+      "text": "Checked README claims (env vars and defaults, --sync/--force behavior, regression tests for bug fixes) against the source.",
+      "inferred": false
+    },
+    {
+      "text": "Ran lint, typecheck, tests with coverage, build, built-CLI smoke test and package contents check; all passed.",
+      "inferred": false
+    },
+    {
+      "text": "Ran init in a temp repo; it generated a workflow pinned to @newcodes7/promptlens@0.2.0.",
+      "inferred": false
+    }
+  ]
+}
