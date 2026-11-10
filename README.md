@@ -5,8 +5,8 @@
 PromptLens is a CLI that links each commit to the Claude Code sessions that produced it and posts one auto-updating comment on the pull request. The comment shows what the developer asked for, what the AI did, what was decided, and whether anything was verified. After a one-time `promptlens init`, developers just commit and push.
 
 [![CI](https://github.com/NewCodes7/promptlens/actions/workflows/ci.yml/badge.svg)](https://github.com/NewCodes7/promptlens/actions/workflows/ci.yml)
-[![npm](https://img.shields.io/npm/v/@newcodes7/promptlens)](https://www.npmjs.com/package/@newcodes7/promptlens)
-![node](https://img.shields.io/node/v/@newcodes7/promptlens)
+[![npm](https://img.shields.io/npm/v/@newcodes/promptlens)](https://www.npmjs.com/package/@newcodes/promptlens)
+![node](https://img.shields.io/node/v/@newcodes/promptlens)
 [![license](https://img.shields.io/github/license/NewCodes7/promptlens)](LICENSE)
 
 **[Quick start](#quick-start)** · **[Reference](#reference)** · **[Design decisions](#design-decisions)** · **[Live PR report](https://github.com/NewCodes7/promptlens/pull/2)**
@@ -69,7 +69,7 @@ flowchart LR
 **Requirements:** Node.js 20+, git, [Claude Code](https://claude.com/claude-code), and a GitHub repository with Actions enabled. The local `claude` CLI and an OpenAI key are optional (see [Summaries](#summaries)).
 
 ```bash
-npm install -g @newcodes7/promptlens
+npm install -g @newcodes/promptlens
 cd /path/to/your/repo
 promptlens init                 # hooks, notes config and .github/workflows/promptlens.yml
 gh secret set OPENAI_API_KEY    # optional: LLM synthesis of the PR summary
@@ -78,7 +78,7 @@ gh secret set OPENAI_API_KEY    # optional: LLM synthesis of the PR summary
 Commit the generated workflow, then work as usual: commit, push, open a PR.
 
 - **Install globally (or as a dev dependency), not with `npx`.** The hooks call the CLI by its absolute path, and npx runs packages from a cache that npm may delete. `init` warns if it detects this.
-- **The workflow is pinned** to the exact version that ran `init` (for example `npx --yes @newcodes7/promptlens@0.2.0`). The job has `contents: write`, so it should never run an unpinned `@latest`. After upgrading, delete the workflow and re-run `init`, or bump the version in it.
+- **The workflow is pinned** to the exact version that ran `init` (for example `npx --yes @newcodes/promptlens@0.2.0`). The job has `contents: write`, so it should never run an unpinned `@latest`. After upgrading, delete the workflow and re-run `init`, or bump the version in it.
 - **The review file is committed by the Actions bot**, so run `git pull` before your next push. It only changes when the commits change. GitHub holds workflow runs on that bot commit as _Action required_ instead of starting them, so it can't loop. Fork PRs get a read-only token and only get the comment. Use `--no-review-file` to turn it off.
 
 <details>

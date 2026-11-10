@@ -26,13 +26,13 @@ describe("generated workflow", () => {
 
 describe("isEphemeralCli", () => {
   it("flags CLIs running from the npx cache", () => {
-    expect(isEphemeralCli("/Users/me/.npm/_npx/3f2a/node_modules/@newcodes7/promptlens/dist/cli.js")).toBe(true);
+    expect(isEphemeralCli("/Users/me/.npm/_npx/3f2a/node_modules/@newcodes/promptlens/dist/cli.js")).toBe(true);
     expect(isEphemeralCli("C:\\Users\\me\\AppData\\Local\\npm-cache\\_npx\\3f2a\\node_modules\\x\\cli.js")).toBe(true);
   });
 
   it("accepts global and local installs", () => {
-    expect(isEphemeralCli("/usr/local/lib/node_modules/@newcodes7/promptlens/dist/cli.js")).toBe(false);
-    expect(isEphemeralCli("/repo/node_modules/@newcodes7/promptlens/dist/cli.js")).toBe(false);
+    expect(isEphemeralCli("/usr/local/lib/node_modules/@newcodes/promptlens/dist/cli.js")).toBe(false);
+    expect(isEphemeralCli("/repo/node_modules/@newcodes/promptlens/dist/cli.js")).toBe(false);
   });
 });
 
@@ -40,7 +40,7 @@ describe("parsePackageInfo", () => {
   it("reads this package's name and version", () => {
     const fromDisk = parsePackageInfo(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
     expect(fromDisk).toEqual(pkg);
-    expect(pkg.name).toBe("@newcodes7/promptlens");
+    expect(pkg.name).toBe("@newcodes/promptlens");
   });
 
   it("rejects package.json without a string name or version", () => {
