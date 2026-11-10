@@ -39,8 +39,8 @@ describe("needsTranslation", () => {
 describe("translatePrompts", () => {
   it("translates only non-English prompts and redacts the result", async () => {
     process.env.OPENAI_API_KEY = "test";
-    const fetchMock = vi.fn(async (_url: string, init: any) => {
-      const body = JSON.parse(init.body);
+    const fetchMock = vi.fn(async (_url: string, init: RequestInit) => {
+      const body = JSON.parse(String(init.body));
       expect(body.messages[0].content).toContain("PR 결과를 영어로 바꿔줘");
       expect(body.messages[0].content).not.toContain("already english");
       return new Response(

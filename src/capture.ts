@@ -3,6 +3,7 @@ import path from "node:path";
 import { commitInfo, filesChanged, gitDir, repoRoot } from "./git.js";
 import { loadEvents, type SessionEvent } from "./sessions.js";
 import type { RawCapture, SessionSlice } from "./types.js";
+import { isRawCapture } from "./validate.js";
 
 /** Grace period after the commit timestamp (commit times have 1s precision; hooks run slightly later). */
 const SLACK_MS = 5_000;
@@ -112,7 +113,14 @@ export function rawPath(sha: string, cwd?: string): string {
 
 export function readRaw(sha: string, cwd?: string): RawCapture | null {
   const p = rawPath(sha, cwd);
-  return existsSync(p) ? (JSON.parse(readFileSync(p, "utf8")) as RawCapture) : null;
+  if (!existsSync(p)) return null;
+  try {
+    const value: unknown = JSON.parse(readFileSync(p, "utf8"));
+    // A capture from another version (or a truncated write) is re-captured instead of trusted.
+    return isRawCapture(value) ? value : null;
+  } catch {
+    return null;
+  }
 }
 
 /** Capture a commit from local Claude Code session logs and store the raw result privately in .git/. */

@@ -1,4 +1,5 @@
 import { collectTurns, mergeToMax } from "./flow.js";
+import { asArray, asObject, asString, type JsonObject, parseObject } from "./json.js";
 import { redact, truncate } from "./redact.js";
 import type { CommitEntry, Synthesis } from "./report.js";
 import { templateSynthesis } from "./report.js";
@@ -50,33 +51,34 @@ export function buildSynthesisPrompt(entries: CommitEntry[], diffStat: string): 
 
 const str = (v: unknown, max = 260) => truncate(redact(String(v ?? "")), max);
 
-export function synthesisFromModel(json: any, generatedBy: string, fallback: Synthesis): Synthesis {
-  const arr = (v: unknown) => (Array.isArray(v) ? v : []);
+export function synthesisFromModel(json: unknown, generatedBy: string, fallback: Synthesis): Synthesis {
+  const m = asObject(json);
+  const withText = (v: unknown) =>
+    asArray(v)
+      .map(asObject)
+      .filter((o) => o.text);
+  const turnOutcomes: (string | undefined)[] = [];
+  for (const r of asArray(m.requests).map(asObject)) {
+    const i = Number(r.index);
+    if (Number.isInteger(i) && i >= 0 && i < 50 && r.outcome) turnOutcomes[i] = str(r.outcome, 160);
+  }
   return {
-    overview: json?.overview ? str(json.overview, 500) : fallback.overview,
-    why: arr(json?.why)
+    overview: m.overview ? str(m.overview, 500) : fallback.overview,
+    why: asArray(m.why)
       .map((s) => str(s))
       .filter(Boolean),
-    keyDecisions: arr(json?.keyDecisions)
-      .filter((d: any) => d?.text)
-      .map((d: any) => ({ text: str(d.text), inferred: Boolean(d.inferred) })),
-    reviewFocus: arr(json?.reviewFocus)
-      .filter((f: any) => f?.text)
-      .map((f: any) => ({ file: f.file ? str(f.file, 200) : undefined, text: str(f.text) })),
-    openQuestions: [...new Set([...arr(json?.openQuestions).map((q) => str(q)), ...fallback.openQuestions])],
-    turnOutcomes: arr(json?.requests).reduce((acc: (string | undefined)[], r: any) => {
-      const i = Number(r?.index);
-      if (Number.isInteger(i) && i >= 0 && i < 50 && r?.outcome) acc[i] = str(r.outcome, 160);
-      return acc;
-    }, []),
+    keyDecisions: withText(m.keyDecisions).map((d) => ({ text: str(d.text), inferred: Boolean(d.inferred) })),
+    reviewFocus: withText(m.reviewFocus).map((f) => ({ file: f.file ? str(f.file, 200) : undefined, text: str(f.text) })),
+    openQuestions: [...new Set([...asArray(m.openQuestions).map((q) => str(q)), ...fallback.openQuestions])],
+    turnOutcomes,
     generatedBy,
   };
 }
 
 export const openaiModel = () => process.env.OPENAI_MODEL || "gpt-5-mini";
 
-/** Call OpenAI Chat Completions in JSON mode and return the parsed object. */
-export async function openaiJson(prompt: string): Promise<any> {
+/** Call OpenAI Chat Completions in JSON mode and return the parsed object (shape unchecked: callers narrow it). */
+export async function openaiJson(prompt: string): Promise<JsonObject> {
   const key = process.env.OPENAI_API_KEY;
   if (!key) throw new Error("OPENAI_API_KEY is not set");
   const baseUrl = (process.env.OPENAI_BASE_URL || "https://api.openai.com/v1").replace(/\/$/, "");
@@ -90,8 +92,9 @@ export async function openaiJson(prompt: string): Promise<any> {
     }),
   });
   if (!res.ok) throw new Error(`OpenAI ${res.status}: ${(await res.text()).slice(0, 300)}`);
-  const data: any = await res.json();
-  return JSON.parse(data.choices?.[0]?.message?.content ?? "{}");
+  const data: unknown = await res.json();
+  const message = asObject(asObject(asArray(asObject(data).choices)[0]).message);
+  return parseObject(asString(message.content) ?? "{}");
 }
 
 /** PR-level synthesis via the OpenAI Chat Completions API. Falls back to the template on any failure. */
@@ -129,9 +132,10 @@ export async function translatePrompts(texts: string[]): Promise<Map<string, str
   ].join("\n");
   try {
     const json = await openaiJson(prompt);
-    for (const it of Array.isArray(json?.items) ? json.items : []) {
-      const src = todo[Number(it?.id)];
-      if (src && typeof it?.en === "string" && it.en.trim()) out.set(src, redact(it.en.trim()));
+    for (const it of asArray(json.items).map(asObject)) {
+      const src = todo[Number(it.id)];
+      const en = asString(it.en)?.trim();
+      if (src && en) out.set(src, redact(en));
     }
   } catch (err) {
     process.stderr.write(`[promptlens] prompt translation failed, showing originals: ${(err as Error).message}\n`);

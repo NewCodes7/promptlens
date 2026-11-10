@@ -5,7 +5,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { captureCommit, readRaw } from "./capture.js";
 import { git, gitDir, NOTES_REF, readNote, resolveSha, revList, writeNote } from "./git.js";
-import { upsertComment, upsertFile } from "./github.js";
+import { type PullRequestEvent, readPullRequestEvent, upsertComment, upsertFile } from "./github.js";
 import { init } from "./init.js";
 import { synthesize, translatePrompts } from "./openai.js";
 import { pkg } from "./pkg.js";
@@ -29,6 +29,16 @@ function flags(argv: string[]): { pos: string[]; opt: Record<string, string | tr
     } else pos.push(a);
   }
   return { pos, opt };
+}
+
+/** A `--key value` option; a bare `--key` (no value) counts as absent rather than the string "true". */
+function stringOpt(opt: Record<string, string | true>, key: string): string | undefined {
+  const v = opt[key];
+  return typeof v === "string" ? v : undefined;
+}
+
+function pullRequestEvent(eventPath: string | undefined): PullRequestEvent {
+  return eventPath ? readPullRequestEvent(JSON.parse(readFileSync(eventPath, "utf8"))) : {};
 }
 
 function logFile(): string {
@@ -152,11 +162,11 @@ async function main() {
 
     case "report":
     case "pr-report": {
-      const event = process.env.GITHUB_EVENT_PATH ? JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH, "utf8")) : null;
-      const base = (opt.base as string) ?? event?.pull_request?.base?.sha ?? "origin/main";
-      const head = (opt.head as string) ?? event?.pull_request?.head?.sha ?? "HEAD";
+      const event = pullRequestEvent(process.env.GITHUB_EVENT_PATH);
+      const base = stringOpt(opt, "base") ?? event.baseSha ?? "origin/main";
+      const head = stringOpt(opt, "head") ?? event.headSha ?? "HEAD";
       const { entries, diffStat } = collectCommits(base, head);
-      const pr = Number(opt.pr ?? event?.pull_request?.number);
+      const pr = Number(stringOpt(opt, "pr") ?? event.number);
       if (opt.file) {
         // Local preview of the line-commentable review file.
         const translations = await translatePrompts(translatableTexts(entries));
@@ -169,14 +179,14 @@ async function main() {
         return;
       }
       const token = process.env.GITHUB_TOKEN;
-      const repo = (opt.repo as string) ?? process.env.GITHUB_REPOSITORY;
+      const repo = stringOpt(opt, "repo") ?? process.env.GITHUB_REPOSITORY;
       if (!token || !repo || !pr) throw new Error("--post needs GITHUB_TOKEN, a repo and a PR number");
 
       // 1) Commit the review file to the PR branch so reviewers can comment on individual lines.
       //    Fork PRs get a read-only token, so they keep the comment only.
       let reviewFile: { path: string; url: string } | undefined;
-      const branch = (opt.branch as string) ?? event?.pull_request?.head?.ref;
-      const headRepo = event?.pull_request?.head?.repo?.full_name ?? repo;
+      const branch = stringOpt(opt, "branch") ?? event.headRef;
+      const headRepo = event.headRepo ?? repo;
       if (opt["no-review-file"]) {
         /* opted out */
       } else if (!branch || headRepo !== repo) {

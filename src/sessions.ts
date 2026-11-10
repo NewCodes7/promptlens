@@ -1,6 +1,7 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { homedir } from "node:os";
 import path from "node:path";
+import { asArray, asObject, asString, type JsonObject, parseObject } from "./json.js";
 
 /** Marker placed at the start of PromptLens' own `claude -p` prompts so they are never captured. */
 export const SELF_MARKER = "PROMPTLENS_SUMMARIZE";
@@ -67,16 +68,19 @@ function isNoise(text: string): boolean {
 function textOf(content: unknown): string | null {
   if (typeof content === "string") return content;
   if (!Array.isArray(content)) return null;
-  if (content.some((b) => b?.type === "tool_result")) return null;
-  const parts = content.filter((b) => b?.type === "text").map((b) => String(b.text));
+  const blocks = content.map(asObject);
+  if (blocks.some((b) => b.type === "tool_result")) return null;
+  const parts = blocks.filter((b) => b.type === "text").map((b) => String(b.text));
   return parts.length ? parts.join("\n") : null;
 }
 
-function toolResultText(block: { content?: unknown }): string {
+function toolResultText(block: JsonObject): string {
   const c = block.content;
   if (typeof c === "string") return c;
-  if (Array.isArray(c)) return c.map((x) => (x?.type === "text" ? String(x.text) : "")).join("\n");
-  return "";
+  return asArray(c)
+    .map(asObject)
+    .map((x) => (x.type === "text" ? String(x.text) : ""))
+    .join("\n");
 }
 
 /** Parse `"question"="answer"` pairs from an AskUserQuestion tool result. */
@@ -93,22 +97,21 @@ export function parseSessionLog(raw: string): SessionEvent[] {
   const askIds = new Set<string>();
   for (const line of raw.split("\n")) {
     if (!line.trim()) continue;
-    let d: any;
+    let d: JsonObject;
     try {
-      d = JSON.parse(line);
+      d = parseObject(line);
     } catch {
       continue;
     }
     if (d.isSidechain || (d.type !== "user" && d.type !== "assistant")) continue;
     const base = { ts: String(d.timestamp ?? ""), sessionId: String(d.sessionId ?? ""), cwd: String(d.cwd ?? "") };
-    const content = d.message?.content;
+    const content = asObject(d.message).content;
 
     if (d.type === "user") {
-      if (Array.isArray(content)) {
-        for (const b of content) {
-          if (b?.type === "tool_result" && askIds.has(b.tool_use_id)) {
-            for (const qa of parseAnswers(toolResultText(b))) events.push({ kind: "decision", ...base, ...qa });
-          }
+      for (const b of asArray(content).map(asObject)) {
+        const toolUseId = asString(b.tool_use_id);
+        if (b.type === "tool_result" && toolUseId && askIds.has(toolUseId)) {
+          for (const qa of parseAnswers(toolResultText(b))) events.push({ kind: "decision", ...base, ...qa });
         }
       }
       if (d.isMeta) continue;
@@ -120,19 +123,21 @@ export function parseSessionLog(raw: string): SessionEvent[] {
       continue;
     }
 
-    if (!Array.isArray(content)) continue;
-    for (const b of content) {
-      if (b?.type === "text" && typeof b.text === "string" && b.text.trim()) {
-        events.push({ kind: "note", ...base, text: b.text.trim() });
-      } else if (b?.type === "tool_use") {
-        const input = b.input ?? {};
-        if (EDIT_TOOLS.has(b.name)) {
+    for (const b of asArray(content).map(asObject)) {
+      const text = asString(b.text)?.trim();
+      if (b.type === "text" && text) {
+        events.push({ kind: "note", ...base, text });
+      } else if (b.type === "tool_use") {
+        const name = asString(b.name) ?? "";
+        const input = asObject(b.input);
+        if (EDIT_TOOLS.has(name)) {
           const file = input.file_path ?? input.notebook_path;
-          if (file) events.push({ kind: "edit", ...base, tool: b.name, file: String(file) });
-        } else if (b.name === "Bash" && input.command) {
-          events.push({ kind: "command", ...base, command: String(input.command), description: input.description });
-        } else if (b.name === "AskUserQuestion") {
-          askIds.add(b.id);
+          if (file) events.push({ kind: "edit", ...base, tool: name, file: String(file) });
+        } else if (name === "Bash" && input.command) {
+          events.push({ kind: "command", ...base, command: String(input.command), description: asString(input.description) });
+        } else if (name === "AskUserQuestion") {
+          const id = asString(b.id);
+          if (id) askIds.add(id);
         }
       }
     }

@@ -1,6 +1,7 @@
 import { renderFlow } from "./flow.js";
 import { commitInfo, git, readNote, revList } from "./git.js";
 import type { Claim, CommitContext } from "./types.js";
+import { isCommitContext } from "./validate.js";
 
 export const REPORT_MARKER = "<!-- promptlens:report -->";
 
@@ -25,8 +26,8 @@ export interface Synthesis {
 export function parseContext(note: string | null): CommitContext | null {
   if (!note) return null;
   try {
-    const c = JSON.parse(note);
-    return c && c.version === 1 ? (c as CommitContext) : null;
+    const value: unknown = JSON.parse(note);
+    return isCommitContext(value) ? value : null;
   } catch {
     return null;
   }

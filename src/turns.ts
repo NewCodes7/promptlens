@@ -1,3 +1,4 @@
+import { asArray, asObject, asString, asStrings } from "./json.js";
 import { redact, truncate } from "./redact.js";
 import type { RawCapture, SessionSlice, Turn, TurnStep } from "./types.js";
 
@@ -211,7 +212,28 @@ export function buildTurns(raw: RawCapture, groups: TurnGroup[]): Turn[] {
 
 export const heuristicTurns = (raw: RawCapture) => buildTurns(raw, heuristicGroups(raw));
 
+/** Read the model's `turns` array into TurnGroups, dropping fields of the wrong type (buildTurns validates the indexes). */
+export function parseTurnGroups(model: unknown): TurnGroup[] {
+  return asArray(model)
+    .map(asObject)
+    .map((g) => {
+      const tips = asObject(g.tips);
+      return {
+        prompts: asArray(g.prompts).map(Number),
+        title: asString(g.title),
+        steps: asArray(g.steps)
+          .map(asObject)
+          .map((s) => ({ type: asString(s.type), text: asString(s.text) })),
+        outcome: asString(g.outcome),
+        decisions: asArray(g.decisions)
+          .map(asObject)
+          .map((d) => ({ text: asString(d.text), why: asString(d.why) })),
+        tips: { keep: asStrings(tips.keep), improve: asStrings(tips.improve) },
+      };
+    });
+}
+
 export function turnsFromModel(raw: RawCapture, model: unknown): Turn[] {
-  if (!Array.isArray(model) || !model.length) return heuristicTurns(raw);
-  return buildTurns(raw, model as TurnGroup[]);
+  const groups = parseTurnGroups(model);
+  return groups.length ? buildTurns(raw, groups) : heuristicTurns(raw);
 }

@@ -1,6 +1,7 @@
 import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { commitPatch } from "./git.js";
+import { asArray, asObject, asString, asStrings, type JsonObject, parseObject } from "./json.js";
 import { openaiJson } from "./openai.js";
 import { redact, truncate } from "./redact.js";
 import { SELF_MARKER } from "./sessions.js";
@@ -122,41 +123,49 @@ export function buildSummaryPrompt(raw: RawCapture, patch: string): string {
   return lines.join("\n");
 }
 
-export function extractJson(text: string): any {
+/** The outermost `{...}` in model output that may wrap it in prose or a code fence. */
+export function extractJson(text: string): JsonObject {
   const start = text.indexOf("{");
   const end = text.lastIndexOf("}");
   if (start < 0 || end <= start) throw new Error("no JSON object in model output");
-  return JSON.parse(text.slice(start, end + 1));
+  return parseObject(text.slice(start, end + 1));
 }
 
-const asClaims = (v: unknown): Claim[] =>
-  Array.isArray(v)
-    ? v.filter((c) => c && typeof c.text === "string").map((c) => ({ text: clean(c.text, 240), inferred: Boolean(c.inferred) }))
-    : [];
+function asClaims(v: unknown): Claim[] {
+  return asArray(v)
+    .map(asObject)
+    .flatMap((c) => {
+      const text = asString(c.text);
+      return text === undefined ? [] : [{ text: clean(text, 240), inferred: Boolean(c.inferred) }];
+    });
+}
 
 /** Merge a model response into a Commit Context. Prompts are always quoted from the capture, never from the model. */
-export function contextFromModel(raw: RawCapture, model: any, generatedBy: CommitContext["generatedBy"] = "claude-cli"): CommitContext {
+export function contextFromModel(raw: RawCapture, model: unknown, generatedBy: CommitContext["generatedBy"] = "claude-cli"): CommitContext {
+  const m = asObject(model);
   const prompts = allPrompts(raw);
   const fallback = heuristicContext(raw);
-  const picked: number[] = Array.isArray(model?.keyPrompts) ? model.keyPrompts.map((k: any) => Number(k.index)) : [];
-  const keyPrompts = (model?.keyPrompts ?? [])
-    .filter((_k: any, i: number) => Number.isInteger(picked[i]) && prompts[picked[i]])
-    .slice(0, 3)
-    .map((k: any) => ({ text: clean(prompts[Number(k.index)].text, PROMPT_MAX), why: clean(String(k.why ?? ""), 200) }));
+  const keyPrompts = asArray(m.keyPrompts)
+    .map(asObject)
+    .flatMap((k) => {
+      const prompt = prompts[Number(k.index)];
+      return Number.isInteger(Number(k.index)) && prompt
+        ? [{ text: clean(prompt.text, PROMPT_MAX), why: clean(String(k.why ?? ""), 200) }]
+        : [];
+    })
+    .slice(0, 3);
+  const intent = asObject(m.intent);
+  const intentText = asString(intent.text);
+  const decisions = asClaims(m.decisions);
   return {
     ...baseContext(raw),
     generatedBy,
-    turns: turnsFromModel(raw, model?.turns),
-    intent:
-      model?.intent && typeof model.intent.text === "string"
-        ? { text: clean(model.intent.text, 240), inferred: Boolean(model.intent.inferred) }
-        : fallback.intent,
+    turns: turnsFromModel(raw, m.turns),
+    intent: intentText !== undefined ? { text: clean(intentText, 240), inferred: Boolean(intent.inferred) } : fallback.intent,
     keyPrompts: keyPrompts.length ? keyPrompts : fallback.keyPrompts,
-    decisions: asClaims(model?.decisions).length ? asClaims(model?.decisions) : fallback.decisions,
-    aiWork: Array.isArray(model?.aiWork)
-      ? model.aiWork.filter((s: unknown) => typeof s === "string").map((s: string) => clean(s, 200))
-      : fallback.aiWork,
-    verification: asClaims(model?.verification),
+    decisions: decisions.length ? decisions : fallback.decisions,
+    aiWork: Array.isArray(m.aiWork) ? asStrings(m.aiWork).map((s) => clean(s, 200)) : fallback.aiWork,
+    verification: asClaims(m.verification),
   };
 }
 
@@ -170,14 +179,19 @@ function runClaude(prompt: string): string {
     timeout: 240_000,
     maxBuffer: 16 * 1024 * 1024,
   });
-  let outer: any = null;
+  return claudeResult(res.status, res.stdout, res.stderr || res.error?.message || "");
+}
+
+/** Read the `--output-format json` envelope of `claude -p`; any other output is an error, not an empty summary. */
+export function claudeResult(status: number | null, stdout: string, stderr: string): string {
+  let outer: JsonObject | null = null;
   try {
-    outer = JSON.parse(res.stdout);
+    outer = parseObject(stdout);
   } catch {
     /* non-JSON output */
   }
-  if (res.status !== 0 && !outer) throw new Error(`claude -p exited ${res.status}: ${res.stderr || res.error?.message || res.stdout}`);
-  if (outer.is_error) throw new Error(`claude -p error: ${outer.result}`);
+  if (!outer) throw new Error(`claude -p exited ${status} without a JSON result: ${(stderr || stdout).slice(0, 300)}`);
+  if (outer.is_error) throw new Error(`claude -p error: ${String(outer.result)}`);
   return String(outer.result ?? "");
 }
 
