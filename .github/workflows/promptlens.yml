@@ -5,7 +5,7 @@ on:
     types: [opened, synchronize, reopened]
 
 permissions:
-  contents: read
+  contents: write # commits .promptlens/PR-<n>.md for line comments
   pull-requests: write
 
 jobs:

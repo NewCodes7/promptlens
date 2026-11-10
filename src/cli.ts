@@ -4,11 +4,13 @@ import { appendFileSync, mkdirSync, openSync, readFileSync, realpathSync } from 
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { captureCommit, readRaw } from "./capture.js";
-import { NOTES_REF, git, gitDir, readNote, resolveSha, revList, writeNote } from "./git.js";
-import { upsertComment } from "./github.js";
+import { git, gitDir, NOTES_REF, readNote, resolveSha, revList, writeNote } from "./git.js";
+import { upsertComment, upsertFile } from "./github.js";
 import { init } from "./init.js";
 import { synthesize, translatePrompts } from "./openai.js";
+import { pkg } from "./pkg.js";
 import { collectCommits, renderReport, translatableTexts } from "./report.js";
+import { renderReviewFile, reviewFilePath, reviewFileUrl } from "./review.js";
 import { summarize } from "./summarize.js";
 
 const CLI = realpathSync(fileURLToPath(import.meta.url));
@@ -66,6 +68,11 @@ async function main() {
   const { pos, opt } = flags(rest);
 
   switch (cmd) {
+    case "--version":
+    case "-v":
+      console.log(pkg.version);
+      return;
+
     case "init": {
       const lines = init({
         cli: CLI,
@@ -118,7 +125,13 @@ async function main() {
         .filter((p) => p.length === 4 && !ZERO.test(p[1]))
         .map(([, localSha, , remoteSha]) => (ZERO.test(remoteSha) ? `${localSha} --not --remotes=${remote}` : `${remoteSha}..${localSha}`));
       const shas = ranges.length
-        ? ranges.flatMap((r) => (r.includes("--not") ? git(["rev-list", ...r.split(" ")], { allowFail: true }).split("\n").filter(Boolean) : revList(r)))
+        ? ranges.flatMap((r) =>
+            r.includes("--not")
+              ? git(["rev-list", ...r.split(" ")], { allowFail: true })
+                  .split("\n")
+                  .filter(Boolean)
+              : revList(r),
+          )
         : revList(`@{u}..HEAD`);
       let written = 0;
       for (const sha of shas) if ((await ensureContext(sha)) === "written") written++;
@@ -143,32 +156,71 @@ async function main() {
       const base = (opt.base as string) ?? event?.pull_request?.base?.sha ?? "origin/main";
       const head = (opt.head as string) ?? event?.pull_request?.head?.sha ?? "HEAD";
       const { entries, diffStat } = collectCommits(base, head);
+      const pr = Number(opt.pr ?? event?.pull_request?.number);
+      if (opt.file) {
+        // Local preview of the line-commentable review file.
+        const translations = await translatePrompts(translatableTexts(entries));
+        console.log(renderReviewFile(entries, pr || 0, { translations }));
+        return;
+      }
       const [synthesis, translations] = await Promise.all([synthesize(entries, diffStat), translatePrompts(translatableTexts(entries))]);
-      const body = renderReport(entries, synthesis, { translations });
       if (!opt.post) {
-        console.log(body);
+        console.log(renderReport(entries, synthesis, { translations }));
         return;
       }
       const token = process.env.GITHUB_TOKEN;
       const repo = (opt.repo as string) ?? process.env.GITHUB_REPOSITORY;
-      const pr = Number(opt.pr ?? event?.pull_request?.number);
       if (!token || !repo || !pr) throw new Error("--post needs GITHUB_TOKEN, a repo and a PR number");
-      const res = await upsertComment(token, repo, pr, body);
+
+      // 1) Commit the review file to the PR branch so reviewers can comment on individual lines.
+      //    Fork PRs get a read-only token, so they keep the comment only.
+      let reviewFile: { path: string; url: string } | undefined;
+      const branch = (opt.branch as string) ?? event?.pull_request?.head?.ref;
+      const headRepo = event?.pull_request?.head?.repo?.full_name ?? repo;
+      if (opt["no-review-file"]) {
+        /* opted out */
+      } else if (!branch || headRepo !== repo) {
+        console.log("PromptLens review file skipped: PR branch is in a fork (read-only token).");
+      } else {
+        const filePath = reviewFilePath(pr);
+        try {
+          const res = await upsertFile(
+            token,
+            repo,
+            branch,
+            filePath,
+            renderReviewFile(entries, pr, { translations }),
+            `chore(promptlens): update prompt flow review file for PR #${pr}`,
+          );
+          reviewFile = { path: filePath, url: reviewFileUrl(repo, pr, filePath) };
+          console.log(`PromptLens review file ${res.action}: ${filePath}${res.sha ? ` (${res.sha.slice(0, 7)})` : ""}`);
+        } catch (err) {
+          console.error(`[promptlens] could not commit the review file (needs \`contents: write\`): ${(err as Error).message}`);
+        }
+      }
+
+      // 2) The conversation comment, as before, now linking to the review file.
+      const res = await upsertComment(token, repo, pr, renderReport(entries, synthesis, { translations, reviewFile }));
       console.log(`PromptLens report ${res.action}: ${res.url}`);
       return;
     }
 
     default:
-      console.log(`promptlens — AI work context for code review
+      console.log(`promptlens ${pkg.version} — AI work context for code review
 
 Usage:
-  promptlens init [--no-workflow]     Install git hooks, notes config and the PR workflow
+  promptlens init [--no-workflow] [--workflow-run CMD]
+                                      Install git hooks, notes config and the PR workflow
+                                      (the workflow pins ${pkg.name}@${pkg.version})
   promptlens capture [rev] [--sync]   (post-commit) link AI sessions to a commit
   promptlens summarize [rev] [--force] Write the Commit Context note for a commit
   promptlens sync [remote]            (pre-push) ensure contexts and push ${NOTES_REF}
   promptlens show [rev]               Print a commit's Commit Context
   promptlens report [--base B] [--head H]   Preview the PR report locally
-  promptlens pr-report --post         (GitHub Actions) post/update the PR comment`);
+  promptlens report --file [--pr N]   Preview the line-commentable review file
+  promptlens pr-report --post         (GitHub Actions) commit .promptlens/PR-<n>.md and post/update the PR comment
+                                      (--no-review-file: comment only)
+  promptlens --version                Print the installed version`);
   }
 }
 

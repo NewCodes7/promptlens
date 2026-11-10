@@ -58,7 +58,7 @@ export function diffStat(sha: string, cwd?: string): string {
 
 export function commitPatch(sha: string, maxChars: number, cwd?: string): string {
   const out = git(["show", "--format=", "--unified=2", sha], { cwd });
-  return out.length > maxChars ? out.slice(0, maxChars) + "\n... (diff truncated)" : out;
+  return out.length > maxChars ? `${out.slice(0, maxChars)}\n... (diff truncated)` : out;
 }
 
 export function readNote(sha: string, cwd?: string): string | null {
@@ -71,7 +71,5 @@ export function writeNote(sha: string, content: string, cwd?: string): void {
 }
 
 export function revList(range: string, cwd?: string): string[] {
-  return git(["rev-list", "--reverse", "--no-merges", range], { cwd, allowFail: true })
-    .split("\n")
-    .filter(Boolean);
+  return git(["rev-list", "--reverse", "--no-merges", range], { cwd, allowFail: true }).split("\n").filter(Boolean);
 }

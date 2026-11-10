@@ -1,17 +1,28 @@
 import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
-import { NOTES_REF, git, gitDir, repoRoot } from "./git.js";
+import { git, gitDir, NOTES_REF, repoRoot } from "./git.js";
+import { type PackageInfo, pkg } from "./pkg.js";
 
 const HOOK_TAG = "# promptlens";
 
-export const WORKFLOW = `name: PromptLens
+/**
+ * The command the generated workflow runs. It pins the exact version that ran `init`:
+ * an unpinned `npx <name>@latest` would hand `contents: write` and the OpenAI key to
+ * whatever is published next under that name.
+ */
+export function defaultWorkflowRun(info: PackageInfo = pkg): string {
+  return `npx --yes ${info.name}@${info.version} pr-report --post`;
+}
+
+export function workflowYaml(run: string): string {
+  return `name: PromptLens
 
 on:
   pull_request:
     types: [opened, synchronize, reopened]
 
 permissions:
-  contents: read
+  contents: write # commits .promptlens/PR-<n>.md for line comments
   pull-requests: write
 
 jobs:
@@ -31,8 +42,14 @@ jobs:
         env:
           GITHUB_TOKEN: \${{ secrets.GITHUB_TOKEN }}
           OPENAI_API_KEY: \${{ secrets.OPENAI_API_KEY }}
-        run: npx --yes promptlens@latest pr-report --post
+        run: ${run}
 `;
+}
+
+/** npx runs packages from a cache that npm may prune, which would leave the hooks pointing at nothing. */
+export function isEphemeralCli(cli: string): boolean {
+  return /[\\/]_npx[\\/]/.test(cli);
+}
 
 function hookScript(cli: string, cmd: string): string {
   return `${HOOK_TAG}\nnode "${cli}" ${cmd} || true\n`;
@@ -55,7 +72,7 @@ function installHook(hooksDir: string, name: string, body: string): "installed" 
 export interface InitOptions {
   cli: string;
   workflow: boolean;
-  /** Workflow command override (e.g. build PromptLens from the repo itself instead of npx). */
+  /** Workflow command override (e.g. build PromptLens from the repo itself instead of npx). Defaults to {@link defaultWorkflowRun}. */
   workflowRun?: string;
   cwd?: string;
 }
@@ -70,6 +87,11 @@ export function init(opts: InitOptions): string[] {
 
   log.push(`post-commit hook: ${installHook(hooksDir, "post-commit", hookScript(opts.cli, "capture HEAD"))}`);
   log.push(`pre-push hook: ${installHook(hooksDir, "pre-push", hookScript(opts.cli, 'sync "$1"'))}`);
+  if (isEphemeralCli(opts.cli)) {
+    log.push(
+      `warning: the hooks point into the npx cache (${opts.cli}), which npm may delete. Run \`npm install -g ${pkg.name}\`, delete the promptlens lines from .git/hooks/post-commit and pre-push, then run \`promptlens init\` again.`,
+    );
+  }
 
   // Keep notes attached when commits are amended or rebased.
   git(["config", "notes.rewriteRef", NOTES_REF], { cwd: opts.cwd });
@@ -87,10 +109,7 @@ export function init(opts: InitOptions): string[] {
     if (existsSync(wf)) log.push(`workflow: exists (${path.relative(root, wf)})`);
     else {
       mkdirSync(path.dirname(wf), { recursive: true });
-      const content = opts.workflowRun
-        ? WORKFLOW.replace("run: npx --yes promptlens@latest pr-report --post", `run: ${opts.workflowRun}`)
-        : WORKFLOW;
-      writeFileSync(wf, content);
+      writeFileSync(wf, workflowYaml(opts.workflowRun ?? defaultWorkflowRun()));
       log.push(`workflow: created ${path.relative(root, wf)} — add an OPENAI_API_KEY secret for LLM synthesis`);
     }
   }

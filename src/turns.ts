@@ -15,9 +15,18 @@ interface PromptMeta {
   carried: boolean;
 }
 
+/** Every PromptMeta comes from one of `raw.sessions`, so a miss here is a programming error, not bad input. */
+function sessionOf(raw: RawCapture, sessionId: string): SessionSlice {
+  const session = raw.sessions.find((s) => s.sessionId === sessionId);
+  if (!session) throw new Error(`capture has no session ${sessionId}`);
+  return session;
+}
+
 export function promptList(raw: RawCapture): PromptMeta[] {
   let i = 0;
-  return raw.sessions.flatMap((s) => s.prompts.map((p) => ({ index: i++, sessionId: s.sessionId, ts: p.ts, text: p.text, carried: Boolean(p.carried) })));
+  return raw.sessions.flatMap((s) =>
+    s.prompts.map((p) => ({ index: i++, sessionId: s.sessionId, ts: p.ts, text: p.text, carried: Boolean(p.carried) })),
+  );
 }
 
 /** Numbered prompt list + per-prompt agent activity, for the summarization prompt. */
@@ -26,10 +35,12 @@ export function turnsForPrompt(raw: RawCapture): string {
   return prompts
     .map((p) => {
       const next = prompts.find((q) => q.sessionId === p.sessionId && q.ts > p.ts)?.ts;
-      const s = raw.sessions.find((x) => x.sessionId === p.sessionId)!;
+      const s = sessionOf(raw, p.sessionId);
       const inRange = (ts: string) => ts >= p.ts && (!next || ts < next);
       const acts = [
-        ...s.decisions.filter((d) => inRange(d.ts)).map((d) => ({ ts: d.ts, t: `ASKED ${truncate(d.question, 120)} → ${truncate(d.answer, 80)}` })),
+        ...s.decisions
+          .filter((d) => inRange(d.ts))
+          .map((d) => ({ ts: d.ts, t: `ASKED ${truncate(d.question, 120)} → ${truncate(d.answer, 80)}` })),
         ...s.edits.filter((e) => inRange(e.ts)).map((e) => ({ ts: e.ts, t: `EDIT ${e.file}` })),
         ...s.commands.filter((c) => inRange(c.ts)).map((c) => ({ ts: c.ts, t: `RUN ${truncate(c.description ?? c.command, 120)}` })),
       ]
@@ -54,7 +65,8 @@ function actsIn(s: SessionSlice, from: string, to: string | null): Act[] {
 
 function classify(a: Act): string | null {
   if (a.kind === "decision") return "plan";
-  if (a.kind === "command") return SHIP_RE.test(a.text) ? "ship" : VERIFY_RE.test(a.text) ? "verify" : INVESTIGATE_RE.test(a.text) ? "investigate" : null;
+  if (a.kind === "command")
+    return SHIP_RE.test(a.text) ? "ship" : VERIFY_RE.test(a.text) ? "verify" : INVESTIGATE_RE.test(a.text) ? "investigate" : null;
   const f = a.file ?? "";
   if (/\.(md|mdx|txt)$/i.test(f)) return "docs";
   if (/(^|\/)(tests?|__tests__|spec)\/|\.(test|spec)\./.test(f)) return "verify";
@@ -139,7 +151,7 @@ export function buildTurns(raw: RawCapture, groups: TurnGroup[]): Turn[] {
   for (const g of groups) {
     const idx = (Array.isArray(g?.prompts) ? g.prompts : []).map(Number).filter((i) => Number.isInteger(i) && prompts[i] && !used.has(i));
     if (!idx.length) continue;
-    idx.forEach((i) => used.add(i));
+    for (const i of idx) used.add(i);
     clean.push({ ...g, prompts: idx });
   }
   for (const p of prompts) if (!used.has(p.index)) clean.push({ prompts: [p.index] });
@@ -147,18 +159,22 @@ export function buildTurns(raw: RawCapture, groups: TurnGroup[]): Turn[] {
 
   return clean.map((g) => {
     const anchor = prompts[g.prompts[0]];
-    const session = raw.sessions.find((s) => s.sessionId === anchor.sessionId)!;
-    const next = clean
-      .map((o) => prompts[o.prompts[0]])
-      .filter((o) => o.sessionId === anchor.sessionId && o.ts > anchor.ts)
-      .map((o) => o.ts)
-      .sort()[0] ?? null;
+    const session = sessionOf(raw, anchor.sessionId);
+    const next =
+      clean
+        .map((o) => prompts[o.prompts[0]])
+        .filter((o) => o.sessionId === anchor.sessionId && o.ts > anchor.ts)
+        .map((o) => o.ts)
+        .sort()[0] ?? null;
     const acts = actsIn(session, anchor.ts, next);
     const own = g.prompts.map((i) => prompts[i]).filter((p) => !p.carried);
     const files = new Set(acts.filter((a) => a.file).map((a) => a.file));
     const cmds = acts.filter((a) => a.kind === "command").map((a) => a.text.trim());
     const ends = [anchor.ts, ...acts.map((a) => a.ts), ...g.prompts.map((i) => prompts[i].ts)].sort();
-    const modelSteps = (g.steps ?? []).filter((s) => s?.type).slice(0, 5).map((s) => ({ type: normalizeType(cleanStr(s.type, 20)), text: cleanStr(s.text, 140) }));
+    const modelSteps = (g.steps ?? [])
+      .filter((s) => s?.type)
+      .slice(0, 5)
+      .map((s) => ({ type: normalizeType(cleanStr(s.type, 20)), text: cleanStr(s.text, 140) }));
     const decisions = (g.decisions ?? []).filter((d) => d?.text).map((d) => ({ text: cleanStr(d.text, 200), why: cleanStr(d.why, 200) }));
     const firstText = (own[0] ?? anchor).text;
     return {
@@ -172,8 +188,14 @@ export function buildTurns(raw: RawCapture, groups: TurnGroup[]): Turn[] {
         ? decisions
         : acts.filter((a) => a.kind === "decision").map((a) => ({ text: cleanStr(a.text, 200), why: "" })),
       tips: {
-        keep: (g.tips?.keep ?? []).slice(0, 2).map((t) => cleanStr(t, 180)).filter(Boolean),
-        improve: (g.tips?.improve ?? []).slice(0, 2).map((t) => cleanStr(t, 180)).filter(Boolean),
+        keep: (g.tips?.keep ?? [])
+          .slice(0, 2)
+          .map((t) => cleanStr(t, 180))
+          .filter(Boolean),
+        improve: (g.tips?.improve ?? [])
+          .slice(0, 2)
+          .map((t) => cleanStr(t, 180))
+          .filter(Boolean),
       },
       metrics: {
         start: ends[0],

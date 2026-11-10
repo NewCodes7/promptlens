@@ -1,7 +1,7 @@
-import type { CommitEntry, Synthesis } from "./report.js";
-import { templateSynthesis } from "./report.js";
 import { collectTurns, mergeToMax } from "./flow.js";
 import { redact, truncate } from "./redact.js";
+import type { CommitEntry, Synthesis } from "./report.js";
+import { templateSynthesis } from "./report.js";
 
 export function buildSynthesisPrompt(entries: CommitEntry[], diffStat: string): string {
   const commits = entries.map((e) => ({
@@ -54,7 +54,9 @@ export function synthesisFromModel(json: any, generatedBy: string, fallback: Syn
   const arr = (v: unknown) => (Array.isArray(v) ? v : []);
   return {
     overview: json?.overview ? str(json.overview, 500) : fallback.overview,
-    why: arr(json?.why).map((s) => str(s)).filter(Boolean),
+    why: arr(json?.why)
+      .map((s) => str(s))
+      .filter(Boolean),
     keyDecisions: arr(json?.keyDecisions)
       .filter((d: any) => d?.text)
       .map((d: any) => ({ text: str(d.text), inferred: Boolean(d.inferred) })),

@@ -1,12 +1,14 @@
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { captureCommit, readRaw } from "../src/capture.js";
 import { readNote, writeNote } from "../src/git.js";
 import { init } from "../src/init.js";
+import { pkg } from "../src/pkg.js";
 import { collectCommits, parseContext, renderReport, templateSynthesis } from "../src/report.js";
+import { renderReviewFile, reviewFilePath } from "../src/review.js";
 import { projectDirName } from "../src/sessions.js";
 import { summarize } from "../src/summarize.js";
 
@@ -47,7 +49,9 @@ describe("end to end: session log → commit → note → PR report", () => {
     expect(readFileSync(path.join(repo, ".git/hooks/pre-push"), "utf8")).toContain('sync "$1"');
     expect(sh(repo, "config", "notes.rewriteRef")).toBe("refs/notes/promptlens");
     expect(sh(repo, "config", "--get-all", "remote.origin.fetch")).toContain("refs/notes/promptlens");
-    expect(existsSync(path.join(repo, ".github/workflows/promptlens.yml"))).toBe(true);
+    const workflow = readFileSync(path.join(repo, ".github/workflows/promptlens.yml"), "utf8");
+    expect(workflow).toContain(`run: npx --yes ${pkg.name}@${pkg.version} pr-report --post`);
+    expect(workflow).not.toContain("@latest");
     // Idempotent.
     expect(init({ cli: "/nonexistent/cli.js", workflow: true, cwd: repo }).join("\n")).toMatch(/post-commit hook: present/);
   });
@@ -61,10 +65,19 @@ describe("end to end: session log → commit → note → PR report", () => {
       path.join(sessionDir, "sess-1.jsonl"),
       [
         line({ type: "user", timestamp: ts(120), message: { content: "Add a greet() helper with tests" } }),
-        line({ type: "assistant", timestamp: ts(100), message: { content: [{ type: "tool_use", id: "e1", name: "Write", input: { file_path: path.join(repo, "greet.js") } }] } }),
-        line({ type: "assistant", timestamp: ts(90), message: { content: [{ type: "tool_use", id: "b1", name: "Bash", input: { command: "node --test", description: "Run tests" } }] } }),
+        line({
+          type: "assistant",
+          timestamp: ts(100),
+          message: { content: [{ type: "tool_use", id: "e1", name: "Write", input: { file_path: path.join(repo, "greet.js") } }] },
+        }),
+        line({
+          type: "assistant",
+          timestamp: ts(90),
+          message: { content: [{ type: "tool_use", id: "b1", name: "Bash", input: { command: "node --test", description: "Run tests" } }] },
+        }),
       ].join("\n"),
     );
+    // biome-ignore lint/suspicious/noTemplateCurlyInString: this is JavaScript source written into the fixture repo
     writeFileSync(path.join(repo, "greet.js"), "export const greet = (n) => `hi ${n}`;\n");
     sh(repo, "checkout", "-q", "-b", "feat");
     sh(repo, "add", "greet.js");
@@ -84,5 +97,20 @@ describe("end to end: session log → commit → note → PR report", () => {
     const md = renderReport(entries, templateSynthesis(entries));
     expect(md).toContain("Add a greet() helper with tests");
     expect(md).toContain("| 1 | 1 / 1 | 1 | 1 | 1 / 1 |");
+  });
+
+  it("ignores the bot's review-file commits when building the report", () => {
+    const { entries: before } = collectCommits("main", "HEAD", repo);
+    const file = reviewFilePath(7);
+    mkdirSync(path.join(repo, ".promptlens"), { recursive: true });
+    writeFileSync(path.join(repo, file), renderReviewFile(before, 7));
+    sh(repo, "add", file);
+    sh(repo, "commit", "-q", "-m", "chore(promptlens): update prompt flow review file for PR #7");
+
+    const { entries, diffStat } = collectCommits("main", "HEAD", repo);
+    expect(entries.map((e) => e.sha)).toEqual(before.map((e) => e.sha));
+    expect(diffStat).not.toContain(".promptlens");
+    // Same commits in → byte-identical file out, so a re-run doesn't commit again.
+    expect(renderReviewFile(entries, 7)).toBe(readFileSync(path.join(repo, file), "utf8"));
   });
 });

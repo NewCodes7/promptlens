@@ -1,7 +1,27 @@
 {
-  "name": "promptlens",
-  "version": "0.1.0",
+  "name": "@newcodes7/promptlens",
+  "version": "0.2.0",
   "description": "Turn AI coding sessions into reviewable PR context: capture prompts per commit, summarize intent, and post a PR report automatically.",
+  "keywords": [
+    "ai",
+    "code-review",
+    "pull-request",
+    "claude-code",
+    "git-notes",
+    "git-hooks",
+    "github-actions",
+    "cli"
+  ],
+  "homepage": "https://github.com/NewCodes7/promptlens#readme",
+  "bugs": {
+    "url": "https://github.com/NewCodes7/promptlens/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NewCodes7/promptlens.git"
+  },
+  "license": "MIT",
+  "author": "Sanghyeok Kim (https://github.com/NewCodes7)",
   "type": "module",
   "bin": {
     "promptlens": "dist/cli.js"
@@ -9,18 +29,26 @@
   "files": [
     "dist"
   ],
-  "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "test": "vitest run",
-    "coverage": "vitest run --coverage",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
-    "hub:data": "node scripts/export-hub-data.mjs --turns 7"
-  },
   "engines": {
     "node": ">=20"
   },
-  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "typecheck": "tsc -p tsconfig.test.json",
+    "test": "vitest run",
+    "coverage": "vitest run --coverage",
+    "check": "npm run lint && npm run typecheck && npm test",
+    "prepublishOnly": "npm run check && npm run build",
+    "hub:data": "node scripts/export-hub-data.mjs --turns 7",
+    "prebuild": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\""
+  },
   "devDependencies": {
+    "@biomejs/biome": "2.6.3",
     "@types/node": "^20.19.43",
     "@vitest/coverage-v8": "^2.1.9",
     "typescript": "^5.9.3",

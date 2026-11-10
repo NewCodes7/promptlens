@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { collectTurns, duration, mergeToMax, renderFlow, type FlowTurn } from "../src/flow.js";
+import { collectTurns, duration, type FlowTurn, mergeToMax, renderFlow } from "../src/flow.js";
 import { redact, truncate } from "../src/redact.js";
 import type { CommitEntry } from "../src/report.js";
 import { heuristicContext } from "../src/summarize.js";
@@ -56,7 +56,10 @@ describe("turns", () => {
       {
         prompts: [0, 1],
         title: "Add per-user rate limiting to login",
-        steps: [{ type: "plan", text: "Asked IP vs user" }, { type: "build", text: "Token bucket middleware" }],
+        steps: [
+          { type: "plan", text: "Asked IP vs user" },
+          { type: "build", text: "Token bucket middleware" },
+        ],
         outcome: "Limiter in place; tests pass",
         decisions: [{ text: "Per user", why: "Shared office IPs" }],
         tips: { keep: ["Stated the endpoint precisely"], improve: ["Give the limit numbers up front"] },
@@ -64,7 +67,11 @@ describe("turns", () => {
       { prompts: [2, 2, 99], title: "Document the limiter" },
     ]);
     expect(turns).toHaveLength(2);
-    expect(turns[0]).toMatchObject({ title: "Add per-user rate limiting to login", outcome: "Limiter in place; tests pass", prompts: ["로그인에 rate limit 추가해줘", "Yes, do it"] });
+    expect(turns[0]).toMatchObject({
+      title: "Add per-user rate limiting to login",
+      outcome: "Limiter in place; tests pass",
+      prompts: ["로그인에 rate limit 추가해줘", "Yes, do it"],
+    });
     expect(turns[0].tips).toEqual({ keep: ["Stated the endpoint precisely"], improve: ["Give the limit numbers up front"] });
     expect(turns[1].steps.map((s) => s.type)).toEqual(["docs"]);
   });
@@ -75,7 +82,10 @@ describe("turns", () => {
   });
 
   it("marks continued requests as carried and leaves their prompt out of the piece", () => {
-    const carried: RawCapture = { ...raw, sessions: [{ ...raw.sessions[0], prompts: [{ ts: "2026-11-09T00:50:00Z", text: "old request", carried: true }] }] };
+    const carried: RawCapture = {
+      ...raw,
+      sessions: [{ ...raw.sessions[0], prompts: [{ ts: "2026-11-09T00:50:00Z", text: "old request", carried: true }] }],
+    };
     const [t] = heuristicTurns(carried);
     expect(t).toMatchObject({ carried: true, prompts: [], title: "old request" });
   });
@@ -113,8 +123,19 @@ const ctx = (turns: Turn[]): CommitContext => ({ ...heuristicContext(raw), turns
 describe("collectTurns", () => {
   it("merges a request that spans commits and hangs each commit off the active request", () => {
     const entries: CommitEntry[] = [
-      { sha: "c1", subject: "a", context: ctx([turn("A", { prompts: ["build it"], title: "Build it", tips: { keep: ["clear"], improve: [] } })]) },
-      { sha: "c2", subject: "b", context: ctx([turn("A", { carried: true, title: "cont", steps: [{ type: "verify", text: "" }], outcome: "done" }), turn("B", { prompts: ["fix"] })]) },
+      {
+        sha: "c1",
+        subject: "a",
+        context: ctx([turn("A", { prompts: ["build it"], title: "Build it", tips: { keep: ["clear"], improve: [] } })]),
+      },
+      {
+        sha: "c2",
+        subject: "b",
+        context: ctx([
+          turn("A", { carried: true, title: "cont", steps: [{ type: "verify", text: "" }], outcome: "done" }),
+          turn("B", { prompts: ["fix"] }),
+        ]),
+      },
       { sha: "c3", subject: "manual", context: null },
     ];
     const t = collectTurns(entries);
@@ -146,7 +167,21 @@ describe("mergeToMax", () => {
 
 describe("renderFlow", () => {
   const entries: CommitEntry[] = [
-    { sha: "aaaaaaa1111", subject: raw.subject, context: ctx(turnsFromModel(raw, [{ prompts: [0, 1], title: "Add rate limiting", outcome: "Tests pass", tips: { keep: ["Precise target"], improve: ["Give numbers"] } }, { prompts: [2], title: "Document it" }])) },
+    {
+      sha: "aaaaaaa1111",
+      subject: raw.subject,
+      context: ctx(
+        turnsFromModel(raw, [
+          {
+            prompts: [0, 1],
+            title: "Add rate limiting",
+            outcome: "Tests pass",
+            tips: { keep: ["Precise target"], improve: ["Give numbers"] },
+          },
+          { prompts: [2], title: "Document it" },
+        ]),
+      ),
+    },
     { sha: "bbbbbbb2222", subject: "chore: manual tweak", context: null },
   ];
   const md = renderFlow(entries);
@@ -154,7 +189,9 @@ describe("renderFlow", () => {
   it("draws one node per request with step chips, outcome and metrics", () => {
     expect(md).toContain("```mermaid\n%%{init:");
     expect(md).toContain("\nflowchart TD\n");
-    expect(md).toMatch(/T0\["<b>① 🧑‍💻 Add rate limiting<\/b><br\/>🧭 Plan → 🛠️ Build → 🧪 Verify<br\/>✅ Tests pass<br\/>⏱ 21m · 💬 2 prompts · 🤖 4 AI steps · 📄 2 files · 🔁 1 re-runs"\]/);
+    expect(md).toMatch(
+      /T0\["<b>① 🧑‍💻 Add rate limiting<\/b><br\/>🧭 Plan → 🛠️ Build → 🧪 Verify<br\/>✅ Tests pass<br\/>⏱ 21m · 💬 2 prompts · 🤖 4 AI steps · 📄 2 files · 🔁 1 re-runs"\]/,
+    );
     expect(md).toContain('T1 -->|"⎇ aaaaaaa"| T2');
     expect(md).toContain('T2 --- END(["⎇ bbbbbbb"]):::commit');
   });
@@ -177,7 +214,13 @@ describe("renderFlow", () => {
 describe("normalizeType", () => {
   it("maps synonyms onto the fixed step types and keeps unknown ones", async () => {
     const { normalizeType } = await import("../src/turns.js");
-    expect(["Test", "debug", "implement", "research", "migrate"].map(normalizeType)).toEqual(["verify", "fix", "build", "investigate", "migrate"]);
+    expect(["Test", "debug", "implement", "research", "migrate"].map(normalizeType)).toEqual([
+      "verify",
+      "fix",
+      "build",
+      "investigate",
+      "migrate",
+    ]);
   });
 });
 
@@ -185,7 +228,17 @@ describe("whole-request outcomes", () => {
   it("parses per-request outcomes from the PR synthesis and overrides the piece outcome", async () => {
     const { synthesisFromModel } = await import("../src/openai.js");
     const { templateSynthesis } = await import("../src/report.js");
-    const syn = synthesisFromModel({ overview: "x", requests: [{ index: 0, outcome: "Whole request done" }, { index: "bad", outcome: "y" }] }, "t", templateSynthesis([]));
+    const syn = synthesisFromModel(
+      {
+        overview: "x",
+        requests: [
+          { index: 0, outcome: "Whole request done" },
+          { index: "bad", outcome: "y" },
+        ],
+      },
+      "t",
+      templateSynthesis([]),
+    );
     expect(syn.turnOutcomes).toEqual(["Whole request done"]);
     const entries: CommitEntry[] = [{ sha: "c1", subject: "a", context: ctx([turn("A", { prompts: ["p"], outcome: "last piece only" })]) }];
     expect(renderFlow(entries, 10, syn.turnOutcomes)).toContain("✅ Whole request done");
