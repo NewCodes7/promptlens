@@ -19,6 +19,7 @@ describe("generated workflow", () => {
     expect(yaml).toContain("        run: node dist/cli.js pr-report --post\n");
     expect(yaml).toContain("contents: write");
     expect(yaml).toContain("pull-requests: write");
+    // biome-ignore lint/suspicious/noTemplateCurlyInString: GitHub Actions expression, not a JS template
     expect(yaml).toContain("${{ secrets.GITHUB_TOKEN }}");
   });
 });

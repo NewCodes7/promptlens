@@ -1,10 +1,10 @@
 import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { commitPatch } from "./git.js";
-import { redact, truncate } from "./redact.js";
 import { openaiJson } from "./openai.js";
-import { heuristicTurns, turnsForPrompt, turnsFromModel } from "./turns.js";
+import { redact, truncate } from "./redact.js";
 import { SELF_MARKER } from "./sessions.js";
+import { heuristicTurns, turnsForPrompt, turnsFromModel } from "./turns.js";
 import type { Claim, CommitContext, RawCapture } from "./types.js";
 
 const VERIFY_RE = /\b(test|tests|vitest|jest|pytest|mocha|tsc|typecheck|lint|eslint|build|go test|cargo (?:test|check)|coverage)\b/i;
@@ -19,7 +19,9 @@ function filesWithAiFlag(raw: RawCapture) {
   return raw.filesChanged.map((p) => ({ path: p, aiEdited: aiEdited.has(p) }));
 }
 
-function baseContext(raw: RawCapture): Omit<CommitContext, "generatedBy" | "intent" | "keyPrompts" | "decisions" | "aiWork" | "verification"> {
+function baseContext(
+  raw: RawCapture,
+): Omit<CommitContext, "generatedBy" | "intent" | "keyPrompts" | "decisions" | "aiWork" | "verification"> {
   const files = filesWithAiFlag(raw);
   return {
     version: 1,
@@ -46,7 +48,10 @@ export function heuristicContext(raw: RawCapture): CommitContext {
   const verification: Claim[] = commands
     .filter((c) => VERIFY_RE.test(c.command))
     .slice(-5)
-    .map((c) => ({ text: clean(c.description ? `${c.description} (\`${truncate(c.command, 80)}\`)` : `\`${c.command}\``, 160), inferred: false }));
+    .map((c) => ({
+      text: clean(c.description ? `${c.description} (\`${truncate(c.command, 80)}\`)` : `\`${c.command}\``, 160),
+      inferred: false,
+    }));
   return {
     ...base,
     generatedBy: "heuristic",
@@ -60,11 +65,11 @@ export function heuristicContext(raw: RawCapture): CommitContext {
           ? "Initial request that started this change."
           : "Follow-up instruction during the session.",
     })),
-    decisions: raw.sessions
-      .flatMap((s) => s.decisions)
-      .map((d) => ({ text: clean(`${d.question} → ${d.answer}`, 240), inferred: false })),
+    decisions: raw.sessions.flatMap((s) => s.decisions).map((d) => ({ text: clean(`${d.question} → ${d.answer}`, 240), inferred: false })),
     aiWork: aiFiles.length
-      ? [`AI edited ${aiFiles.length} of ${base.files.length} changed file(s): ${aiFiles.slice(0, 6).join(", ")}${aiFiles.length > 6 ? ", …" : ""}`]
+      ? [
+          `AI edited ${aiFiles.length} of ${base.files.length} changed file(s): ${aiFiles.slice(0, 6).join(", ")}${aiFiles.length > 6 ? ", …" : ""}`,
+        ]
       : [],
     verification,
   };
@@ -135,7 +140,7 @@ export function contextFromModel(raw: RawCapture, model: any, generatedBy: Commi
   const fallback = heuristicContext(raw);
   const picked: number[] = Array.isArray(model?.keyPrompts) ? model.keyPrompts.map((k: any) => Number(k.index)) : [];
   const keyPrompts = (model?.keyPrompts ?? [])
-    .filter((k: any, i: number) => Number.isInteger(picked[i]) && prompts[picked[i]])
+    .filter((_k: any, i: number) => Number.isInteger(picked[i]) && prompts[picked[i]])
     .slice(0, 3)
     .map((k: any) => ({ text: clean(prompts[Number(k.index)].text, PROMPT_MAX), why: clean(String(k.why ?? ""), 200) }));
   return {
@@ -148,7 +153,9 @@ export function contextFromModel(raw: RawCapture, model: any, generatedBy: Commi
         : fallback.intent,
     keyPrompts: keyPrompts.length ? keyPrompts : fallback.keyPrompts,
     decisions: asClaims(model?.decisions).length ? asClaims(model?.decisions) : fallback.decisions,
-    aiWork: Array.isArray(model?.aiWork) ? model.aiWork.filter((s: unknown) => typeof s === "string").map((s: string) => clean(s, 200)) : fallback.aiWork,
+    aiWork: Array.isArray(model?.aiWork)
+      ? model.aiWork.filter((s: unknown) => typeof s === "string").map((s: string) => clean(s, 200))
+      : fallback.aiWork,
     verification: asClaims(model?.verification),
   };
 }

@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -65,10 +65,19 @@ describe("end to end: session log → commit → note → PR report", () => {
       path.join(sessionDir, "sess-1.jsonl"),
       [
         line({ type: "user", timestamp: ts(120), message: { content: "Add a greet() helper with tests" } }),
-        line({ type: "assistant", timestamp: ts(100), message: { content: [{ type: "tool_use", id: "e1", name: "Write", input: { file_path: path.join(repo, "greet.js") } }] } }),
-        line({ type: "assistant", timestamp: ts(90), message: { content: [{ type: "tool_use", id: "b1", name: "Bash", input: { command: "node --test", description: "Run tests" } }] } }),
+        line({
+          type: "assistant",
+          timestamp: ts(100),
+          message: { content: [{ type: "tool_use", id: "e1", name: "Write", input: { file_path: path.join(repo, "greet.js") } }] },
+        }),
+        line({
+          type: "assistant",
+          timestamp: ts(90),
+          message: { content: [{ type: "tool_use", id: "b1", name: "Bash", input: { command: "node --test", description: "Run tests" } }] },
+        }),
       ].join("\n"),
     );
+    // biome-ignore lint/suspicious/noTemplateCurlyInString: this is JavaScript source written into the fixture repo
     writeFileSync(path.join(repo, "greet.js"), "export const greet = (n) => `hi ${n}`;\n");
     sh(repo, "checkout", "-q", "-b", "feat");
     sh(repo, "add", "greet.js");

@@ -24,11 +24,11 @@ PromptLens records which AI coding sessions produced each commit and posts one a
 
 **AI now writes code faster than people can review it.**
 
-| | |
-|---|---|
+|                                                                                                                              |                                                                                                                                                           |
+| ---------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **42%** of the code developers commit is already AI-generated or AI-assisted. Developers expect it to reach **65% by 2027**. | [Sonar, State of Code 2026](https://www.sonarsource.com/blog/state-of-code-developer-survey-report-the-current-reality-of-ai-coding/) (1,100+ developers) |
-| **38%** of developers say reviewing AI-written code takes *more* effort than reviewing a colleague's code. | same survey |
-| **96%** don't fully trust AI-generated code, yet only **48%** always check it before committing. | same survey |
+| **38%** of developers say reviewing AI-written code takes _more_ effort than reviewing a colleague's code.                   | same survey                                                                                                                                               |
+| **96%** don't fully trust AI-generated code, yet only **48%** always check it before committing.                             | same survey                                                                                                                                               |
 
 A diff shows **what** changed. It does not show **why**:
 
@@ -38,20 +38,20 @@ A diff shows **what** changed. It does not show **why**:
 
 That context exists, but it's buried in a long private chat log. Sharing the whole log is noise, and writing a summary by hand is a chore nobody does. **So reviewers end up reverse-engineering intent from AI-written code.**
 
-> **Who has this problem:** any developer who reviews code that someone else wrote *with* an AI agent. Changes get bigger, the diff explains less, and the only way to learn the reasoning is to ask, or to read the conversation yourself.
+> **Who has this problem:** any developer who reviews code that someone else wrote _with_ an AI agent. Changes get bigger, the diff explains less, and the only way to learn the reasoning is to ask, or to read the conversation yourself.
 
 ## 💡 The solution: three steps, zero extra work
 
-| | Step | What happens |
-|:-:|---|---|
-| ① | **Capture at commit** | A `post-commit` hook links the commit to the Claude Code sessions that actually edited its files. |
-| ② | **Preserve intent per commit** | A background job distills each capture into a small *Commit Context* (intent, key prompts, decisions, AI work, verification) and attaches it to the commit SHA with `git notes`. |
-| ③ | **Report on the PR** | GitHub Actions merges every commit's context with the final diff and posts **one** PR comment, updated on every push. |
-| ④ | **Comment on a prompt** | The same run commits `.promptlens/PR-<n>.md`, the prompt flow as plain Markdown, to the PR branch. Reviewers select lines in *Files changed* and comment on a specific prompt, step or decision. |
+|     | Step                           | What happens                                                                                                                                                                                     |
+| :-: | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+|  ①  | **Capture at commit**          | A `post-commit` hook links the commit to the Claude Code sessions that actually edited its files.                                                                                                |
+|  ②  | **Preserve intent per commit** | A background job distills each capture into a small _Commit Context_ (intent, key prompts, decisions, AI work, verification) and attaches it to the commit SHA with `git notes`.                 |
+|  ③  | **Report on the PR**           | GitHub Actions merges every commit's context with the final diff and posts **one** PR comment, updated on every push.                                                                            |
+|  ④  | **Comment on a prompt**        | The same run commits `.promptlens/PR-<n>.md`, the prompt flow as plain Markdown, to the PR branch. Reviewers select lines in _Files changed_ and comment on a specific prompt, step or decision. |
 
 Developers keep working as usual: `git commit`, `git push`, then open a PR from the web, `gh`, or an AI agent.
 
-> **About the review file:** it is committed by the Actions bot, so run `git pull` before your next push. It is only rewritten when the commits change (no timestamps or LLM synthesis inside), so line comments don't go stale on every push. GitHub holds the workflow runs on that bot commit as *Action required* instead of starting them, so there is no loop. Approving them is safe: the file is unchanged, so nothing is committed again. Fork PRs get a read-only token and keep the comment only. Pass `--no-review-file` to turn it off.
+> **About the review file:** it is committed by the Actions bot, so run `git pull` before your next push. It is only rewritten when the commits change (no timestamps or LLM synthesis inside), so line comments don't go stale on every push. GitHub holds the workflow runs on that bot commit as _Action required_ instead of starting them, so there is no loop. Approving them is safe: the file is unchanged, so nothing is committed again. Fork PRs get a read-only token and keep the comment only. Pass `--no-review-file` to turn it off.
 
 ### What the reviewer gets
 
@@ -62,7 +62,7 @@ Developers keep working as usual: `git commit`, `git push`, then open a PR from 
   - what the AI did
   - decisions, including the developer's answers when the AI asked a question
   - verification
-- **🎯 Prompt review:** *Keep* / *Try* feedback on how the developer prompted.
+- **🎯 Prompt review:** _Keep_ / _Try_ feedback on how the developer prompted.
 - **Where to focus your review:** AI-edited files with no recorded verification.
 - **Open questions:** commits with no AI context, and claims the model inferred rather than read from the session.
 
@@ -77,10 +77,10 @@ Developers keep working as usual: `git commit`, `git push`, then open a PR from 
 This repository was built with Claude Code during a 5-hour hackathon, with PromptLens running on itself. **[PR #1](https://github.com/NewCodes7/promptlens/pull/1)** is the result. **[PR #2](https://github.com/NewCodes7/promptlens/pull/2)** replays the same commits (plus the review file feature) as a live demo with both the comment and the line-commentable `.promptlens/PR-2.md`:
 
 | Commits | With AI context | AI sessions | Developer prompts | AI-edited files | Request nodes in the flow |
-|:-:|:-:|:-:|:-:|:-:|:-:|
-| 15 | **15 / 15** | 2 | 11 | 33 / 36 | 10 |
+| :-----: | :-------------: | :---------: | :---------------: | :-------------: | :-----------------------: |
+|   15    |   **15 / 15**   |      2      |        11         |     33 / 36     |            10             |
 
-None of this was written by hand: every commit was captured, summarized, and pushed by the hooks. PromptLens also reviewed *my* prompting:
+None of this was written by hand: every commit was captured, summarized, and pushed by the hooks. PromptLens also reviewed _my_ prompting:
 
 > 👍 **Keep:** Asked the agent to survey ambiguities before coding, which settled architecture and scope in one round.
 > 💡 **Try:** State required secrets and API providers up front; the OpenAI vs Anthropic key issue surfaced only mid-survey.
@@ -95,11 +95,11 @@ Dogfooding also found real bugs that the unit tests didn't, and each fix shows u
 
 AI-assisted coding is becoming the default. The review step is where AI-written code either earns trust or quietly piles up risk. PromptLens starts there and expands outward:
 
-| | Who | Value |
-|---|---|---|
-| **Today: PR review** | Teams shipping with Claude Code, Codex, or Cursor | Reviewers understand intent in seconds instead of asking or digging through logs. Authors get reviewed without writing documentation. |
-| **Next: team insight** | Engineering leads | An audit trail of *why* each AI change was made. See which prompting habits lead to verified, reviewable work, and spread them across the team. |
-| **Later: [PromptLens Hub](https://newcodes7.github.io/promptlens/)** | Every profession that works through prompts | A place to share and learn from real prompt flows, for developers, designers, marketers, lawyers, and founders. |
+|                                                                      | Who                                               | Value                                                                                                                                           |
+| -------------------------------------------------------------------- | ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Today: PR review**                                                 | Teams shipping with Claude Code, Codex, or Cursor | Reviewers understand intent in seconds instead of asking or digging through logs. Authors get reviewed without writing documentation.           |
+| **Next: team insight**                                               | Engineering leads                                 | An audit trail of _why_ each AI change was made. See which prompting habits lead to verified, reviewable work, and spread them across the team. |
+| **Later: [PromptLens Hub](https://newcodes7.github.io/promptlens/)** | Every profession that works through prompts       | A place to share and learn from real prompt flows, for developers, designers, marketers, lawyers, and founders.                                 |
 
 **Why learning from other people's prompts matters:** using AI is a skill, and the gap is large.
 
@@ -140,15 +140,15 @@ flowchart LR
   PP -->|"push notes first, then branch"| REM
 ```
 
-| Module | Responsibility |
-|---|---|
-| [`sessions.ts`](src/sessions.ts) | Parse Claude Code session logs into prompts, tool calls, and file edits. This is the adapter boundary for Codex, Cursor, and Git AI. |
-| [`capture.ts`](src/capture.ts) | Link sessions to a commit by commit window × changed files, and carry forward instructions given earlier. |
-| [`summarize.ts`](src/summarize.ts) | Build the per-commit Commit Context with `claude -p`, falling back to OpenAI and then to a heuristic. |
-| [`turns.ts`](src/turns.ts) · [`flow.ts`](src/flow.ts) | Split the work into one chunk per developer prompt and render the Mermaid flow and request details. |
-| [`report.ts`](src/report.ts) · [`github.ts`](src/github.ts) | Synthesize the PR against the final diff, and create or update the single comment. |
-| [`redact.ts`](src/redact.ts) | Mask secrets and emails before anything leaves the machine. |
-| [`init.ts`](src/init.ts) | Install hooks, notes config, and the workflow in one command. |
+| Module                                                      | Responsibility                                                                                                                       |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| [`sessions.ts`](src/sessions.ts)                            | Parse Claude Code session logs into prompts, tool calls, and file edits. This is the adapter boundary for Codex, Cursor, and Git AI. |
+| [`capture.ts`](src/capture.ts)                              | Link sessions to a commit by commit window × changed files, and carry forward instructions given earlier.                            |
+| [`summarize.ts`](src/summarize.ts)                          | Build the per-commit Commit Context with `claude -p`, falling back to OpenAI and then to a heuristic.                                |
+| [`turns.ts`](src/turns.ts) · [`flow.ts`](src/flow.ts)       | Split the work into one chunk per developer prompt and render the Mermaid flow and request details.                                  |
+| [`report.ts`](src/report.ts) · [`github.ts`](src/github.ts) | Synthesize the PR against the final diff, and create or update the single comment.                                                   |
+| [`redact.ts`](src/redact.ts)                                | Mask secrets and emails before anything leaves the machine.                                                                          |
+| [`init.ts`](src/init.ts)                                    | Install hooks, notes config, and the workflow in one command.                                                                        |
 
 ## 🧠 The hard problems, and how I solved them
 
@@ -156,7 +156,7 @@ flowchart LR
 PRs get opened from the GitHub web UI, from `gh`, and by AI agents, so no hook sees all of them. But every path goes through a **commit**. PromptLens records context at commit time and stores it in `git notes`:
 - No files are added to your tree.
 - The note is keyed by SHA and survives `--amend` and `rebase` (`notes.rewriteRef`).
-- `pre-push` pushes the notes ref *before* the branch, so the Action always finds the context.
+- `pre-push` pushes the notes ref _before_ the branch, so the Action always finds the context.
 
 **2. Which of my sessions produced this commit?**
 Developers run several sessions in parallel, keep one session going for hours, or open a session just to ask questions. A session is linked only if, **between the parent commit and this one, it edited a file this commit changed**:
@@ -171,7 +171,7 @@ A single request can trigger 60+ agent actions, so PromptLens chunks the work **
 
 **4. Can a reviewer trust an LLM's summary?**
 - The model selects key prompts **by index**, and PromptLens quotes them verbatim from the log, so they are never paraphrased.
-- Claims the model inferred are tagged *(inferred)*.
+- Claims the model inferred are tagged _(inferred)_.
 - Translations are labeled. The notes keep the original language; only the PR comment shows English.
 
 **5. Prompts contain secrets and private thoughts.**
@@ -186,11 +186,11 @@ A single request can trigger 60+ agent actions, so PromptLens chunks the work **
 
 ### PromptLens vs. existing tools
 
-| | Question it answers | Looks at |
-|---|---|---|
-| **Git AI** and other provenance tools | *Which lines did an AI write?* | Lines of code |
-| **AI code-review bots** | *Is this diff correct?* | The diff |
-| **PromptLens** | ***Why** was it written this way, and was it checked?* | The prompts, decisions, and verification behind the diff |
+|                                       | Question it answers                                    | Looks at                                                 |
+| ------------------------------------- | ------------------------------------------------------ | -------------------------------------------------------- |
+| **Git AI** and other provenance tools | _Which lines did an AI write?_                         | Lines of code                                            |
+| **AI code-review bots**               | _Is this diff correct?_                                | The diff                                                 |
+| **PromptLens**                        | _**Why** was it written this way, and was it checked?_ | The prompts, decisions, and verification behind the diff |
 
 These tools complement each other. PromptLens doesn't replace code review; it supplies the context that the code alone can't show.
 
@@ -210,16 +210,16 @@ Then work as usual: commit, push, and open a PR.
 <details>
 <summary><b>Commands and environment variables</b></summary>
 
-| Command | When it runs | What it does |
-|---|---|---|
-| `promptlens init` | once | Installs `post-commit` / `pre-push` hooks (appending to existing ones), notes rewrite and fetch config, and the PR workflow |
-| `promptlens capture [rev]` | post-commit | Links sessions to the commit, saves the private raw capture, and starts the background summarizer |
-| `promptlens sync [remote]` | pre-push | Fills in any missing Commit Context and pushes the notes ref |
-| `promptlens summarize [rev] --force` | manual | Re-captures a commit and regenerates its context |
-| `promptlens show [rev]` | manual | Prints a commit's Commit Context |
-| `promptlens report --base main` | manual | Previews the PR comment locally |
-| `promptlens report --file` | manual | Previews the line-commentable review file |
-| `promptlens pr-report --post` | GitHub Actions | Commits `.promptlens/PR-<n>.md` to the PR branch, then creates or updates the PR comment |
+| Command                              | When it runs   | What it does                                                                                                                |
+| ------------------------------------ | -------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `promptlens init`                    | once           | Installs `post-commit` / `pre-push` hooks (appending to existing ones), notes rewrite and fetch config, and the PR workflow |
+| `promptlens capture [rev]`           | post-commit    | Links sessions to the commit, saves the private raw capture, and starts the background summarizer                           |
+| `promptlens sync [remote]`           | pre-push       | Fills in any missing Commit Context and pushes the notes ref                                                                |
+| `promptlens summarize [rev] --force` | manual         | Re-captures a commit and regenerates its context                                                                            |
+| `promptlens show [rev]`              | manual         | Prints a commit's Commit Context                                                                                            |
+| `promptlens report --base main`      | manual         | Previews the PR comment locally                                                                                             |
+| `promptlens report --file`           | manual         | Previews the line-commentable review file                                                                                   |
+| `promptlens pr-report --post`        | GitHub Actions | Commits`.promptlens/PR-<n>.md` to the PR branch, then creates or updates the PR comment                                     |
 
 Environment variables:
 - `OPENAI_API_KEY`
@@ -237,10 +237,9 @@ npm test          # 60 tests in 7 files
 npm run coverage
 ```
 
-| Module | capture | flow | report | turns | redact | sessions | init |
-|---|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
-| Line coverage | 98% | 99% | 99% | 100% | 100% | 96% | 90% |
-
+| Module        | capture | flow | report | turns | redact | sessions | init |
+| ------------- | :-----: | :--: | :----: | :---: | :----: | :------: | :--: |
+| Line coverage |   98%   | 99%  |  99%   | 100%  |  100%  |   96%    | 90%  |
 - **End-to-end test:** builds a real git repo with a fake Claude Code session log, then commits, captures, writes the note, and renders the PR report.
 - **CI:** runs typecheck and coverage on every PR. The PromptLens workflow posts the report on its own PR.
 - **Network adapters** (`github.ts`, `openai.ts`) and the CLI entrypoint are exercised by dogfooding on [PR #1](https://github.com/NewCodes7/promptlens/pull/1).

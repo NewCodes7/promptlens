@@ -39,12 +39,13 @@
     "build": "tsc -p tsconfig.json",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "typecheck": "tsc -p tsconfig.test.json",
     "test": "vitest run",
     "coverage": "vitest run --coverage",
     "check": "npm run lint && npm run typecheck && npm test",
     "prepublishOnly": "npm run check && npm run build",
-    "hub:data": "node scripts/export-hub-data.mjs --turns 7"
+    "hub:data": "node scripts/export-hub-data.mjs --turns 7",
+    "prebuild": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\""
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.3",

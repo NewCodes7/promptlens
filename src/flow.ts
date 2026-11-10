@@ -1,5 +1,5 @@
 import type { CommitEntry } from "./report.js";
-import type { Turn, TurnStep } from "./types.js";
+import type { CommitContext, Turn, TurnStep } from "./types.js";
 
 export const MAX_FLOW_TURNS = 10;
 
@@ -50,8 +50,11 @@ function mergeSteps(a: TurnStep[], b: TurnStep[]): TurnStep[] {
 }
 
 function mergeMetrics(a: Turn["metrics"], b: Turn["metrics"]): Turn["metrics"] {
+  // ISO-8601 timestamps sort as strings; Math.min/max would coerce them to NaN.
   return {
+    // biome-ignore lint/complexity/useMathMinMax: string comparison, see above
     start: a.start < b.start ? a.start : b.start,
+    // biome-ignore lint/complexity/useMathMinMax: string comparison, see above
     end: a.end > b.end ? a.end : b.end,
     aiSteps: a.aiSteps + b.aiSteps,
     files: a.files + b.files,
@@ -81,8 +84,7 @@ function absorb(into: FlowTurn, piece: Turn): void {
   into.metrics = mergeMetrics(into.metrics, piece.metrics);
 }
 
-function legacyTurn(e: CommitEntry): Turn {
-  const c = e.context!;
+function legacyTurn(e: CommitEntry, c: CommitContext): Turn {
   return {
     key: `legacy@${e.sha}`,
     title: e.subject,
@@ -121,7 +123,7 @@ export function collectTurns(entries: CommitEntry[]): FlowTurn[] {
       out.push(manual);
       continue;
     }
-    const turns = c.turns?.length ? c.turns : [legacyTurn(e)];
+    const turns = c.turns?.length ? c.turns : [legacyTurn(e, c)];
     let last: FlowTurn | undefined;
     for (const t of turns) {
       const existing = byKey.get(t.key);
@@ -204,8 +206,11 @@ function dominant(t: FlowTurn): string {
 }
 
 function mm(text: string, max = 70): string {
-  const t = text.replace(/\s+/g, " ").replace(/["`#<>{}|]/g, "'").trim();
-  return t.length > max ? t.slice(0, max - 1) + "…" : t;
+  const t = text
+    .replace(/\s+/g, " ")
+    .replace(/["`#<>{}|]/g, "'")
+    .trim();
+  return t.length > max ? `${t.slice(0, max - 1)}…` : t;
 }
 
 function esc(text: string): string {
@@ -221,10 +226,14 @@ export function renderFlow(
   outcomeOverrides: (string | undefined)[] = [],
   translate: (s: string) => string = (s) => s,
 ): string {
-  const turns = mergeToMax(collectTurns(entries), max).map((t, i) => (outcomeOverrides[i] ? { ...t, outcome: outcomeOverrides[i]! } : t));
+  const turns = mergeToMax(collectTurns(entries), max).map((t, i) => {
+    const outcome = outcomeOverrides[i];
+    return outcome ? { ...t, outcome } : t;
+  });
   if (!turns.length) return "";
   const sessionIds = [...new Set(turns.flatMap((t) => t.sessions))];
-  const badge = (t: FlowTurn) => (sessionIds.length > 1 && t.sessions.length ? ` · ${t.sessions.map((s) => `S${sessionIds.indexOf(s) + 1}`).join("+")}` : "");
+  const badge = (t: FlowTurn) =>
+    sessionIds.length > 1 && t.sessions.length ? ` · ${t.sessions.map((s) => `S${sessionIds.indexOf(s) + 1}`).join("+")}` : "";
   const commitLabel = (t: FlowTurn) => `⎇ ${mm(t.commits.map((s) => s.slice(0, 7)).join(" · "), 60)}`;
 
   const lines = [
@@ -253,7 +262,10 @@ export function renderFlow(
 
   const details = turns.map((t, i) => {
     const commits = t.commits.length ? ` · ⎇ ${t.commits.map((s) => `<code>${s.slice(0, 7)}</code>`).join(" ")}` : "";
-    const out = [`<details><summary><b>${CIRCLED[i] ?? i + 1} ${one(t.title)}</b> · ${one(metricsLine(t))}${badge(t)}${commits}</summary>`, ""];
+    const out = [
+      `<details><summary><b>${CIRCLED[i] ?? i + 1} ${one(t.title)}</b> · ${one(metricsLine(t))}${badge(t)}${commits}</summary>`,
+      "",
+    ];
     if (t.prompts.length) {
       out.push("**🧑‍💻 Prompt**", "");
       let translated = false;
@@ -273,7 +285,10 @@ export function renderFlow(
     if (t.steps.length) {
       const step = (s: TurnStep) => `${icon(s.type)} **${one(title(s.type))}**${s.text ? ` — ${one(s.text)}` : ""}`;
       // Long requests (spanning many commits) keep the beginning and the end; the middle collapses.
-      const shown = t.steps.length > 8 ? [...t.steps.slice(0, 3).map(step), `… ${t.steps.length - 8} more steps`, ...t.steps.slice(-5).map(step)] : t.steps.map(step);
+      const shown =
+        t.steps.length > 8
+          ? [...t.steps.slice(0, 3).map(step), `… ${t.steps.length - 8} more steps`, ...t.steps.slice(-5).map(step)]
+          : t.steps.map(step);
       out.push("**🤖 What the AI did**", ...shown.map((s) => `- ${s}`), "");
     }
     if (t.outcome) out.push(`✅ **Outcome:** ${one(t.outcome)}`, "");
@@ -281,7 +296,12 @@ export function renderFlow(
       out.push("**Decisions**", ...t.decisions.slice(0, 8).map((d) => `- **${one(d.text)}**${d.why ? ` — ${one(d.why)}` : ""}`), "");
     }
     if (t.tips.keep.length || t.tips.improve.length) {
-      out.push("**🎯 Prompt review**", ...t.tips.keep.map((k) => `- 👍 **Keep:** ${one(k)}`), ...t.tips.improve.map((k) => `- 💡 **Try:** ${one(k)}`), "");
+      out.push(
+        "**🎯 Prompt review**",
+        ...t.tips.keep.map((k) => `- 👍 **Keep:** ${one(k)}`),
+        ...t.tips.improve.map((k) => `- 💡 **Try:** ${one(k)}`),
+        "",
+      );
     }
     out.push("</details>");
     return out.join("\n");

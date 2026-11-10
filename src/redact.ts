@@ -24,14 +24,12 @@ const RULES: { name: string; re: RegExp; replace?: (m: string, ...g: string[]) =
 export function redact(text: string): string {
   let out = text;
   for (const rule of RULES) {
-    out = out.replace(rule.re, (...args) =>
-      rule.replace ? rule.replace(...(args as [string, ...string[]])) : `[REDACTED:${rule.name}]`,
-    );
+    out = out.replace(rule.re, (...args) => (rule.replace ? rule.replace(...(args as [string, ...string[]])) : `[REDACTED:${rule.name}]`));
   }
   return out;
 }
 
 export function truncate(text: string, max: number): string {
   const clean = text.trim();
-  return clean.length > max ? clean.slice(0, max - 1).trimEnd() + "…" : clean;
+  return clean.length > max ? `${clean.slice(0, max - 1).trimEnd()}…` : clean;
 }

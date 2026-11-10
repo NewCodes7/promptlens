@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { synthesisFromModel } from "../src/openai.js";
-import { parseContext, renderReport, REPORT_MARKER, templateSynthesis, type CommitEntry } from "../src/report.js";
+import { type CommitEntry, parseContext, REPORT_MARKER, renderReport, templateSynthesis } from "../src/report.js";
 import { contextFromModel, extractJson, heuristicContext } from "../src/summarize.js";
 import type { RawCapture } from "../src/types.js";
 
@@ -50,7 +50,10 @@ describe("contextFromModel", () => {
   it("quotes prompts from the capture by index, never from the model", () => {
     const ctx = contextFromModel(raw, {
       intent: { text: "Protect login from brute force", inferred: false },
-      keyPrompts: [{ index: 1, why: "Changed the design" }, { index: 99, why: "bogus" }],
+      keyPrompts: [
+        { index: 1, why: "Changed the design" },
+        { index: 99, why: "bogus" },
+      ],
       decisions: [{ text: "Per-user buckets", inferred: true }],
       aiWork: ["Added middleware"],
       verification: [],
@@ -96,7 +99,12 @@ describe("renderReport", () => {
 
   it("merges an LLM synthesis while keeping missing-context warnings", () => {
     const syn = synthesisFromModel(
-      { overview: "Adds login rate limiting.", why: ["brute force"], keyDecisions: [{ text: "per user" }], reviewFocus: [{ file: "src/login.ts", text: "bucket math" }] },
+      {
+        overview: "Adds login rate limiting.",
+        why: ["brute force"],
+        keyDecisions: [{ text: "per user" }],
+        reviewFocus: [{ file: "src/login.ts", text: "bucket math" }],
+      },
       "OpenAI test",
       templateSynthesis(entries),
     );

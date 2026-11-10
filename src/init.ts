@@ -1,6 +1,6 @@
 import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
-import { NOTES_REF, git, gitDir, repoRoot } from "./git.js";
+import { git, gitDir, NOTES_REF, repoRoot } from "./git.js";
 import { type PackageInfo, pkg } from "./pkg.js";
 
 const HOOK_TAG = "# promptlens";

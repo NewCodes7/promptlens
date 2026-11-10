@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
-import { collectTurns, icon, mergeToMax, metricsLine, type FlowTurn } from "./flow.js";
-import { applyTranslations, REVIEW_DIR, type CommitEntry, templateSynthesis } from "./report.js";
+import { collectTurns, type FlowTurn, icon, mergeToMax, metricsLine } from "./flow.js";
+import { applyTranslations, type CommitEntry, REVIEW_DIR, templateSynthesis } from "./report.js";
 import type { CommitContext } from "./types.js";
 
 const CIRCLED = ["①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨", "⑩", "⑪", "⑫"];
@@ -42,7 +42,8 @@ function turnSection(t: FlowTurn, i: number, tr: (s: string) => string): string[
   } else out.push("🤖 Continued an earlier request without a new prompt.", "");
   if (t.steps.length) {
     out.push("### 🤖 What the AI did", "");
-    for (const s of t.steps) out.push(`- ${icon(s.type)} **${one(s.type.charAt(0).toUpperCase() + s.type.slice(1))}**${s.text ? ` — ${one(s.text)}` : ""}`);
+    for (const s of t.steps)
+      out.push(`- ${icon(s.type)} **${one(s.type.charAt(0).toUpperCase() + s.type.slice(1))}**${s.text ? ` — ${one(s.text)}` : ""}`);
     out.push("");
   }
   if (t.outcome) out.push(`✅ **Outcome:** ${one(t.outcome)}`, "");
@@ -50,7 +51,13 @@ function turnSection(t: FlowTurn, i: number, tr: (s: string) => string): string[
     out.push("### Decisions", "", ...t.decisions.map((d) => `- **${one(d.text)}**${d.why ? ` — ${one(d.why)}` : ""}`), "");
   }
   if (t.tips.keep.length || t.tips.improve.length) {
-    out.push("### 🎯 Prompt review", "", ...t.tips.keep.map((k) => `- 👍 **Keep:** ${one(k)}`), ...t.tips.improve.map((k) => `- 💡 **Try:** ${one(k)}`), "");
+    out.push(
+      "### 🎯 Prompt review",
+      "",
+      ...t.tips.keep.map((k) => `- 👍 **Keep:** ${one(k)}`),
+      ...t.tips.improve.map((k) => `- 💡 **Try:** ${one(k)}`),
+      "",
+    );
   }
   return out;
 }
@@ -85,12 +92,12 @@ export function renderReviewFile(rawEntries: CommitEntry[], pr: number, opts: { 
   ];
   const turns = mergeToMax(collectTurns(entries));
   if (!turns.length) out.push("_No AI work context was recorded for the commits in this PR._", "");
-  turns.forEach((t, i) => out.push(...turnSection(t, i, tr)));
+  for (const [i, t] of turns.entries()) out.push(...turnSection(t, i, tr));
   out.push(
     "---",
     "",
     "Prompts are quoted verbatim from the Commit Context notes (`refs/notes/promptlens`) and redacted for secrets.",
     "Non-English prompts keep the original, with an English translation below.",
   );
-  return out.join("\n") + "\n";
+  return `${out.join("\n")}\n`;
 }

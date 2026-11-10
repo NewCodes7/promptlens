@@ -46,7 +46,7 @@ export function findSessionFiles(root: string, modifiedSince?: Date): string[] {
   const prefix = projectDirName(root);
   const files: string[] = [];
   for (const entry of readdirSync(dir)) {
-    if (entry !== prefix && !entry.startsWith(prefix + "-")) continue;
+    if (entry !== prefix && !entry.startsWith(`${prefix}-`)) continue;
     const full = path.join(dir, entry);
     if (!statSync(full).isDirectory()) continue;
     for (const f of readdirSync(full)) {
@@ -83,8 +83,7 @@ function toolResultText(block: { content?: unknown }): string {
 export function parseAnswers(result: string): { question: string; answer: string }[] {
   const out: { question: string; answer: string }[] = [];
   const re = /"((?:[^"\\]|\\.)+)"="((?:[^"\\]|\\.)*)"/g;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(result))) out.push({ question: m[1], answer: m[2] });
+  for (const [, question, answer] of result.matchAll(re)) out.push({ question, answer });
   return out;
 }
 
@@ -114,7 +113,9 @@ export function parseSessionLog(raw: string): SessionEvent[] {
       }
       if (d.isMeta) continue;
       // Strip harness wrappers around pasted text so only what the developer wrote remains.
-      const text = textOf(content)?.replace(/<\/?pasted_content[^>]*>/g, "").trim();
+      const text = textOf(content)
+        ?.replace(/<\/?pasted_content[^>]*>/g, "")
+        .trim();
       if (text && !isNoise(text)) events.push({ kind: "prompt", ...base, text });
       continue;
     }

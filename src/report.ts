@@ -1,5 +1,5 @@
-import { commitInfo, git, readNote, revList } from "./git.js";
 import { renderFlow } from "./flow.js";
+import { commitInfo, git, readNote, revList } from "./git.js";
 import type { Claim, CommitContext } from "./types.js";
 
 export const REPORT_MARKER = "<!-- promptlens:report -->";
@@ -37,7 +37,9 @@ export const REVIEW_DIR = ".promptlens";
 
 /** true for commits that only touch the review file folder — the bot's own commits, never part of the report. */
 function isReviewFileCommit(sha: string, cwd?: string): boolean {
-  const files = git(["diff-tree", "--no-commit-id", "--name-only", "-r", "--root", sha], { cwd, allowFail: true }).split("\n").filter(Boolean);
+  const files = git(["diff-tree", "--no-commit-id", "--name-only", "-r", "--root", sha], { cwd, allowFail: true })
+    .split("\n")
+    .filter(Boolean);
   return files.length > 0 && files.every((f) => f.startsWith(`${REVIEW_DIR}/`));
 }
 
@@ -72,15 +74,21 @@ export function templateSynthesis(entries: CommitEntry[]): Synthesis {
     ctx.flatMap((c) => c.files.filter((f) => f.aiEdited).map((f) => f.path)),
     (f) => f,
   );
-  for (const c of ctx) if (c.verification.length) c.files.forEach((f) => verifiedFiles.add(f.path));
+  for (const c of ctx) if (c.verification.length) for (const f of c.files) verifiedFiles.add(f.path);
   const missing = entries.filter((e) => !e.context);
-  const intents = dedupe(ctx.map((c) => c.intent.text.replace(/\s+/g, " ").trim()), (t) => t);
+  const intents = dedupe(
+    ctx.map((c) => c.intent.text.replace(/\s+/g, " ").trim()),
+    (t) => t,
+  );
   return {
     overview: ctx.length
       ? `${ctx.length} commit(s) with AI context across ${new Set(ctx.flatMap((c) => c.sessionIds)).size} session(s). Main request: ${intents[0]}`
       : "No AI work context was recorded for the commits in this PR.",
     why: intents,
-    keyDecisions: dedupe(ctx.flatMap((c) => c.decisions), (d) => d.text).slice(0, 8),
+    keyDecisions: dedupe(
+      ctx.flatMap((c) => c.decisions),
+      (d) => d.text,
+    ).slice(0, 8),
     reviewFocus: aiFiles
       .filter((f) => !verifiedFiles.has(f))
       .slice(0, 6)
@@ -121,15 +129,12 @@ function commitDetails(e: CommitEntry, tr: (s: string) => string): string {
   out.push(`**Intent:** ${claim(c.intent)}`, "");
   if (c.keyPrompts.length) {
     out.push("**Key prompts**", "");
-    for (const p of c.keyPrompts) out.push(quote(tr(p.text)), "", `<sub>↳ ${line(p.why)}${tr(p.text) !== p.text ? " · 🌐 translated" : ""}</sub>`, "");
+    for (const p of c.keyPrompts)
+      out.push(quote(tr(p.text)), "", `<sub>↳ ${line(p.why)}${tr(p.text) !== p.text ? " · 🌐 translated" : ""}</sub>`, "");
   }
   if (c.aiWork.length) out.push("**What the AI did**", ...c.aiWork.map((w) => `- ${line(w)}`), "");
   if (c.decisions.length) out.push("**Decisions**", ...c.decisions.map((d) => `- ${claim(d)}`), "");
-  out.push(
-    "**Verification**",
-    ...(c.verification.length ? c.verification.map((v) => `- ✅ ${claim(v)}`) : ["- ⚠️ None recorded"]),
-    "",
-  );
+  out.push("**Verification**", ...(c.verification.length ? c.verification.map((v) => `- ✅ ${claim(v)}`) : ["- ⚠️ None recorded"]), "");
   out.push("</details>");
   return out.join("\n");
 }
@@ -164,12 +169,21 @@ export function applyTranslations(entries: CommitEntry[], syn: Synthesis, map: M
             ...e.context,
             intent: { ...e.context.intent, text: sub(e.context.intent.text) },
             decisions: e.context.decisions.map((d) => ({ ...d, text: sub(d.text) })),
-            turns: e.context.turns?.map((t) => ({ ...t, title: sub(t.title), decisions: t.decisions.map((d) => ({ ...d, text: sub(d.text) })) })),
+            turns: e.context.turns?.map((t) => ({
+              ...t,
+              title: sub(t.title),
+              decisions: t.decisions.map((d) => ({ ...d, text: sub(d.text) })),
+            })),
           },
         }
       : e,
   );
-  const tSyn = { ...syn, overview: sub(syn.overview), why: syn.why.map(sub), keyDecisions: syn.keyDecisions.map((d) => ({ ...d, text: sub(d.text) })) };
+  const tSyn = {
+    ...syn,
+    overview: sub(syn.overview),
+    why: syn.why.map(sub),
+    keyDecisions: syn.keyDecisions.map((d) => ({ ...d, text: sub(d.text) })),
+  };
   return [tEntries, tSyn];
 }
 
@@ -196,7 +210,10 @@ export function renderReport(
     "",
   );
   if (opts.reviewFile)
-    out.push(`> 💬 **Comment on a specific prompt:** open [\`${esc(opts.reviewFile.path)}\`](${opts.reviewFile.url}) in *Files changed* and select lines.`, "");
+    out.push(
+      `> 💬 **Comment on a specific prompt:** open [\`${esc(opts.reviewFile.path)}\`](${opts.reviewFile.url}) in *Files changed* and select lines.`,
+      "",
+    );
   const flow = renderFlow(entries, undefined, syn.turnOutcomes, tr);
   if (flow) out.push("### 🧭 How this PR was built — prompt by prompt", "", flow, "");
   if (syn.why.length) out.push("### Why these changes", ...syn.why.map((w) => `- ${line(w)}`), "");

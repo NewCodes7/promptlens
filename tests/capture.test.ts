@@ -53,9 +53,19 @@ describe("buildCapture", () => {
     expect(later.sessions).toHaveLength(0); // A's edit was before this window
 
     const followUp = parseSessionLog(
-      [userPrompt("A", "2026-11-09T01:00:00Z", "implement feature a"), toolUse("A", "2026-11-09T01:20:00Z", "Edit", { file_path: `${ROOT}/src/a.ts` })].join("\n"),
+      [
+        userPrompt("A", "2026-11-09T01:00:00Z", "implement feature a"),
+        toolUse("A", "2026-11-09T01:20:00Z", "Edit", { file_path: `${ROOT}/src/a.ts` }),
+      ].join("\n"),
     );
-    const cap = buildCapture(followUp, { root: ROOT, sha: "x", subject: "x", from: "2026-11-09T01:05:00Z", to: "2026-11-09T01:30:00Z", filesChanged: ["src/a.ts"] });
+    const cap = buildCapture(followUp, {
+      root: ROOT,
+      sha: "x",
+      subject: "x",
+      from: "2026-11-09T01:05:00Z",
+      to: "2026-11-09T01:30:00Z",
+      filesChanged: ["src/a.ts"],
+    });
     expect(cap.sessions[0].prompts).toEqual([{ ts: "2026-11-09T01:00:00Z", text: "implement feature a", carried: true }]);
   });
 
@@ -67,7 +77,14 @@ describe("buildCapture", () => {
         toolUse("S", "2026-11-09T01:00:20Z", "Bash", { command: "sed -i '' 's/a/b/' src/c.ts" }),
       ].join("\n"),
     );
-    const cap = buildCapture(ev, { root: ROOT, sha: "x", subject: "x", from: "2026-11-09T00:30:00Z", to: "2026-11-09T01:30:00Z", filesChanged: ["src/b.ts", "src/c.ts"] });
+    const cap = buildCapture(ev, {
+      root: ROOT,
+      sha: "x",
+      subject: "x",
+      from: "2026-11-09T00:30:00Z",
+      to: "2026-11-09T01:30:00Z",
+      filesChanged: ["src/b.ts", "src/c.ts"],
+    });
     expect(cap.sessions[0].edits).toEqual([{ ts: "2026-11-09T01:00:20Z", tool: "Bash", file: "src/c.ts" }]);
   });
 
@@ -80,7 +97,14 @@ describe("buildCapture", () => {
     ["python3 -c \"open('src/c.ts','w').write('x')\"", true],
   ])("shell write detection: %s → %s", (command, writes) => {
     const ev = parseSessionLog(toolUse("S", "2026-11-09T01:00:20Z", "Bash", { command }));
-    const cap = buildCapture(ev, { root: ROOT, sha: "x", subject: "x", from: "2026-11-09T00:30:00Z", to: "2026-11-09T01:30:00Z", filesChanged: ["src/c.ts"] });
+    const cap = buildCapture(ev, {
+      root: ROOT,
+      sha: "x",
+      subject: "x",
+      from: "2026-11-09T00:30:00Z",
+      to: "2026-11-09T01:30:00Z",
+      filesChanged: ["src/c.ts"],
+    });
     expect(cap.sessions.length > 0).toBe(writes);
   });
 

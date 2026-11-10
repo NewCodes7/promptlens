@@ -4,7 +4,7 @@ import { appendFileSync, mkdirSync, openSync, readFileSync, realpathSync } from 
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { captureCommit, readRaw } from "./capture.js";
-import { NOTES_REF, git, gitDir, readNote, resolveSha, revList, writeNote } from "./git.js";
+import { git, gitDir, NOTES_REF, readNote, resolveSha, revList, writeNote } from "./git.js";
 import { upsertComment, upsertFile } from "./github.js";
 import { init } from "./init.js";
 import { synthesize, translatePrompts } from "./openai.js";
@@ -125,7 +125,13 @@ async function main() {
         .filter((p) => p.length === 4 && !ZERO.test(p[1]))
         .map(([, localSha, , remoteSha]) => (ZERO.test(remoteSha) ? `${localSha} --not --remotes=${remote}` : `${remoteSha}..${localSha}`));
       const shas = ranges.length
-        ? ranges.flatMap((r) => (r.includes("--not") ? git(["rev-list", ...r.split(" ")], { allowFail: true }).split("\n").filter(Boolean) : revList(r)))
+        ? ranges.flatMap((r) =>
+            r.includes("--not")
+              ? git(["rev-list", ...r.split(" ")], { allowFail: true })
+                  .split("\n")
+                  .filter(Boolean)
+              : revList(r),
+          )
         : revList(`@{u}..HEAD`);
       let written = 0;
       for (const sha of shas) if ((await ensureContext(sha)) === "written") written++;

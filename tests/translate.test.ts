@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { needsTranslation, translatePrompts } from "../src/openai.js";
-import { renderReport, templateSynthesis, translatableTexts, type CommitEntry } from "../src/report.js";
+import { type CommitEntry, renderReport, templateSynthesis, translatableTexts } from "../src/report.js";
 import { heuristicContext } from "../src/summarize.js";
 import type { RawCapture } from "../src/types.js";
 
@@ -43,7 +43,13 @@ describe("translatePrompts", () => {
       const body = JSON.parse(init.body);
       expect(body.messages[0].content).toContain("PR 결과를 영어로 바꿔줘");
       expect(body.messages[0].content).not.toContain("already english");
-      return new Response(JSON.stringify({ choices: [{ message: { content: JSON.stringify({ items: [{ id: 0, en: "Change the PR output to English, mail dev@example.com" }] }) } }] }));
+      return new Response(
+        JSON.stringify({
+          choices: [
+            { message: { content: JSON.stringify({ items: [{ id: 0, en: "Change the PR output to English, mail dev@example.com" }] }) } },
+          ],
+        }),
+      );
     });
     vi.stubGlobal("fetch", fetchMock);
     const map = await translatePrompts(["PR 결과를 영어로 바꿔줘", "already english", "PR 결과를 영어로 바꿔줘"]);
@@ -54,7 +60,10 @@ describe("translatePrompts", () => {
   it("returns nothing without a key or on API failure", async () => {
     expect((await translatePrompts(["한국어"])).size).toBe(0);
     process.env.OPENAI_API_KEY = "test";
-    vi.stubGlobal("fetch", vi.fn(async () => new Response("boom", { status: 500 })));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response("boom", { status: 500 })),
+    );
     expect((await translatePrompts(["한국어"])).size).toBe(0);
   });
 });
@@ -62,7 +71,9 @@ describe("translatePrompts", () => {
 describe("renderReport with translations", () => {
   it("shows English prompts in the flow and the commit timeline, marked as translated", () => {
     const entries: CommitEntry[] = [{ sha: raw.sha, subject: raw.subject, context: heuristicContext(raw) }];
-    const md = renderReport(entries, templateSynthesis(entries), { translations: new Map([["PR 결과를 영어로 바꿔줘", "Change the PR output to English"]]) });
+    const md = renderReport(entries, templateSynthesis(entries), {
+      translations: new Map([["PR 결과를 영어로 바꿔줘", "Change the PR output to English"]]),
+    });
     expect(md).not.toContain("PR 결과를");
     expect(md).toContain("> Change the PR output to English");
     expect(md).toContain("🌐 Translated to English from the original prompt.");
@@ -73,7 +84,10 @@ describe("renderReport with translations", () => {
 
 describe("translatableTexts", () => {
   it("collects prompts, titles, intents and decisions from contexts", () => {
-    const texts = translatableTexts([{ sha: raw.sha, subject: raw.subject, context: heuristicContext(raw) }, { sha: "x", subject: "manual", context: null }]);
+    const texts = translatableTexts([
+      { sha: raw.sha, subject: raw.subject, context: heuristicContext(raw) },
+      { sha: "x", subject: "manual", context: null },
+    ]);
     expect(texts).toContain("PR 결과를 영어로 바꿔줘");
   });
 });

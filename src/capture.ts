@@ -1,4 +1,4 @@
-import { mkdirSync, readFileSync, writeFileSync, existsSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { commitInfo, filesChanged, gitDir, repoRoot } from "./git.js";
 import { loadEvents, type SessionEvent } from "./sessions.js";

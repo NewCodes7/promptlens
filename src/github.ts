@@ -17,7 +17,12 @@ async function gh(token: string, method: string, url: string, body?: unknown): P
 }
 
 /** Create the PromptLens comment on a PR, or update it in place so there is only ever one. */
-export async function upsertComment(token: string, repo: string, pr: number, body: string): Promise<{ id: number; action: "created" | "updated"; url: string }> {
+export async function upsertComment(
+  token: string,
+  repo: string,
+  pr: number,
+  body: string,
+): Promise<{ id: number; action: "created" | "updated"; url: string }> {
   for (let page = 1; page <= 20; page++) {
     const comments: any[] = await gh(token, "GET", `/repos/${repo}/issues/${pr}/comments?per_page=100&page=${page}`);
     const mine = comments.find((c) => typeof c.body === "string" && c.body.includes(REPORT_MARKER));
