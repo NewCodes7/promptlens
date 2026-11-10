@@ -6,6 +6,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { captureCommit, readRaw } from "../src/capture.js";
 import { readNote, writeNote } from "../src/git.js";
 import { init } from "../src/init.js";
+import { pkg } from "../src/pkg.js";
 import { collectCommits, parseContext, renderReport, templateSynthesis } from "../src/report.js";
 import { renderReviewFile, reviewFilePath } from "../src/review.js";
 import { projectDirName } from "../src/sessions.js";
@@ -48,7 +49,9 @@ describe("end to end: session log → commit → note → PR report", () => {
     expect(readFileSync(path.join(repo, ".git/hooks/pre-push"), "utf8")).toContain('sync "$1"');
     expect(sh(repo, "config", "notes.rewriteRef")).toBe("refs/notes/promptlens");
     expect(sh(repo, "config", "--get-all", "remote.origin.fetch")).toContain("refs/notes/promptlens");
-    expect(existsSync(path.join(repo, ".github/workflows/promptlens.yml"))).toBe(true);
+    const workflow = readFileSync(path.join(repo, ".github/workflows/promptlens.yml"), "utf8");
+    expect(workflow).toContain(`run: npx --yes ${pkg.name}@${pkg.version} pr-report --post`);
+    expect(workflow).not.toContain("@latest");
     // Idempotent.
     expect(init({ cli: "/nonexistent/cli.js", workflow: true, cwd: repo }).join("\n")).toMatch(/post-commit hook: present/);
   });

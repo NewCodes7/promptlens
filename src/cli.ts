@@ -8,6 +8,7 @@ import { NOTES_REF, git, gitDir, readNote, resolveSha, revList, writeNote } from
 import { upsertComment, upsertFile } from "./github.js";
 import { init } from "./init.js";
 import { synthesize, translatePrompts } from "./openai.js";
+import { pkg } from "./pkg.js";
 import { collectCommits, renderReport, translatableTexts } from "./report.js";
 import { renderReviewFile, reviewFilePath, reviewFileUrl } from "./review.js";
 import { summarize } from "./summarize.js";
@@ -67,6 +68,11 @@ async function main() {
   const { pos, opt } = flags(rest);
 
   switch (cmd) {
+    case "--version":
+    case "-v":
+      console.log(pkg.version);
+      return;
+
     case "init": {
       const lines = init({
         cli: CLI,
@@ -194,10 +200,12 @@ async function main() {
     }
 
     default:
-      console.log(`promptlens — AI work context for code review
+      console.log(`promptlens ${pkg.version} — AI work context for code review
 
 Usage:
-  promptlens init [--no-workflow]     Install git hooks, notes config and the PR workflow
+  promptlens init [--no-workflow] [--workflow-run CMD]
+                                      Install git hooks, notes config and the PR workflow
+                                      (the workflow pins ${pkg.name}@${pkg.version})
   promptlens capture [rev] [--sync]   (post-commit) link AI sessions to a commit
   promptlens summarize [rev] [--force] Write the Commit Context note for a commit
   promptlens sync [remote]            (pre-push) ensure contexts and push ${NOTES_REF}
@@ -205,7 +213,8 @@ Usage:
   promptlens report [--base B] [--head H]   Preview the PR report locally
   promptlens report --file [--pr N]   Preview the line-commentable review file
   promptlens pr-report --post         (GitHub Actions) commit .promptlens/PR-<n>.md and post/update the PR comment
-                                      (--no-review-file: comment only)`);
+                                      (--no-review-file: comment only)
+  promptlens --version                Print the installed version`);
   }
 }
 
