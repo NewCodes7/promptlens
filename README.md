@@ -180,6 +180,21 @@ Each commit is summarized by the first option that works: the local `claude -p` 
 
 PromptLens also writes `.git/promptlens/` (raw captures and a log) and the `refs/notes/promptlens` ref. Remove them with `rm -rf .git/promptlens`, `git update-ref -d refs/notes/promptlens`, and `git push origin --delete refs/notes/promptlens`.
 
+## How I got to this design
+
+I started from one problem: AI agents make PRs bigger, but the reasoning behind a change stays in a chat the reviewer never sees.
+
+- **Dropped: extracting a developer's know-how from their sessions.** Pulling reusable patterns out of a conversation was much harder to do well than I expected, so I left it for later.
+- **Dropped as the core: a separate site for sharing prompts.** Reviewers already discuss design on the PR, and a new place to visit adds friction, so the output had to land on the PR. The [Hub page](https://newcodes7.github.io/promptlens/) stays as a vision demo.
+- **Reframed: review the prompts, not just the diff.** Quote what the developer asked verbatim, and summarize what the agent did in between.
+
+Then two constraints shaped the build:
+
+- **No hook fires when a PR is created.** PRs are opened from the web, from `gh` and by agents, but every path goes through a commit. So capture happens at commit time (decision 1 below).
+- **One PR can span several sessions, and one session can feed several PRs.** Git already tracks change per commit, so the context is attached to commits, not to PRs or sessions (decision 2).
+
+I had planned to use [Git AI](https://usegitai.com) as the capture layer. It wasn't set up on my machine during the build, so I linked sessions to commits directly and kept [`sessions.ts`](src/sessions.ts) as the adapter boundary where Git AI can plug in.
+
 ## Design decisions
 
 **1. There is no "PR created" hook, so capture happens at commit time.** PRs are opened from the web UI, from `gh`, and by AI agents, and no hook sees all of them. Every path goes through a commit, so the context is stored in `git notes`, keyed by SHA. That adds no files to your tree, survives `--amend` and `rebase` (`notes.rewriteRef`), and `pre-push` pushes the notes ref before the branch so the Action always finds it.
@@ -196,13 +211,15 @@ PromptLens also writes `.git/promptlens/` (raw captures and a log) and the `refs
 
 ### Compared with other tools
 
-|                                   | Question it answers                                    | Looks at                                                |
-| --------------------------------- | ------------------------------------------------------ | ------------------------------------------------------- |
-| Git AI and other provenance tools | _Which lines did an AI write?_                         | Lines of code                                           |
-| AI code-review bots               | _Is this diff correct?_                                | The diff                                                |
-| **PromptLens**                    | _**Why** was it written this way, and was it checked?_ | The prompts, decisions and verification behind the diff |
+|                                | Question it answers                                             | Unit it shows                                                      | Where you see it                                                      |
+| ------------------------------ | --------------------------------------------------------------- | ------------------------------------------------------------------ | --------------------------------------------------------------------- |
+| [Git AI](https://usegitai.com) | _Which lines did an AI write, and from which agent and prompt?_ | One line of code                                                   | `git ai blame`, `git ai show-prompt`, editor plugins, team dashboards |
+| AI code-review bots            | _Is this diff correct?_                                         | The diff                                                           | Comments on the PR                                                    |
+| **PromptLens**                 | _**Why** was it written this way, and was it checked?_          | One developer request: what the agent did, decisions, verification | One comment on the PR, plus a line-commentable review file            |
 
-They complement each other. The other tools check the output; PromptLens records the process behind it, so the reviewer can spend their time on design instead of reconstructing intent.
+Git AI is the closest. It also keeps the prompts: it links every AI-written line to the agent, model and prompt behind it, and stores the sessions outside git (locally, in its cloud, or self-hosted). Its view starts from a line of code, though, and its per-PR view (% AI, cost, in the Teams version) is a dashboard of aggregates.
+
+PromptLens starts from the developer's requests instead. It walks the PR one request at a time, in the order the work happened, and puts that on the PR itself, where the reviewer already discusses the design. Git AI tells you where a line came from; PromptLens tells the reviewer what the author was trying to do. The tools fit together: Git AI could be the capture layer under PromptLens, and review bots still check the diff.
 
 ## Dogfooding
 
@@ -212,7 +229,7 @@ PromptLens was built with Claude Code in a 5-hour hackathon, with PromptLens run
 | ------- | --------------- | ----------- | ----------------- | --------------- |
 | 15      | **15 / 15**     | 2           | 11                | 33 / 36         |
 
-None of it was written by hand. Running it on real work found bugs the unit tests didn't: redaction masked harmless config values, pasted-content wrappers leaked into quoted prompts, and `2>/dev/null` counted as a file edit. Each now has a regression test.
+Claude Code wrote the code. I planned the tool, decided its constraints and scope, and judged the results on real PRs. The prompts I gave along the way are quoted in the PR #1 and #2 reports, so you can see that split for yourself. Running it on real work found bugs the unit tests didn't: redaction masked harmless config values, pasted-content wrappers leaked into quoted prompts, and `2>/dev/null` counted as a file edit. Each now has a regression test.
 
 ## Development
 
