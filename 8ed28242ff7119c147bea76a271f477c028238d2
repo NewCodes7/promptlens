@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "sha": "8ed28242ff7119c147bea76a271f477c028238d2",
+  "subject": "Show how PromptLens got to its design, and who did what",
+  "files": [
+    {
+      "path": "README.md",
+      "aiEdited": false
+    }
+  ],
+  "stats": {
+    "sessions": 0,
+    "prompts": 0,
+    "aiEdits": 0
+  },
+  "sessionIds": [],
+  "generatedBy": "heuristic",
+  "turns": [],
+  "intent": {
+    "text": "Show how PromptLens got to its design, and who did what",
+    "inferred": true
+  },
+  "keyPrompts": [],
+  "decisions": [],
+  "aiWork": [],
+  "verification": []
+}
