@@ -1,3 +1,4 @@
+import { dedupe } from "./dedupe.js";
 import { renderFlow } from "./flow.js";
 import { commitInfo, git, readNote, revList } from "./git.js";
 import type { Claim, CommitContext } from "./types.js";
@@ -55,16 +56,6 @@ export function collectCommits(base: string, head: string, cwd?: string): { entr
     }));
   const diffStat = git(["diff", "--stat", mergeBase, head, "--", ".", `:(exclude)${REVIEW_DIR}`], { cwd, allowFail: true });
   return { entries, diffStat };
-}
-
-function dedupe<T>(items: T[], key: (t: T) => string): T[] {
-  const seen = new Set<string>();
-  return items.filter((i) => {
-    const k = key(i).toLowerCase();
-    if (seen.has(k)) return false;
-    seen.add(k);
-    return true;
-  });
 }
 
 /** No-LLM synthesis: stitch the per-commit contexts together. */

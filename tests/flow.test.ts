@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { collectTurns, duration, type FlowTurn, mergeToMax, renderFlow } from "../src/flow.js";
+import { buildSynthesisPrompt } from "../src/openai.js";
 import { redact, truncate } from "../src/redact.js";
-import type { CommitEntry } from "../src/report.js";
+import { type CommitEntry, renderReport, templateSynthesis } from "../src/report.js";
+import { renderReviewFile } from "../src/review.js";
 import { heuristicContext } from "../src/summarize.js";
 import { buildTurns, heuristicGroups, heuristicTurns, turnsForPrompt, turnsFromModel } from "../src/turns.js";
 import type { CommitContext, RawCapture, Turn } from "../src/types.js";
@@ -162,6 +164,105 @@ describe("mergeToMax", () => {
     const merged = mergeToMax(many, 10);
     expect(merged).toHaveLength(10);
     expect(merged.flatMap((t) => t.commits)).toHaveLength(23);
+  });
+});
+
+describe("decisions of a request that spans commits", () => {
+  // PR #2's shape: the request is prompted in the first commit and carried, without a new prompt, into the second.
+  // Each note holds its own decisions; the second piece only adds new ones.
+  const pr2 = (): CommitEntry[] => [
+    {
+      sha: "67e86bb0000",
+      subject: "Add PromptLens CLI",
+      context: ctx([
+        turn("s1@2026-11-09T02:27:57Z", {
+          title: "Implement PromptLens CLI from Notion plan",
+          prompts: ["노션 기획대로 구현하자"],
+          decisions: [
+            { text: "Direct session-to-commit linking", why: "Git AI isn't installed on this machine." },
+            { text: "Git notes plus pre-push auto-share", why: "Shares Commit Context without altering commit contents." },
+          ],
+        }),
+      ]),
+    },
+    {
+      sha: "4cdc7130000",
+      subject: "Add OpenAI fallback for commit summaries",
+      context: ctx([
+        turn("s1@2026-11-09T02:27:57Z", {
+          carried: true,
+          decisions: [
+            { text: "Fall back to OpenAI only when OPENAI_API_KEY is set", why: "Keeps the tool working offline without a key." },
+            { text: "Log background summarize stderr to the log file", why: "Failures were previously silent." },
+          ],
+        }),
+      ]),
+    },
+  ];
+  const texts = pr2().flatMap((e) => e.context?.turns?.flatMap((t) => t.decisions.map((d) => d.text)) ?? []);
+  const times = (md: string, s: string) => md.split(s).length - 1;
+
+  it.each([
+    ["with translations", new Map([["번역이 필요한 다른 문장", "Another sentence"]])],
+    ["without translations", new Map<string, string>()],
+  ])("lists each once in the review file and the PR comment, rendered in the order CI runs them (%s)", (_, translations) => {
+    const entries = pr2();
+    const notes = structuredClone(entries);
+    buildSynthesisPrompt(entries, "");
+    const file = renderReviewFile(entries, 2, { translations });
+    const comment = renderReport(entries, templateSynthesis(entries), { translations });
+    for (const text of texts) {
+      expect(times(file, `**${text}**`), text).toBe(1);
+      expect(times(comment, `**${text}**`), text).toBe(1);
+    }
+    expect(entries).toEqual(notes);
+  });
+
+  it("treats texts that differ only in case or whitespace as one, keeping the first and filling its empty why", () => {
+    const t = collectTurns([
+      {
+        sha: "c1",
+        subject: "a",
+        context: ctx([
+          turn("A", {
+            prompts: ["p"],
+            decisions: [
+              { text: "Summarize in the background", why: "" },
+              { text: "Use git notes", why: "first why" },
+            ],
+          }),
+        ]),
+      },
+      {
+        sha: "c2",
+        subject: "b",
+        context: ctx([
+          turn("A", {
+            carried: true,
+            decisions: [
+              { text: "summarize  in the\nBACKGROUND", why: "claude -p takes 10-30s" },
+              { text: "use git notes", why: "second why" },
+            ],
+          }),
+        ]),
+      },
+    ]);
+    expect(t[0].decisions).toEqual([
+      { text: "Summarize in the background", why: "claude -p takes 10-30s" },
+      { text: "Use git notes", why: "first why" },
+    ]);
+  });
+
+  it("applies the same rule when neighbouring requests are merged to fit the flow", () => {
+    const turns = collectTurns([
+      { sha: "c1", subject: "a", context: ctx([turn("A", { prompts: ["p"], decisions: [{ text: "Keep it offline", why: "" }] })]) },
+      {
+        sha: "c2",
+        subject: "b",
+        context: ctx([turn("B", { prompts: ["q"], decisions: [{ text: "keep it  offline", why: "No key in CI" }] })]),
+      },
+    ]);
+    expect(mergeToMax(turns, 1)[0].decisions).toEqual([{ text: "Keep it offline", why: "No key in CI" }]);
   });
 });
 
