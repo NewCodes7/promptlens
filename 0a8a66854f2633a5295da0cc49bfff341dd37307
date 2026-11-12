@@ -1,0 +1,145 @@
+{
+  "version": 1,
+  "sha": "0a8a66854f2633a5295da0cc49bfff341dd37307",
+  "subject": "Stop repeating a carried request's decisions in the PR report",
+  "files": [
+    {
+      "path": "src/dedupe.ts",
+      "aiEdited": true
+    },
+    {
+      "path": "src/flow.ts",
+      "aiEdited": true
+    },
+    {
+      "path": "src/report.ts",
+      "aiEdited": true
+    },
+    {
+      "path": "tests/flow.test.ts",
+      "aiEdited": true
+    }
+  ],
+  "stats": {
+    "sessions": 1,
+    "prompts": 1,
+    "aiEdits": 8
+  },
+  "sessionIds": [
+    "b6ac4cbc-22b7-4db2-a433-6881b2c7ab84"
+  ],
+  "generatedBy": "claude-cli",
+  "turns": [
+    {
+      "key": "b6ac4cbc-22b7-4db2-a433-6881b2c7ab84@2026-11-12T14:09:40.068Z",
+      "title": "Fix duplicated decisions across commits in PR report",
+      "prompts": [
+        "그럼 일단 수정 자체는 클로드 코드에서 하자. 프롬프트 작성해. \n\n1. Git AI는 내가 원하는 목적이랑 다른 도구 아닌가? \n2. 너가 써줘 \n3. 응\n\n```\n.promptlens/PR-2.md를 보면 1 요청의 Decisions에 같은 항목이 두 번씩 나와 (예: \"Fall back to OpenAI only when OPENAI_API_KEY is set...\"). 한 요청이 여러 커밋에 걸치면 커밋마다 노트에 같은 decision이 다시 들어가는데, src/flow.ts에서 조각을 합칠 때(absorb(), 그리고 턴 수를 줄이려고 두 턴을 합치는 부분) decisions를 그냥 이어 붙여서 생기는 것 같아.\n\n1. 원인이 맞는지 먼저 확인해줘. PR 코멘트 쪽에도 같은 중복이 생기는지 같이 봐줘.\n2. 고칠 때 기준: 공백이나 대소문자만 다른 건 같은 decision으로 봐. 먼저 나온 걸 남기되, why가 비어 있으면 나중 것의 why로 채워줘. report.ts에…"
+      ],
+      "carried": false,
+      "steps": [
+        {
+          "type": "investigate",
+          "text": "Confirmed flow.ts concatenation causes duplicates; checked PR comment and PR-3 too"
+        },
+        {
+          "type": "build",
+          "text": "Extracted shared dedupe; added mergeDecisions used by absorb() and mergeToMax()"
+        },
+        {
+          "type": "fix",
+          "text": "Made absorb() non-mutating so shared note arrays aren't altered"
+        },
+        {
+          "type": "verify",
+          "text": "Added regression tests, confirmed they fail on old code, ran npm run check"
+        },
+        {
+          "type": "ship",
+          "text": "Committed on fix branch after reproducing on real PR #2 data"
+        }
+      ],
+      "outcome": "Duplicates removed; 91 tests pass; fix committed on branch.",
+      "decisions": [
+        {
+          "text": "Treat case/whitespace-only differences as the same decision",
+          "why": "Developer's stated rule; first kept, empty why filled from later copy."
+        },
+        {
+          "text": "Share dedupe via new src/dedupe.ts",
+          "why": "Developer asked to reuse report.ts dedupe; whitespace normalization needed in both places."
+        },
+        {
+          "text": "Replace arrays in absorb() rather than push",
+          "why": "Entries are collected multiple times per run, so mutation would leak into other outputs."
+        }
+      ],
+      "tips": {
+        "keep": [
+          "Gave a precise dedupe rule and a regression-test shape matching the real PR-2 case.",
+          "Set explicit boundaries (no force push, research-only for existing PR) up front."
+        ],
+        "improve": [
+          "Mention the PR comment path was suspected too, to focus the test on both renderers earlier."
+        ]
+      },
+      "metrics": {
+        "start": "2026-11-12T14:09:40.068Z",
+        "end": "2026-11-12T14:14:06.186Z",
+        "aiSteps": 28,
+        "files": 4,
+        "reruns": 0
+      },
+      "sessionId": "b6ac4cbc-22b7-4db2-a433-6881b2c7ab84"
+    }
+  ],
+  "intent": {
+    "text": "Fix duplicated decisions in the PR report when one request spans several commits (carried prompts), by merging decisions with case/whitespace-insensitive dedupe.",
+    "inferred": false
+  },
+  "keyPrompts": [
+    {
+      "text": "그럼 일단 수정 자체는 클로드 코드에서 하자. 프롬프트 작성해. \n\n1. Git AI는 내가 원하는 목적이랑 다른 도구 아닌가? \n2. 너가 써줘 \n3. 응\n\n```\n.promptlens/PR-2.md를 보면 1 요청의 Decisions에 같은 항목이 두 번씩 나와 (예: \"Fall back to OpenAI only when OPENAI_API_KEY is set...\"). 한 요청이 여러 커밋에 걸치면 커밋마다 노트에 같은 decision이 다시 들어가는데, src/flow.ts에서 조각을 합칠 때(absorb(), 그리고 턴 수를 줄이려고 두 턴을 합치는 부분) decisions를 그냥 이어 붙여서 생기는 것 같아.\n\n1. 원인이 맞는지 먼저 확인해줘. PR 코멘트 쪽에도 같은 중복이 생기는지 같이…",
+      "why": "Defines the bug, the dedupe rule (first kept, empty why filled from later), reuse of report.ts dedupe, regression test shape, and limits on rewriting history."
+    }
+  ],
+  "decisions": [
+    {
+      "text": "Decisions equal up to case and whitespace count as one; first copy stays and a later copy fills an empty why.",
+      "inferred": false
+    },
+    {
+      "text": "Moved dedupe from report.ts into shared src/dedupe.ts (with whitespace-normalizing textKey) and reused it in flow.ts.",
+      "inferred": false
+    },
+    {
+      "text": "absorb() now replaces arrays instead of pushing, because the first note's arrays are shared and entries are collected several times per run.",
+      "inferred": false
+    },
+    {
+      "text": "Same merge rule applied in mergeToMax() when neighbouring requests are combined to fit the turn limit.",
+      "inferred": false
+    }
+  ],
+  "aiWork": [
+    "Traced the duplication to flow.ts absorb()/mergeToMax() concatenating decisions; found PR-3.md has the same issue.",
+    "Added src/dedupe.ts and mergeDecisions() in flow.ts; report.ts now imports the shared dedupe.",
+    "Stopped absorb() from mutating shared note arrays (prompts and decisions).",
+    "Added regression tests in PR-2's shape plus case/whitespace and mergeToMax cases.",
+    "Committed the fix on a fix branch created from origin/main."
+  ],
+  "verification": [
+    {
+      "text": "New tests fail on the old flow.ts (PR-2-shaped test: expected 2 to be 1) and pass with the fix.",
+      "inferred": false
+    },
+    {
+      "text": "npm run check passes: lint, typecheck, 91 tests.",
+      "inferred": false
+    },
+    {
+      "text": "Reproduced on real PR #2 notes: decisions in review file ① dropped from 16 to 10 and notes stayed intact.",
+      "inferred": false
+    }
+  ]
+}
