@@ -1,3 +1,4 @@
+import { dedupe, textKey } from "./dedupe.js";
 import type { CommitEntry } from "./report.js";
 import type { CommitContext, Turn, TurnStep } from "./types.js";
 
@@ -49,6 +50,15 @@ function mergeSteps(a: TurnStep[], b: TurnStep[]): TurnStep[] {
   return out;
 }
 
+type Decision = Turn["decisions"][number];
+
+/** Each decision once (same text up to case and whitespace): the first copy stays, a later copy fills its empty why. */
+function mergeDecisions(a: Decision[], b: Decision[]): Decision[] {
+  const all = [...a, ...b];
+  const whyOf = (d: Decision) => all.find((o) => o.why.trim() && textKey(o.text) === textKey(d.text))?.why ?? d.why;
+  return dedupe(all, (d) => d.text).map((d) => (d.why.trim() ? d : { ...d, why: whyOf(d) }));
+}
+
 function mergeMetrics(a: Turn["metrics"], b: Turn["metrics"]): Turn["metrics"] {
   // ISO-8601 timestamps sort as strings; Math.min/max would coerce them to NaN.
   return {
@@ -67,17 +77,21 @@ function fromTurn(t: Turn): FlowTurn {
   return { ...rest, sessions: [sessionId], commits: [], outcomes: t.outcome ? [t.outcome] : [] };
 }
 
-/** Pieces of one request (same key) that continue across commits become one FlowTurn. */
+/**
+ * Pieces of one request (same key) that continue across commits become one FlowTurn.
+ * `into` shares its arrays with the first piece's note, so they are replaced, never pushed to: the same entries are
+ * collected more than once per run (synthesis prompt, review file, PR comment).
+ */
 function absorb(into: FlowTurn, piece: Turn): void {
   const real = !piece.carried && piece.prompts.length > 0;
   if (real || !into.title) into.title = piece.title;
-  into.prompts.push(...piece.prompts);
+  into.prompts = [...into.prompts, ...piece.prompts];
   into.steps = mergeSteps(into.steps, piece.steps);
   if (piece.outcome) {
     into.outcome = piece.outcome;
     into.outcomes.push(piece.outcome);
   }
-  into.decisions.push(...piece.decisions);
+  into.decisions = mergeDecisions(into.decisions, piece.decisions);
   if (piece.tips.keep.length || piece.tips.improve.length) {
     if (real || (!into.tips.keep.length && !into.tips.improve.length)) into.tips = piece.tips;
   }
@@ -158,7 +172,7 @@ export function mergeToMax(turns: FlowTurn[], max = MAX_FLOW_TURNS): FlowTurn[] 
       prompts: [...a.prompts, ...b.prompts],
       steps: mergeSteps(a.steps, b.steps),
       outcome: b.outcome || a.outcome,
-      decisions: [...a.decisions, ...b.decisions],
+      decisions: mergeDecisions(a.decisions, b.decisions),
       tips: big.tips,
       metrics: a.metrics.start && b.metrics.start ? mergeMetrics(a.metrics, b.metrics) : big.metrics,
       sessions: [...new Set([...a.sessions, ...b.sessions])],
