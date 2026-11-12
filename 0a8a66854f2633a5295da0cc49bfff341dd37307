@@ -32,7 +32,7 @@
   "turns": [
     {
       "key": "b6ac4cbc-22b7-4db2-a433-6881b2c7ab84@2026-11-12T14:09:40.068Z",
-      "title": "Fix duplicated decisions across commits in PR report",
+      "title": "Fix duplicate decisions across commits in PR report",
       "prompts": [
         "그럼 일단 수정 자체는 클로드 코드에서 하자. 프롬프트 작성해. \n\n1. Git AI는 내가 원하는 목적이랑 다른 도구 아닌가? \n2. 너가 써줘 \n3. 응\n\n```\n.promptlens/PR-2.md를 보면 1 요청의 Decisions에 같은 항목이 두 번씩 나와 (예: \"Fall back to OpenAI only when OPENAI_API_KEY is set...\"). 한 요청이 여러 커밋에 걸치면 커밋마다 노트에 같은 decision이 다시 들어가는데, src/flow.ts에서 조각을 합칠 때(absorb(), 그리고 턴 수를 줄이려고 두 턴을 합치는 부분) decisions를 그냥 이어 붙여서 생기는 것 같아.\n\n1. 원인이 맞는지 먼저 확인해줘. PR 코멘트 쪽에도 같은 중복이 생기는지 같이 봐줘.\n2. 고칠 때 기준: 공백이나 대소문자만 다른 건 같은 decision으로 봐. 먼저 나온 걸 남기되, why가 비어 있으면 나중 것의 why로 채워줘. report.ts에…"
       ],
@@ -40,47 +40,47 @@
       "steps": [
         {
           "type": "investigate",
-          "text": "Confirmed flow.ts concatenation causes duplicates; checked PR comment and PR-3 too"
+          "text": "Confirmed flow.ts concatenation causes duplicates in PR-2.md and the PR comment"
         },
         {
-          "type": "build",
-          "text": "Extracted shared dedupe; added mergeDecisions used by absorb() and mergeToMax()"
+          "type": "refactor",
+          "text": "Moved dedupe into shared src/dedupe.ts and reused it in report.ts"
         },
         {
           "type": "fix",
-          "text": "Made absorb() non-mutating so shared note arrays aren't altered"
+          "text": "Merged decisions with dedupe in absorb() and mergeToMax(); stopped mutating shared arrays"
         },
         {
           "type": "verify",
-          "text": "Added regression tests, confirmed they fail on old code, ran npm run check"
+          "text": "Added PR-2-shaped regression tests; confirmed they fail on old code"
         },
         {
-          "type": "ship",
-          "text": "Committed on fix branch after reproducing on real PR #2 data"
+          "type": "verify",
+          "text": "Ran npm run check and replayed the fix on PR #2 data, then committed"
         }
       ],
-      "outcome": "Duplicates removed; 91 tests pass; fix committed on branch.",
+      "outcome": "Duplicates removed; 91 tests pass; fix committed on a fix branch.",
       "decisions": [
         {
-          "text": "Treat case/whitespace-only differences as the same decision",
-          "why": "Developer's stated rule; first kept, empty why filled from later copy."
+          "text": "Treat decisions differing only in case or whitespace as the same",
+          "why": "Developer's stated rule; keeps the first and fills an empty why from a later copy."
         },
         {
-          "text": "Share dedupe via new src/dedupe.ts",
-          "why": "Developer asked to reuse report.ts dedupe; whitespace normalization needed in both places."
+          "text": "Share one dedupe helper between report.ts and flow.ts",
+          "why": "Developer asked to reuse the existing report.ts dedupe."
         },
         {
-          "text": "Replace arrays in absorb() rather than push",
-          "why": "Entries are collected multiple times per run, so mutation would leak into other outputs."
+          "text": "Replace arrays in absorb() instead of pushing",
+          "why": "The arrays are shared with the first note and collected multiple times per run."
         }
       ],
       "tips": {
         "keep": [
-          "Gave a precise dedupe rule and a regression-test shape matching the real PR-2 case.",
-          "Set explicit boundaries (no force push, research-only for existing PR) up front."
+          "Gave a root-cause hypothesis with file and function names, plus an explicit dedupe rule.",
+          "Specified a regression test shape (PR-2 case) and constraints such as no force push."
         ],
         "improve": [
-          "Mention the PR comment path was suspected too, to focus the test on both renderers earlier."
+          "Say whether the regenerated PR-2 report should be in scope, to avoid a separate investigation step."
         ]
       },
       "metrics": {
@@ -94,43 +94,43 @@
     }
   ],
   "intent": {
-    "text": "Fix duplicated decisions in the PR report when one request spans several commits (carried prompts), by merging decisions with case/whitespace-insensitive dedupe.",
+    "text": "Fix duplicate decisions in the PR report when one request spans multiple commits, by merging decisions with case/whitespace-insensitive dedupe in flow.ts.",
     "inferred": false
   },
   "keyPrompts": [
     {
       "text": "그럼 일단 수정 자체는 클로드 코드에서 하자. 프롬프트 작성해. \n\n1. Git AI는 내가 원하는 목적이랑 다른 도구 아닌가? \n2. 너가 써줘 \n3. 응\n\n```\n.promptlens/PR-2.md를 보면 1 요청의 Decisions에 같은 항목이 두 번씩 나와 (예: \"Fall back to OpenAI only when OPENAI_API_KEY is set...\"). 한 요청이 여러 커밋에 걸치면 커밋마다 노트에 같은 decision이 다시 들어가는데, src/flow.ts에서 조각을 합칠 때(absorb(), 그리고 턴 수를 줄이려고 두 턴을 합치는 부분) decisions를 그냥 이어 붙여서 생기는 것 같아.\n\n1. 원인이 맞는지 먼저 확인해줘. PR 코멘트 쪽에도 같은 중복이 생기는지 같이…",
-      "why": "Defines the bug, the dedupe rule (first kept, empty why filled from later), reuse of report.ts dedupe, regression test shape, and limits on rewriting history."
+      "why": "Specifies root cause hypothesis, dedupe rule (first kept, empty why filled from later), reuse of report.ts dedupe, regression test shape, and no force-push constraint."
     }
   ],
   "decisions": [
     {
-      "text": "Decisions equal up to case and whitespace count as one; first copy stays and a later copy fills an empty why.",
+      "text": "Decisions match when text differs only by case or whitespace; the first copy is kept and an empty why is filled from a later copy.",
       "inferred": false
     },
     {
-      "text": "Moved dedupe from report.ts into shared src/dedupe.ts (with whitespace-normalizing textKey) and reused it in flow.ts.",
+      "text": "Moved dedupe from report.ts into a shared src/dedupe.ts, with a whitespace-normalizing textKey, so flow.ts can reuse it.",
       "inferred": false
     },
     {
-      "text": "absorb() now replaces arrays instead of pushing, because the first note's arrays are shared and entries are collected several times per run.",
-      "inferred": false
+      "text": "absorb() now replaces arrays instead of pushing, because the note's arrays are shared and collected several times per run.",
+      "inferred": true
     },
     {
-      "text": "Same merge rule applied in mergeToMax() when neighbouring requests are combined to fit the turn limit.",
+      "text": "The same merge rule applies in absorb() and mergeToMax() (the turn-count reduction).",
       "inferred": false
     }
   ],
   "aiWork": [
-    "Traced the duplication to flow.ts absorb()/mergeToMax() concatenating decisions; found PR-3.md has the same issue.",
-    "Added src/dedupe.ts and mergeDecisions() in flow.ts; report.ts now imports the shared dedupe.",
-    "Stopped absorb() from mutating shared note arrays (prompts and decisions).",
-    "Added regression tests in PR-2's shape plus case/whitespace and mergeToMax cases.",
-    "Committed the fix on a fix branch created from origin/main."
+    "Traced the duplication to flow.ts concatenating decisions in absorb() and mergeToMax(), and checked it also affected the PR comment path.",
+    "Extracted dedupe/textKey into src/dedupe.ts and added mergeDecisions() in flow.ts.",
+    "Changed absorb() to avoid mutating the first piece's note arrays.",
+    "Added regression tests in the PR-2 shape (carried request across two commits), plus tests for the matching rule and the mergeToMax case.",
+    "Committed on a fix branch from origin/main without rewriting history."
   ],
   "verification": [
     {
-      "text": "New tests fail on the old flow.ts (PR-2-shaped test: expected 2 to be 1) and pass with the fix.",
+      "text": "New tests fail on the old flow.ts (including the PR-2-shaped one: expected 2 to be 1) and pass with the fix.",
       "inferred": false
     },
     {
@@ -138,7 +138,7 @@
       "inferred": false
     },
     {
-      "text": "Reproduced on real PR #2 notes: decisions in review file ① dropped from 16 to 10 and notes stayed intact.",
+      "text": "Reproduced on PR #2's real notes: the note keeps its 4 decisions and the review file's section ① drops from 16 to 10 entries.",
       "inferred": false
     }
   ]
