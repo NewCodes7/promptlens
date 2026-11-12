@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "sha": "bac06d1f2260f3e70d6c9bc4bd1cb57bca03966b",
+  "subject": "Tell where PromptLens came from in the README's Why",
+  "files": [
+    {
+      "path": "README.md",
+      "aiEdited": false
+    }
+  ],
+  "stats": {
+    "sessions": 0,
+    "prompts": 0,
+    "aiEdits": 0
+  },
+  "sessionIds": [],
+  "generatedBy": "heuristic",
+  "turns": [],
+  "intent": {
+    "text": "Tell where PromptLens came from in the README's Why",
+    "inferred": true
+  },
+  "keyPrompts": [],
+  "decisions": [],
+  "aiWork": [],
+  "verification": []
+}
