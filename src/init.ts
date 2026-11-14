@@ -37,7 +37,7 @@ jobs:
         run: git fetch origin "+${NOTES_REF}:${NOTES_REF}" || echo "no PromptLens notes yet"
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
       - name: Post PromptLens report
         env:
           GITHUB_TOKEN: \${{ secrets.GITHUB_TOKEN }}

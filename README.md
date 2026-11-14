@@ -107,7 +107,7 @@ The hooks fail soft: an error never blocks a commit or a push. Without an LLM, s
 
 ## Quick start
 
-**Requirements:** Node.js 20+, git, [Claude Code](https://claude.com/claude-code), and a GitHub repository with Actions enabled. The local `claude` CLI and an OpenAI key are optional (see [Summaries](#summaries)).
+**Requirements:** Node.js 22+, git, [Claude Code](https://claude.com/claude-code), and a GitHub repository with Actions enabled. The local `claude` CLI and an OpenAI key are optional (see [Summaries](#summaries)).
 
 ```bash
 npm install -g @newcodes/promptlens
