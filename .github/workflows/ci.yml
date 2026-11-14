@@ -25,6 +25,10 @@ jobs:
         run: npm run lint
       - name: Typecheck (src and tests)
         run: npm run typecheck
+      - name: Type coverage (100%, strict)
+        run: npm run typecoverage
+      - name: Unused files, exports and dependencies (knip)
+        run: npm run knip
       - name: Test with coverage
         run: npm run coverage
       - name: Build
@@ -37,5 +41,7 @@ jobs:
             echo "an unknown command must exit non-zero"
             exit 1
           fi
+      - name: Package metadata and exports (publint)
+        run: npm run publint
       - name: Check the published file list
         run: npm pack --dry-run
