@@ -9,7 +9,7 @@ PromptLens is a CLI that links each commit to the Claude Code sessions that prod
 ![node](https://img.shields.io/node/v/@newcodes/promptlens)
 [![license](https://img.shields.io/github/license/NewCodes7/promptlens)](LICENSE)
 
-**[Quick start](#quick-start)** · **[Reference](#reference)** · **[Design decisions](#design-decisions)** · **[Live PR report](https://github.com/NewCodes7/promptlens/pull/2)**
+**[Quick start](#quick-start)** · **[Reference](#reference)** · **[Design decisions](#design-decisions)** · **[Quality gates](#quality-gates)** · **[Live PR report](https://github.com/NewCodes7/promptlens/pull/2)** · **[Changelog](CHANGELOG.md)**
 
 <p align="center">
   <img src="docs/assets/pr-report-flow.png" width="760" alt="The PromptLens comment on this repo's PR #1: PR summary, metrics, and a prompt-by-prompt flow chart">
@@ -48,19 +48,7 @@ This matters more as AI writes more of the code. In [Sonar's State of Code 2026]
 
 ## How it works
 
-### Ways to run it
-
-You run `init` once. After that, git and GitHub Actions run PromptLens for you; the other commands are optional local previews.
-
-| Starts when                 | Run by             | Command                                                | Result                                                                 |
-| --------------------------- | ------------------ | ------------------------------------------------------ | ---------------------------------------------------------------------- |
-| You set up a repo (once)    | you                | `promptlens init`                                      | Hooks, notes config and `.github/workflows/promptlens.yml`             |
-| `git commit`                | `post-commit` hook | `promptlens capture`, then `summarize` in background   | A _Commit Context_ note attached to the commit                         |
-| `git push`                  | `pre-push` hook    | `promptlens sync`                                      | Missing notes filled in; `refs/notes/promptlens` pushed before the branch |
-| A PR is opened or updated   | GitHub Actions     | `promptlens pr-report --post`                          | One PR comment, plus `.promptlens/PR-<n>.md` for line comments         |
-| Any time                    | you                | `promptlens show` · `report` · `report --file`         | A local preview; nothing is posted                                     |
-
-### What happens inside
+You run `init` once. After that, the `post-commit` and `pre-push` hooks and a GitHub Actions workflow run PromptLens for you; the other commands are local previews. [Commands](#commands) lists each one and when it runs.
 
 ```mermaid
 sequenceDiagram
@@ -181,22 +169,14 @@ Each commit is summarized by the first option that works: the local `claude -p` 
 
 PromptLens also writes `.git/promptlens/` (raw captures and a log) and the `refs/notes/promptlens` ref. Remove them with `rm -rf .git/promptlens`, `git update-ref -d refs/notes/promptlens`, and `git push origin --delete refs/notes/promptlens`.
 
-## How I got to this design
-
-I started from one problem: AI agents make PRs bigger, but the reasoning behind a change stays in a chat the reviewer never sees.
-
-- **Dropped: extracting a developer's know-how from their sessions.** Pulling reusable patterns out of a conversation was much harder to do well than I expected, so I left it for later.
-- **Dropped as the core: a separate site for sharing prompts.** Reviewers already discuss design on the PR, and a new place to visit adds friction, so the output had to land on the PR. The [Hub page](https://newcodes7.github.io/promptlens/) stays as a vision demo.
-- **Reframed: review the prompts, not just the diff.** Quote what the developer asked verbatim, and summarize what the agent did in between.
-
-Then two constraints shaped the build:
-
-- **No hook fires when a PR is created.** PRs are opened from the web, from `gh` and by agents, but every path goes through a commit. So capture happens at commit time (decision 1 below).
-- **One PR can span several sessions, and one session can feed several PRs.** Git already tracks change per commit, so the context is attached to commits, not to PRs or sessions (decision 2).
-
-I had planned to use [Git AI](https://usegitai.com) as the capture layer. It wasn't set up on my machine during the build, so I linked sessions to commits directly and kept [`sessions.ts`](src/sessions.ts) as the adapter boundary where Git AI can plug in.
-
 ## Design decisions
+
+I started from one problem: AI agents make PRs bigger, but the reasoning behind a change stays in a chat the reviewer never sees. Two early ideas were dropped:
+
+- **Extracting a developer's know-how from their sessions.** Pulling reusable patterns out of a conversation was much harder to do well than I expected, so I left it for later.
+- **A separate site for sharing prompts.** Reviewers already discuss design on the PR, and a new place to visit adds friction, so the output had to land on the PR. The [Hub page](https://newcodes7.github.io/promptlens/) stays as a vision demo.
+
+What remained was to review the prompts, not just the diff: quote what the developer asked verbatim, and summarize what the agent did in between. The decisions below follow from that.
 
 **1. There is no "PR created" hook, so capture happens at commit time.** PRs are opened from the web UI, from `gh`, and by AI agents, and no hook sees all of them. Every path goes through a commit, so the context is stored in `git notes`, keyed by SHA. That adds no files to your tree, survives `--amend` and `rebase` (`notes.rewriteRef`), and `pre-push` pushes the notes ref before the branch so the Action always finds it.
 
@@ -204,7 +184,7 @@ I had planned to use [Git AI](https://usegitai.com) as the capture layer. It was
 
 **3. The work is chunked by developer prompt, not by agent action.** One request can trigger 60+ agent actions. Each request becomes one node, with its steps normalized into eight types (Investigate · Plan · Build · Fix · Verify · Refactor · Docs · Ship) and long step lists folded. The result is a Mermaid chart that GitHub renders natively.
 
-**4. The LLM summary is not trusted to quote.** The model picks key prompts **by index**, and PromptLens quotes them verbatim from the log, so they are never paraphrased. Inferred claims are tagged _(inferred)_. Translations are labeled; the notes keep the original language. This comes straight from [the PRs that started this project](#where-this-came-from): an AI summary told me what had changed, not what the author meant.
+**4. The LLM summary is not trusted to quote.** The model picks key prompts **by index**, and PromptLens quotes them verbatim from the log, so they are never paraphrased. Inferred claims are tagged _(inferred)_. Translations are labeled; the notes keep the original language.
 
 **5. Prompts can contain secrets, so raw logs never leave the machine.** The raw capture stays in `.git/promptlens/raw/` and is never pushed. Everything that does leave goes through `redact()` (OpenAI, Anthropic, GitHub, AWS and Slack keys, JWTs, bearer tokens, private keys, credential assignments, emails). The per-commit summary runs locally with `claude -p`; CI only sees already-redacted notes. PromptLens marks its own summarizer prompts so they are never captured as your work.
 
@@ -218,9 +198,7 @@ I had planned to use [Git AI](https://usegitai.com) as the capture layer. It was
 | AI code-review bots            | _Is this diff correct?_                                         | The diff                                                           | Comments on the PR                                                    |
 | **PromptLens**                 | _**Why** was it written this way, and was it checked?_          | One developer request: what the agent did, decisions, verification | One comment on the PR, plus a line-commentable review file            |
 
-Git AI is the closest. It also keeps the prompts: it links every AI-written line to the agent, model and prompt behind it, and stores the sessions outside git (locally, in its cloud, or self-hosted). Its view starts from a line of code, though, and its per-PR view (% AI, cost, in the Teams version) is a dashboard of aggregates.
-
-PromptLens starts from the developer's requests instead. It walks the PR one request at a time, in the order the work happened, and puts that on the PR itself, where the reviewer already discusses the design. Git AI tells you where a line came from; PromptLens tells the reviewer what the author was trying to do. The tools fit together: Git AI could be the capture layer under PromptLens, and review bots still check the diff.
+Git AI is the closest: it also keeps the prompts, but its view starts from a line of code, and its per-PR view is a dashboard of aggregates. Git AI tells you where a line came from; PromptLens tells the reviewer what the author was trying to do. The tools fit together. I had planned to use Git AI as the capture layer, but it wasn't set up on my machine during the build, so [`sessions.ts`](src/sessions.ts) is the adapter boundary where it can plug in.
 
 ## Dogfooding
 
@@ -236,31 +214,45 @@ Claude Code wrote the code. I planned the tool, decided its constraints and scop
 
 ```bash
 npm ci
-npm run check       # Biome lint + format check, typecheck (src and tests), tests
-npm run coverage
+npm run check       # Biome, typecheck, type coverage, knip, tests
+npm run coverage    # tests with the coverage thresholds
 npm run build       # cleans and compiles to dist/
 ```
 
-CI runs lint, typecheck, tests with coverage, the build, a smoke test of the built CLI, and `npm pack --dry-run` on every PR.
+| Module                                                                              | Responsibility                                                                                                 |
+| ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| [`sessions.ts`](src/sessions.ts)                                                    | Parse Claude Code session logs into prompts, tool calls and file edits. The adapter boundary for other agents. |
+| [`capture.ts`](src/capture.ts)                                                      | Link sessions to a commit (commit window × changed files) and carry forward earlier instructions.              |
+| [`summarize.ts`](src/summarize.ts)                                                  | Build the Commit Context with `claude -p`, then OpenAI, then a heuristic.                                      |
+| [`turns.ts`](src/turns.ts) · [`flow.ts`](src/flow.ts)                               | Split the work into one chunk per developer prompt; render the Mermaid flow and request details.               |
+| [`report.ts`](src/report.ts) · [`review.ts`](src/review.ts)                         | Synthesize the PR comment and the line-commentable review file.                                                |
+| [`github.ts`](src/github.ts) · [`openai.ts`](src/openai.ts)                         | Network adapters for the GitHub REST API and OpenAI.                                                           |
+| [`json.ts`](src/json.ts) · [`validate.ts`](src/validate.ts)                         | Read untrusted JSON (session logs, LLM output, GitHub payloads, notes) as `unknown` and narrow it.             |
+| [`redact.ts`](src/redact.ts)                                                        | Mask secrets and emails before anything leaves the machine.                                                    |
+| [`init.ts`](src/init.ts) · [`main.ts`](src/main.ts) · [`usage.ts`](src/usage.ts)    | One-command setup, command dispatch, and the help and error text. [`cli.ts`](src/cli.ts) only calls `main()`.  |
 
-| Module                                                      | Responsibility                                                                                                 |
-| ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| [`sessions.ts`](src/sessions.ts)                            | Parse Claude Code session logs into prompts, tool calls and file edits. The adapter boundary for other agents. |
-| [`capture.ts`](src/capture.ts)                              | Link sessions to a commit (commit window × changed files) and carry forward earlier instructions.              |
-| [`summarize.ts`](src/summarize.ts)                          | Build the Commit Context with `claude -p`, then OpenAI, then a heuristic.                                      |
-| [`turns.ts`](src/turns.ts) · [`flow.ts`](src/flow.ts)       | Split the work into one chunk per developer prompt; render the Mermaid flow and request details.               |
-| [`report.ts`](src/report.ts) · [`review.ts`](src/review.ts) | Synthesize the PR comment and the line-commentable review file.                                                |
-| [`github.ts`](src/github.ts) · [`openai.ts`](src/openai.ts) | Network adapters for the GitHub REST API and OpenAI.                                                           |
-| [`redact.ts`](src/redact.ts)                                | Mask secrets and emails before anything leaves the machine.                                                    |
-| [`init.ts`](src/init.ts) · [`cli.ts`](src/cli.ts)           | One-command setup and the CLI entry point.                                                                     |
+### Quality gates
 
-**Test coverage:** the core modules (`capture`, `flow`, `report`, `turns`, `redact`, `sessions`) are 96–100% line-covered, and an end-to-end test builds a real git repo with a fake session log and runs init → commit → capture → note → report. The CLI entry point and the network adapters are exercised by dogfooding but not yet by unit tests, which keeps overall line coverage at about 74%.
+CI runs every gate on Node.js 22, 24 and 26 for each PR, and `npm publish` runs `npm run check` and the build before it uploads anything.
+
+| Check         | Tool                          | Now                                                                     | CI fails when                                                  |
+| ------------- | ----------------------------- | ----------------------------------------------------------------------- | -------------------------------------------------------------- |
+| Lint, format  | Biome                         | No findings                                                             | Any finding                                                    |
+| Types         | TypeScript `strict`           | No `any`, no `@ts-ignore`, no `as` assertions except `as const`         | Any type error in `src/` or `tests/`                           |
+| Type coverage | type-coverage `--strict`      | 100% (6,188 of 6,188 identifiers typed)                                 | Below 100%                                                     |
+| Tests         | Vitest                        | 139 tests in 16 files                                                   | Any failure                                                    |
+| Test coverage | Vitest, V8                    | Lines 97%, statements 96%, functions 97%, branches 85%                  | Lines < 95%, statements < 93%, functions < 94%, branches < 82% |
+| Unused code   | knip                          | No unused files, exports or dependencies                                | Anything unused                                                |
+| Package       | publint, `npm pack --dry-run` | No issues; only `dist/`, README, LICENSE and package.json are published | Any issue                                                      |
+| Built CLI     | Smoke test                    | `--version` and `--help` exit 0; an unknown command exits 1             | Either exit code is wrong                                      |
+
+The network adapters run against a stubbed `fetch`. The summary chain runs a fake `claude` binary as a real child process. Every command runs through `main()` in a throwaway repo with a local bare remote, and an end-to-end test goes init → commit → capture → note → report.
 
 ## Limitations and roadmap
 
 - **Claude Code only for now.** Codex, Cursor and Git AI adapters plug in at `sessions.ts`.
 - **Squash merges** rewrite SHAs, so notes don't follow the squash commit. The PR report is produced before the merge, so the review isn't affected.
-- **Next:** typed validation at every external-input boundary, `--json` output for agents, unit tests for the network adapters, and an optional commit-time interview when a session lacks a clear "why".
+- **Next:** `--json` output for agents, and an optional commit-time interview when a session lacks a clear "why".
 
 The longer-term vision (team insight and the [PromptLens Hub](https://newcodes7.github.io/promptlens/) for sharing prompt flows across professions) is in [docs/vision.md](docs/vision.md).
 

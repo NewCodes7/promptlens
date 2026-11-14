@@ -9,12 +9,26 @@ Notable changes to PromptLens. The format follows [Keep a Changelog](https://kee
 - **Breaking:** Node.js 22 or later is required. Node.js 20 reached end-of-life in April 2026. CI now tests Node.js 22, 24 and 26, and the workflow that `init` generates runs on Node.js 24.
 - An unknown command prints an error, with the closest command when there is one, and exits with code 1. It used to print the usage and exit 0, so a mistyped command looked like success to scripts and agents. `promptlens`, `help`, `--help` and `-h` print the usage.
 - External JSON (Claude Code session logs, LLM responses, GitHub events, notes pushed by others) is read as `unknown` and narrowed, so a wrong shape falls back to a default instead of crashing.
+- Command handling moved from `src/cli.ts` to `main()` in `src/main.ts`, so tests can run every command. Hooks still call the installed `dist/cli.js`.
+
+### Fixed
+
 - Error messages read thrown values that are not `Error` objects instead of printing `undefined`.
+- `redact()` passes rules only their capture groups, as strings, instead of every `String.replace` argument through a cast.
+
+### Removed
+
+- `diffStat()` in `git.ts` and `STEP_TYPES` in `types.ts`, which nothing used.
+
+### Tests and CI
+
+- Tests for the GitHub and OpenAI adapters, the `claude -p` → OpenAI → heuristic chain (with a fake `claude` binary on `PATH`), and every command through `main()`. 139 tests; line coverage went from 78% to 97%, and CI fails below the thresholds in `vitest.config.ts`.
+- New CI gates: type-coverage `--strict` at 100%, knip for unused files, exports and dependencies, and publint for the package.
 - Tests run on Vitest 5.
 
 ### Documentation
 
-- The README explains where PromptLens came from, how it runs, and how the design was reached.
+- The README explains where PromptLens came from, how it runs, and how the design was reached, and lists the quality gates with their current numbers.
 - Added this changelog.
 
 ## [0.2.0] - 2026-11-10
