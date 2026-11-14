@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { isObject } from "./json.js";
 
 export interface PackageInfo {
   name: string;
@@ -6,8 +7,8 @@ export interface PackageInfo {
 }
 
 function isPackageInfo(value: unknown): value is PackageInfo {
-  if (typeof value !== "object" || value === null) return false;
-  const { name, version } = value as Record<string, unknown>;
+  if (!isObject(value)) return false;
+  const { name, version } = value;
   return typeof name === "string" && typeof version === "string";
 }
 

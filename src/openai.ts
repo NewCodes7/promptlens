@@ -1,3 +1,4 @@
+import { errorMessage } from "./errors.js";
 import { collectTurns, mergeToMax } from "./flow.js";
 import { asArray, asObject, asString, type JsonObject, parseObject } from "./json.js";
 import { redact, truncate } from "./redact.js";
@@ -105,7 +106,7 @@ export async function synthesize(entries: CommitEntry[], diffStat: string): Prom
     const json = await openaiJson(buildSynthesisPrompt(entries, diffStat));
     return synthesisFromModel(json, `OpenAI ${openaiModel()}`, fallback);
   } catch (err) {
-    process.stderr.write(`[promptlens] OpenAI synthesis failed, using template: ${(err as Error).message}\n`);
+    process.stderr.write(`[promptlens] OpenAI synthesis failed, using template: ${errorMessage(err)}\n`);
     return fallback;
   }
 }
@@ -138,7 +139,7 @@ export async function translatePrompts(texts: string[]): Promise<Map<string, str
       if (src && en) out.set(src, redact(en));
     }
   } catch (err) {
-    process.stderr.write(`[promptlens] prompt translation failed, showing originals: ${(err as Error).message}\n`);
+    process.stderr.write(`[promptlens] prompt translation failed, showing originals: ${errorMessage(err)}\n`);
   }
   return out;
 }

@@ -4,6 +4,7 @@ import { appendFileSync, mkdirSync, openSync, readFileSync, realpathSync } from 
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { captureCommit, readRaw } from "./capture.js";
+import { errorMessage } from "./errors.js";
 import { git, gitDir, NOTES_REF, readNote, resolveSha, revList, writeNote } from "./git.js";
 import { type PullRequestEvent, readPullRequestEvent, upsertComment, upsertFile } from "./github.js";
 import { init } from "./init.js";
@@ -150,7 +151,7 @@ async function main() {
         pushNotes(remote);
         console.error(`[promptlens] synced Commit Context for ${shas.length} commit(s) (${written} new) → ${remote} ${NOTES_REF}`);
       } catch (err) {
-        console.error(`[promptlens] could not push notes: ${(err as Error).message}`);
+        console.error(`[promptlens] could not push notes: ${errorMessage(err)}`);
       }
       return;
     }
@@ -206,7 +207,7 @@ async function main() {
           reviewFile = { path: filePath, url: reviewFileUrl(repo, pr, filePath) };
           console.log(`PromptLens review file ${res.action}: ${filePath}${res.sha ? ` (${res.sha.slice(0, 7)})` : ""}`);
         } catch (err) {
-          console.error(`[promptlens] could not commit the review file (needs \`contents: write\`): ${(err as Error).message}`);
+          console.error(`[promptlens] could not commit the review file (needs \`contents: write\`): ${errorMessage(err)}`);
         }
       }
 
@@ -231,6 +232,6 @@ async function main() {
 }
 
 main().catch((err) => {
-  console.error(`[promptlens] ${err instanceof Error ? err.message : err}`);
+  console.error(`[promptlens] ${errorMessage(err)}`);
   process.exit(1);
 });

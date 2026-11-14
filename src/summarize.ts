@@ -1,5 +1,6 @@
 import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
+import { errorMessage } from "./errors.js";
 import { commitPatch } from "./git.js";
 import { asArray, asObject, asString, asStrings, type JsonObject, parseObject } from "./json.js";
 import { openaiJson } from "./openai.js";
@@ -206,14 +207,14 @@ export async function summarize(raw: RawCapture, cwd?: string): Promise<CommitCo
     try {
       return contextFromModel(raw, extractJson(runClaude(prompt)), "claude-cli");
     } catch (err) {
-      process.stderr.write(`[promptlens] claude -p summary failed: ${(err as Error).message}\n`);
+      process.stderr.write(`[promptlens] claude -p summary failed: ${errorMessage(err)}\n`);
     }
   }
   if (process.env.OPENAI_API_KEY) {
     try {
       return contextFromModel(raw, await openaiJson(prompt), "openai");
     } catch (err) {
-      process.stderr.write(`[promptlens] OpenAI summary failed: ${(err as Error).message}\n`);
+      process.stderr.write(`[promptlens] OpenAI summary failed: ${errorMessage(err)}\n`);
     }
   }
   return heuristicContext(raw);
