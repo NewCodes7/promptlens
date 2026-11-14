@@ -1,10 +1,11 @@
+import { errorMessage } from "./errors.js";
 import { collectTurns, mergeToMax } from "./flow.js";
 import { asArray, asObject, asString, type JsonObject, parseObject } from "./json.js";
 import { redact, truncate } from "./redact.js";
 import type { CommitEntry, Synthesis } from "./report.js";
 import { templateSynthesis } from "./report.js";
 
-export function buildSynthesisPrompt(entries: CommitEntry[], diffStat: string): string {
+function buildSynthesisPrompt(entries: CommitEntry[], diffStat: string): string {
   const commits = entries.map((e) => ({
     sha: e.sha.slice(0, 7),
     subject: e.subject,
@@ -75,7 +76,7 @@ export function synthesisFromModel(json: unknown, generatedBy: string, fallback:
   };
 }
 
-export const openaiModel = () => process.env.OPENAI_MODEL || "gpt-5-mini";
+const openaiModel = () => process.env.OPENAI_MODEL || "gpt-5-mini";
 
 /** Call OpenAI Chat Completions in JSON mode and return the parsed object (shape unchecked: callers narrow it). */
 export async function openaiJson(prompt: string): Promise<JsonObject> {
@@ -105,7 +106,7 @@ export async function synthesize(entries: CommitEntry[], diffStat: string): Prom
     const json = await openaiJson(buildSynthesisPrompt(entries, diffStat));
     return synthesisFromModel(json, `OpenAI ${openaiModel()}`, fallback);
   } catch (err) {
-    process.stderr.write(`[promptlens] OpenAI synthesis failed, using template: ${(err as Error).message}\n`);
+    process.stderr.write(`[promptlens] OpenAI synthesis failed, using template: ${errorMessage(err)}\n`);
     return fallback;
   }
 }
@@ -138,7 +139,7 @@ export async function translatePrompts(texts: string[]): Promise<Map<string, str
       if (src && en) out.set(src, redact(en));
     }
   } catch (err) {
-    process.stderr.write(`[promptlens] prompt translation failed, showing originals: ${(err as Error).message}\n`);
+    process.stderr.write(`[promptlens] prompt translation failed, showing originals: ${errorMessage(err)}\n`);
   }
   return out;
 }

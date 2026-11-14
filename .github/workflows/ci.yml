@@ -11,22 +11,37 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [22, 24, 26]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: ${{ matrix.node }}
           cache: npm
       - run: npm ci
       - name: Lint and format (Biome)
         run: npm run lint
       - name: Typecheck (src and tests)
         run: npm run typecheck
+      - name: Type coverage (100%, strict)
+        run: npm run typecoverage
+      - name: Unused files, exports and dependencies (knip)
+        run: npm run knip
       - name: Test with coverage
         run: npm run coverage
       - name: Build
         run: npm run build
       - name: CLI smoke test
-        run: node dist/cli.js --version
+        run: |
+          node dist/cli.js --version
+          node dist/cli.js --help > /dev/null
+          if node dist/cli.js no-such-command 2> /dev/null; then
+            echo "an unknown command must exit non-zero"
+            exit 1
+          fi
+      - name: Package metadata and exports (publint)
+        run: npm run publint
       - name: Check the published file list
         run: npm pack --dry-run

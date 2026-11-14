@@ -1,3 +1,4 @@
+import { errorMessage } from "./errors.js";
 import { asArray, asObject, asString, type JsonObject } from "./json.js";
 import { REPORT_MARKER } from "./report.js";
 
@@ -98,7 +99,7 @@ export async function upsertFile(
   try {
     existing = toFile(await gh(token, "GET", `${url}?ref=${encodeURIComponent(branch)}`));
   } catch (err) {
-    if (!/→ 404:/.test((err as Error).message)) throw err;
+    if (!/→ 404:/.test(errorMessage(err))) throw err;
   }
   if (existing && Buffer.from(existing.content, "base64").toString("utf8") === content) return { action: "unchanged" };
   const res = await gh(token, "PUT", url, {

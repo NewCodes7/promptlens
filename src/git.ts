@@ -52,10 +52,6 @@ export function filesChanged(sha: string, cwd?: string): string[] {
   return out.split("\n").filter(Boolean);
 }
 
-export function diffStat(sha: string, cwd?: string): string {
-  return git(["show", "--stat", "--format=", sha], { cwd });
-}
-
 export function commitPatch(sha: string, maxChars: number, cwd?: string): string {
   const out = git(["show", "--format=", "--unified=2", sha], { cwd });
   return out.length > maxChars ? `${out.slice(0, maxChars)}\n... (diff truncated)` : out;

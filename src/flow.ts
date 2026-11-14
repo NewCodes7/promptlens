@@ -1,7 +1,7 @@
 import type { CommitEntry } from "./report.js";
 import type { CommitContext, Turn, TurnStep } from "./types.js";
 
-export const MAX_FLOW_TURNS = 10;
+const MAX_FLOW_TURNS = 10;
 
 const ICON: Record<string, string> = {
   investigate: "🔍",

@@ -103,11 +103,11 @@ export function buildCapture(events: SessionEvent[], input: CaptureInput): RawCa
   };
 }
 
-export function rawDir(cwd?: string): string {
+function rawDir(cwd?: string): string {
   return path.join(gitDir(cwd), "promptlens", "raw");
 }
 
-export function rawPath(sha: string, cwd?: string): string {
+function rawPath(sha: string, cwd?: string): string {
   return path.join(rawDir(cwd), `${sha}.json`);
 }
 
