@@ -1,7 +1,7 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { homedir } from "node:os";
 import path from "node:path";
-import { asArray, asObject, asString, type JsonObject, parseObject } from "./json.js";
+import { asArray, asObject, asString, isArray, type JsonObject, parseObject } from "./json.js";
 
 /** Marker placed at the start of PromptLens' own `claude -p` prompts so they are never captured. */
 export const SELF_MARKER = "PROMPTLENS_SUMMARIZE";
@@ -29,7 +29,7 @@ export type SessionEvent =
   | { kind: "decision"; ts: string; sessionId: string; cwd: string; question: string; answer: string }
   | { kind: "note"; ts: string; sessionId: string; cwd: string; text: string };
 
-export function claudeProjectsDir(): string {
+function claudeProjectsDir(): string {
   if (process.env.PROMPTLENS_CLAUDE_PROJECTS) return process.env.PROMPTLENS_CLAUDE_PROJECTS;
   const base = process.env.CLAUDE_CONFIG_DIR ?? path.join(homedir(), ".claude");
   return path.join(base, "projects");
@@ -41,7 +41,7 @@ export function projectDirName(absPath: string): string {
 }
 
 /** Session log files that may belong to this repo (including worktrees and subdirectories). */
-export function findSessionFiles(root: string, modifiedSince?: Date): string[] {
+function findSessionFiles(root: string, modifiedSince?: Date): string[] {
   const dir = claudeProjectsDir();
   if (!existsSync(dir)) return [];
   const prefix = projectDirName(root);
@@ -67,7 +67,7 @@ function isNoise(text: string): boolean {
 
 function textOf(content: unknown): string | null {
   if (typeof content === "string") return content;
-  if (!Array.isArray(content)) return null;
+  if (!isArray(content)) return null;
   const blocks = content.map(asObject);
   if (blocks.some((b) => b.type === "tool_result")) return null;
   const parts = blocks.filter((b) => b.type === "text").map((b) => String(b.text));

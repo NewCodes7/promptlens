@@ -2,7 +2,7 @@ import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { errorMessage } from "./errors.js";
 import { commitPatch } from "./git.js";
-import { asArray, asObject, asString, asStrings, type JsonObject, parseObject } from "./json.js";
+import { asArray, asObject, asString, asStrings, isArray, type JsonObject, parseObject } from "./json.js";
 import { openaiJson } from "./openai.js";
 import { redact, truncate } from "./redact.js";
 import { SELF_MARKER } from "./sessions.js";
@@ -77,7 +77,7 @@ export function heuristicContext(raw: RawCapture): CommitContext {
   };
 }
 
-export function buildSummaryPrompt(raw: RawCapture, patch: string): string {
+function buildSummaryPrompt(raw: RawCapture, patch: string): string {
   const prompts = allPrompts(raw);
   const lines: string[] = [
     `${SELF_MARKER}`,
@@ -165,7 +165,7 @@ export function contextFromModel(raw: RawCapture, model: unknown, generatedBy: C
     intent: intentText !== undefined ? { text: clean(intentText, 240), inferred: Boolean(intent.inferred) } : fallback.intent,
     keyPrompts: keyPrompts.length ? keyPrompts : fallback.keyPrompts,
     decisions: decisions.length ? decisions : fallback.decisions,
-    aiWork: Array.isArray(m.aiWork) ? asStrings(m.aiWork).map((s) => clean(s, 200)) : fallback.aiWork,
+    aiWork: isArray(m.aiWork) ? asStrings(m.aiWork).map((s) => clean(s, 200)) : fallback.aiWork,
     verification: asClaims(m.verification),
   };
 }

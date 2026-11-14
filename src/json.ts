@@ -15,6 +15,11 @@ export function asObject(value: unknown): JsonObject {
   return isObject(value) ? value : {};
 }
 
+/** `Array.isArray` narrows to `any[]`; this narrows to `unknown[]`, so elements still have to be checked. */
+export function isArray(value: unknown): value is unknown[] {
+  return Array.isArray(value);
+}
+
 /** The value as an array, or an empty array when it is anything else. */
 export function asArray(value: unknown): unknown[] {
   return Array.isArray(value) ? value : [];

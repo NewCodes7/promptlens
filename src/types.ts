@@ -1,5 +1,5 @@
 /** A single human prompt typed into an AI coding session. */
-export interface PromptEvent {
+interface PromptEvent {
   ts: string;
   text: string;
   /** true when the prompt was given before this commit's window but the agent was still acting on it. */
@@ -7,7 +7,7 @@ export interface PromptEvent {
 }
 
 /** A file-modifying tool call made by the AI (Edit, Write, MultiEdit, ...). */
-export interface EditEvent {
+interface EditEvent {
   ts: string;
   tool: string;
   /** Path relative to the repository root. */
@@ -15,14 +15,14 @@ export interface EditEvent {
 }
 
 /** A shell command run by the AI — used to detect verification (tests, builds). */
-export interface CommandEvent {
+interface CommandEvent {
   ts: string;
   command: string;
   description?: string;
 }
 
 /** A question the AI asked the developer and the answer it got. */
-export interface DecisionEvent {
+interface DecisionEvent {
   ts: string;
   question: string;
   answer: string;
@@ -50,7 +50,7 @@ export interface RawCapture {
   sessions: SessionSlice[];
 }
 
-export interface KeyPrompt {
+interface KeyPrompt {
   /** Redacted, possibly truncated prompt text. */
   text: string;
   /** Why this prompt matters for review. */
@@ -63,10 +63,8 @@ export interface Claim {
   inferred: boolean;
 }
 
-/** Step types for what the agent did inside a turn; anything else is a free-form type the model chose. */
-export const STEP_TYPES = ["investigate", "plan", "build", "fix", "verify", "refactor", "docs", "ship"] as const;
-
 export interface TurnStep {
+  /** investigate · plan · build · fix · verify · refactor · docs · ship, or a free-form type the model chose. */
   type: string;
   text: string;
 }

@@ -5,7 +5,7 @@ import { redact, truncate } from "./redact.js";
 import type { CommitEntry, Synthesis } from "./report.js";
 import { templateSynthesis } from "./report.js";
 
-export function buildSynthesisPrompt(entries: CommitEntry[], diffStat: string): string {
+function buildSynthesisPrompt(entries: CommitEntry[], diffStat: string): string {
   const commits = entries.map((e) => ({
     sha: e.sha.slice(0, 7),
     subject: e.subject,
@@ -76,7 +76,7 @@ export function synthesisFromModel(json: unknown, generatedBy: string, fallback:
   };
 }
 
-export const openaiModel = () => process.env.OPENAI_MODEL || "gpt-5-mini";
+const openaiModel = () => process.env.OPENAI_MODEL || "gpt-5-mini";
 
 /** Call OpenAI Chat Completions in JSON mode and return the parsed object (shape unchecked: callers narrow it). */
 export async function openaiJson(prompt: string): Promise<JsonObject> {

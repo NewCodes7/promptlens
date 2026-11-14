@@ -23,7 +23,7 @@ function sessionOf(raw: RawCapture, sessionId: string): SessionSlice {
   return session;
 }
 
-export function promptList(raw: RawCapture): PromptMeta[] {
+function promptList(raw: RawCapture): PromptMeta[] {
   let i = 0;
   return raw.sessions.flatMap((s) =>
     s.prompts.map((p) => ({ index: i++, sessionId: s.sessionId, ts: p.ts, text: p.text, carried: Boolean(p.carried) })),
@@ -75,7 +75,7 @@ function classify(a: Act): string | null {
 }
 
 /** Step chips derived from activity: consecutive duplicates collapsed, at most 5. */
-export function heuristicSteps(acts: Act[]): TurnStep[] {
+function heuristicSteps(acts: Act[]): TurnStep[] {
   const steps: TurnStep[] = [];
   for (const a of acts) {
     const t = classify(a);

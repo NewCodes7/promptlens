@@ -1,4 +1,4 @@
-import { isObject, type JsonObject } from "./json.js";
+import { isArray, isObject, type JsonObject } from "./json.js";
 import type { CommitContext, RawCapture } from "./types.js";
 
 /**
@@ -10,7 +10,7 @@ import type { CommitContext, RawCapture } from "./types.js";
 const isString = (v: unknown): v is string => typeof v === "string";
 const isNumber = (v: unknown): v is number => typeof v === "number" && Number.isFinite(v);
 const isBoolean = (v: unknown): v is boolean => typeof v === "boolean";
-const arrayOf = (v: unknown, item: (x: unknown) => boolean): v is unknown[] => Array.isArray(v) && v.every(item);
+const arrayOf = (v: unknown, item: (x: unknown) => boolean): v is unknown[] => isArray(v) && v.every(item);
 const has = (o: JsonObject, shape: Record<string, (v: unknown) => boolean>) => Object.entries(shape).every(([k, check]) => check(o[k]));
 
 const isClaim = (v: unknown) => isObject(v) && has(v, { text: isString, inferred: isBoolean });

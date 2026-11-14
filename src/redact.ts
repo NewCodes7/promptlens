@@ -24,7 +24,11 @@ const RULES: { name: string; re: RegExp; replace?: (m: string, ...g: string[]) =
 export function redact(text: string): string {
   let out = text;
   for (const rule of RULES) {
-    out = out.replace(rule.re, (...args) => (rule.replace ? rule.replace(...(args as [string, ...string[]])) : `[REDACTED:${rule.name}]`));
+    out = out.replace(rule.re, (match: string, ...rest: unknown[]) => {
+      if (!rule.replace) return `[REDACTED:${rule.name}]`;
+      // Capture groups come first and keep their positions; an unmatched group or the offset becomes "".
+      return rule.replace(match, ...rest.map((g) => (typeof g === "string" ? g : "")));
+    });
   }
   return out;
 }
