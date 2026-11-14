@@ -12,6 +12,7 @@ import { pkg } from "./pkg.js";
 import { collectCommits, renderReport, translatableTexts } from "./report.js";
 import { renderReviewFile, reviewFilePath, reviewFileUrl } from "./review.js";
 import { summarize } from "./summarize.js";
+import { unknownCommand, usage } from "./usage.js";
 
 const CLI = realpathSync(fileURLToPath(import.meta.url));
 const ZERO = /^0+$/;
@@ -215,22 +216,17 @@ async function main() {
       return;
     }
 
-    default:
-      console.log(`promptlens ${pkg.version} — AI work context for code review
+    case undefined:
+    case "help":
+    case "--help":
+    case "-h":
+      console.log(usage());
+      return;
 
-Usage:
-  promptlens init [--no-workflow] [--workflow-run CMD]
-                                      Install git hooks, notes config and the PR workflow
-                                      (the workflow pins ${pkg.name}@${pkg.version})
-  promptlens capture [rev] [--sync]   (post-commit) link AI sessions to a commit
-  promptlens summarize [rev] [--force] Write the Commit Context note for a commit
-  promptlens sync [remote]            (pre-push) ensure contexts and push ${NOTES_REF}
-  promptlens show [rev]               Print a commit's Commit Context
-  promptlens report [--base B] [--head H]   Preview the PR report locally
-  promptlens report --file [--pr N]   Preview the line-commentable review file
-  promptlens pr-report --post         (GitHub Actions) commit .promptlens/PR-<n>.md and post/update the PR comment
-                                      (--no-review-file: comment only)
-  promptlens --version                Print the installed version`);
+    default:
+      console.error(`${unknownCommand(cmd)}\n`);
+      console.error(usage());
+      process.exitCode = 1;
   }
 }
 

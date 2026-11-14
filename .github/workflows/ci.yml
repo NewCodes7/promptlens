@@ -30,6 +30,12 @@ jobs:
       - name: Build
         run: npm run build
       - name: CLI smoke test
-        run: node dist/cli.js --version
+        run: |
+          node dist/cli.js --version
+          node dist/cli.js --help > /dev/null
+          if node dist/cli.js no-such-command 2> /dev/null; then
+            echo "an unknown command must exit non-zero"
+            exit 1
+          fi
       - name: Check the published file list
         run: npm pack --dry-run

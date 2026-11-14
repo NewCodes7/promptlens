@@ -151,6 +151,7 @@ Pass `--workflow-run "<command>"` to make the generated workflow run something o
 | `promptlens report --file [--pr N]`                    | manual         | Previews the line-commentable review file                                                                                                                |
 | `promptlens pr-report --post [--no-review-file]`       | GitHub Actions | Commits `.promptlens/PR-<n>.md` to the PR branch, then creates or updates the PR comment                                                                 |
 | `promptlens --version`                                 | manual         | Prints the installed version                                                                                                                             |
+| `promptlens --help`                                    | manual         | Prints the usage. An unknown command prints an error and the usage to stderr and exits with code 1                                                       |
 
 ### Environment variables
 
