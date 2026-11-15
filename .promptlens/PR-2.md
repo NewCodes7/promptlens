@@ -68,12 +68,6 @@ The full summary is in the PromptLens comment on the PR conversation.
 - **Put architecture, differentiators, design decisions and test results in the README** — A demo video can't show all of them
 - **Dedupe intents after whitespace normalization in template mode** — Heuristic mode repeated the same intent across commits
 - **Heuristic regex plus path substring match to detect shell edits** — Cheap and good enough to catch sed -i, heredocs and scripts without parsing shell syntax
-- **Fall back to OpenAI only when OPENAI_API_KEY is set, otherwise to the heuristic** — Keeps the tool working offline without a key.
-- **Log background summarize stderr to the log file** — Failures were previously silent, which hid the claude -p problem.
-- **Mark carried prompts with carried:true rather than counting them as new prompts** — Keeps stats accurate while still giving the reviewer the instruction's context.
-- **Put architecture, differentiators, design decisions and test results in the README** — A demo video can't show all of them
-- **Dedupe intents after whitespace normalization in template mode** — Heuristic mode repeated the same intent across commits
-- **Heuristic regex plus path substring match to detect shell edits** — Cheap and good enough to catch sed -i, heredocs and scripts without parsing shell syntax
 
 ### 🎯 Prompt review
 
@@ -177,7 +171,6 @@ The full summary is in the PromptLens comment on the PR conversation.
 - **Show representative prompt and decisions with reasons per chunk** — Gives reviewers intent and rationale without full transcripts
 - **Max 10 chunks, single chronological flow** — Bounds length regardless of session count or conversation size
 - **Strip the tags in the session parser, not at render time.** — The cleaned text then feeds every downstream use, including summaries and flow grouping.
-- **Strip the tags in the session parser, not at render time.** — The cleaned text then feeds every downstream use, including summaries and flow grouping.
 
 ### 🎯 Prompt review
 
@@ -256,8 +249,6 @@ The full summary is in the PromptLens comment on the PR conversation.
 - **Step chips plus one-line outcome per turn** — Compact view of what the AI did
 - **English intent title, original prompt in details** — Report is English while prompts are Korean
 - **Adopt Devin-style prompt tips (including positives) and turn efficiency metrics** — Helps developers reinforce good prompting habits and see per-request effort
-- **Rewrite each request's outcome over the whole request via the PR-level LLM synthesis** — A per-commit outcome only reflects the last piece of a multi-commit request
-- **Treat only redirects to real files and explicit write calls as shell writes** — Stderr redirects and read-only python/node commands caused false session-to-commit links
 - **Rewrite each request's outcome over the whole request via the PR-level LLM synthesis** — A per-commit outcome only reflects the last piece of a multi-commit request
 - **Treat only redirects to real files and explicit write calls as shell writes** — Stderr redirects and read-only python/node commands caused false session-to-commit links
 

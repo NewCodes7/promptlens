@@ -147,6 +147,24 @@ describe("collectTurns", () => {
     expect(t[2].manual).toBe(true);
   });
 
+  it("lists a decision once when every commit of a request repeats it", () => {
+    const d = (text: string, why = "") => ({ text, why });
+    const t = collectTurns([
+      {
+        sha: "c1",
+        subject: "a",
+        context: ctx([turn("A", { prompts: ["go"], decisions: [d("Use git notes"), d("Run in background", "fast")] })]),
+      },
+      {
+        sha: "c2",
+        subject: "b",
+        context: ctx([turn("A", { carried: true, decisions: [d("use  git notes", "no tree changes"), d("Run in background")] })]),
+      },
+    ]);
+    expect(t).toHaveLength(1);
+    expect(t[0].decisions).toEqual([d("Use git notes", "no tree changes"), d("Run in background", "fast")]);
+  });
+
   it("falls back to one request per commit for notes without turns", () => {
     const t = collectTurns([{ sha: "c", subject: "old note", context: { ...heuristicContext(raw), turns: undefined } }]);
     expect(t).toHaveLength(1);
@@ -162,6 +180,18 @@ describe("mergeToMax", () => {
     const merged = mergeToMax(many, 10);
     expect(merged).toHaveLength(10);
     expect(merged.flatMap((t) => t.commits)).toHaveLength(23);
+  });
+
+  it("does not repeat a decision shared by the requests it merges", () => {
+    const shared = { text: "Pin the workflow version", why: "" };
+    const many = collectTurns(
+      Array.from({ length: 3 }, (_, i) => ({
+        sha: `c${i}`,
+        subject: `s${i}`,
+        context: ctx([turn(`K${i}`, { prompts: ["p"], decisions: [shared] })]),
+      })),
+    );
+    expect(mergeToMax(many, 1)[0].decisions).toEqual([shared]);
   });
 });
 

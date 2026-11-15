@@ -238,7 +238,7 @@ CI runs every gate on Node.js 22, 24 and 26 for each PR, and `npm publish` runs 
 | Check         | Tool                          | Now                                                                     | CI fails when                                                  |
 | ------------- | ----------------------------- | ----------------------------------------------------------------------- | -------------------------------------------------------------- |
 | Lint, format  | Biome                         | No findings                                                             | Any finding                                                    |
-| Types         | TypeScript `strict`           | No `any`, no `@ts-ignore`, no `as` assertions except `as const`         | Any type error in `src/` or `tests/`                           |
+| Types         | TypeScript `strict`           | No `any` or `@ts-ignore`; no `as` assertions in `src/` except `as const` | Any type error in `src/` or `tests/`                           |
 | Type coverage | type-coverage `--strict`      | 100% (6,188 of 6,188 identifiers typed)                                 | Below 100%                                                     |
 | Tests         | Vitest                        | 139 tests in 16 files                                                   | Any failure                                                    |
 | Test coverage | Vitest, V8                    | Lines 97%, statements 96%, functions 97%, branches 85%                  | Lines < 95%, statements < 93%, functions < 94%, branches < 82% |
@@ -251,6 +251,7 @@ The network adapters run against a stubbed `fetch`. The summary chain runs a fak
 ## Limitations and roadmap
 
 - **Claude Code only for now.** Codex, Cursor and Git AI adapters plug in at `sessions.ts`.
+- **Only sessions logged on the committing machine are captured.** The hooks read the local Claude Code logs, so commits made from Claude Code on the web or on another machine get no Commit Context and show as "Committed without an AI session" (as in [PR #7](https://github.com/NewCodes7/promptlens/pull/7)).
 - **Squash merges** rewrite SHAs, so notes don't follow the squash commit. The PR report is produced before the merge, so the review isn't affected.
 - **Next:** `--json` output for agents, and an optional commit-time interview when a session lacks a clear "why".
 

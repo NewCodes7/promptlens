@@ -4,6 +4,10 @@ Notable changes to PromptLens. The format follows [Keep a Changelog](https://kee
 
 ## [Unreleased]
 
+### Fixed
+
+- When every commit of a long request repeated the decisions made so far, the request's details listed each decision once per commit. Each decision is now listed once, keeping a reason if any copy has one. The committed review files for PR #2 and PR #3 had the repeated bullets removed.
+
 ## [0.3.0] - 2026-11-15
 
 ### Changed
