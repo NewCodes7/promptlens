@@ -34,7 +34,7 @@
       "key": "dbd93610-cc14-4d44-9b04-d73e8fde942f@2026-11-10T01:15:24.618Z",
       "title": "Fix npm publish by changing package scope",
       "prompts": [
-        "ksnghyk@KSNGHYK-book  ~/promptlens   main  npm publish\n\n> @newcodes7/promptlens@0.2.0 prepublishOnly\n> npm run check && npm run build\n\n\n> @newcodes7/promptlens@0.2.0 check\n> npm run lint && npm run typecheck && npm test\n\n\n> @newcodes7/promptlens@0.2.0 lint\n> biome check .\n\nsrc/github.ts:3:88 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n  ⚠ Unexpected any. Specify a different type.\n\n    1 │ import { REPORT_MARKER } from \"./report.js\";…"
+        "user@host  ~/promptlens   main  npm publish\n\n> @newcodes7/promptlens@0.2.0 prepublishOnly\n> npm run check && npm run build\n\n\n> @newcodes7/promptlens@0.2.0 check\n> npm run lint && npm run typecheck && npm test\n\n\n> @newcodes7/promptlens@0.2.0 lint\n> biome check .\n\nsrc/github.ts:3:88 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n  ⚠ Unexpected any. Specify a different type.\n\n    1 │ import { REPORT_MARKER } from \"./report.js\";…"
       ],
       "carried": false,
       "steps": [
@@ -86,7 +86,7 @@
   },
   "keyPrompts": [
     {
-      "text": "ksnghyk@KSNGHYK-book  ~/promptlens   main  npm publish\n\n> @newcodes7/promptlens@0.2.0 prepublishOnly\n> npm run check && npm run build\n\n\n> @newcodes7/promptlens@0.2.0 check\n> npm run lint && npm run typecheck && npm test\n\n\n> @newcodes7/promptlens@0.2.0 lint\n> biome check .\n\nsrc/github.ts:3:88 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━…",
+      "text": "user@host  ~/promptlens   main  npm publish\n\n> @newcodes7/promptlens@0.2.0 prepublishOnly\n> npm run check && npm run build\n\n\n> @newcodes7/promptlens@0.2.0 check\n> npm run lint && npm run typecheck && npm test\n\n\n> @newcodes7/promptlens@0.2.0 lint\n> biome check .\n\nsrc/github.ts:3:88 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━…",
       "why": "Pasted npm publish output with the lint failure; it led the agent to check npm login and scope availability and then rename the scope."
     }
   ],
