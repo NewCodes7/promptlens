@@ -157,10 +157,6 @@ The full summary is in the PromptLens comment on the PR conversation.
 - **Wipe dist on build** — Stale dist/phases.js would otherwise be published
 - **Turn off Biome Markdown formatting** — Formatter never converged on the centered table, which would break CI.
 - **Move product vision to docs/vision.md** — Keeps the README focused on installation and use.
-- **Revert Biome's min/max auto-fix** — Operands are ISO strings, so Math.min would change behavior
-- **Wipe dist on build** — Stale dist/phases.js would otherwise be published
-- **Turn off Biome Markdown formatting** — Formatter never converged on the centered table, which would break CI.
-- **Move product vision to docs/vision.md** — Keeps the README focused on installation and use.
 
 ### 🎯 Prompt review
 
