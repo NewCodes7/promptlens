@@ -62,6 +62,27 @@ function mergeMetrics(a: Turn["metrics"], b: Turn["metrics"]): Turn["metrics"] {
   };
 }
 
+/**
+ * Each commit's summary of a long request repeats the decisions made so far, so joining the
+ * pieces listed them twice. Keep each decision once (by normalized text) and keep a reason if
+ * any copy has one.
+ */
+function mergeDecisions(a: Turn["decisions"], b: Turn["decisions"]): Turn["decisions"] {
+  const out: Turn["decisions"] = [];
+  const seen = new Map<string, number>();
+  for (const d of [...a, ...b]) {
+    const k = d.text.trim().replace(/\s+/g, " ").toLowerCase();
+    const i = seen.get(k);
+    if (i === undefined) {
+      seen.set(k, out.length);
+      out.push(d);
+    } else if (!out[i].why && d.why) {
+      out[i] = { text: out[i].text, why: d.why };
+    }
+  }
+  return out;
+}
+
 function fromTurn(t: Turn): FlowTurn {
   const { sessionId, carried: _c, ...rest } = t;
   return { ...rest, sessions: [sessionId], commits: [], outcomes: t.outcome ? [t.outcome] : [] };
@@ -77,7 +98,7 @@ function absorb(into: FlowTurn, piece: Turn): void {
     into.outcome = piece.outcome;
     into.outcomes.push(piece.outcome);
   }
-  into.decisions.push(...piece.decisions);
+  into.decisions = mergeDecisions(into.decisions, piece.decisions);
   if (piece.tips.keep.length || piece.tips.improve.length) {
     if (real || (!into.tips.keep.length && !into.tips.improve.length)) into.tips = piece.tips;
   }
@@ -158,7 +179,7 @@ export function mergeToMax(turns: FlowTurn[], max = MAX_FLOW_TURNS): FlowTurn[] 
       prompts: [...a.prompts, ...b.prompts],
       steps: mergeSteps(a.steps, b.steps),
       outcome: b.outcome || a.outcome,
-      decisions: [...a.decisions, ...b.decisions],
+      decisions: mergeDecisions(a.decisions, b.decisions),
       tips: big.tips,
       metrics: a.metrics.start && b.metrics.start ? mergeMetrics(a.metrics, b.metrics) : big.metrics,
       sessions: [...new Set([...a.sessions, ...b.sessions])],
