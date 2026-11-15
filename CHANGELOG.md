@@ -4,6 +4,8 @@ Notable changes to PromptLens. The format follows [Keep a Changelog](https://kee
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-15
+
 ### Changed
 
 - **Breaking:** Node.js 22 or later is required. Node.js 20 reached end-of-life in April 2026. CI now tests Node.js 22, 24 and 26, and the workflow that `init` generates runs on Node.js 24.
@@ -46,5 +48,6 @@ First release on npm, as `@newcodes/promptlens`.
 - Secrets and email addresses are redacted before anything leaves the machine.
 - Biome lint and format, type-checked tests, and CI that runs lint, typecheck, tests with coverage, the build, a CLI smoke test and `npm pack --dry-run`.
 
-[Unreleased]: https://github.com/NewCodes7/promptlens/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/NewCodes7/promptlens/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/NewCodes7/promptlens/releases/tag/v0.3.0
 [0.2.0]: https://github.com/NewCodes7/promptlens/releases/tag/v0.2.0

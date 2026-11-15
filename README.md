@@ -107,7 +107,7 @@ gh secret set OPENAI_API_KEY    # optional: LLM synthesis of the PR summary
 Commit the generated workflow, then work as usual: commit, push, open a PR.
 
 - **Install globally (or as a dev dependency), not with `npx`.** The hooks call the CLI by its absolute path, and npx runs packages from a cache that npm may delete. `init` warns if it detects this.
-- **The workflow is pinned** to the exact version that ran `init` (for example `npx --yes @newcodes/promptlens@0.2.0`). The job has `contents: write`, so it should never run an unpinned `@latest`. After upgrading, delete the workflow and re-run `init`, or bump the version in it.
+- **The workflow is pinned** to the exact version that ran `init` (for example `npx --yes @newcodes/promptlens@0.3.0`). The job has `contents: write`, so it should never run an unpinned `@latest`. After upgrading, delete the workflow and re-run `init`, or bump the version in it.
 - **The review file is committed by the Actions bot**, so run `git pull` before your next push. It only changes when the commits change. GitHub holds workflow runs on that bot commit as _Action required_ instead of starting them, so it can't loop. Fork PRs get a read-only token and only get the comment. Use `--no-review-file` to turn it off.
 
 <details>
