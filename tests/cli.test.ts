@@ -52,6 +52,11 @@ beforeAll(() => {
   process.env.PROMPTLENS_CLAUDE_PROJECTS = projects;
   process.env.PROMPTLENS_NO_LLM = "1";
   delete process.env.OPENAI_API_KEY;
+  // A CI runner sets these for its own pull request, which `report` would read instead of
+  // this repo's commits. Tests that need a GitHub event set their own.
+  delete process.env.GITHUB_EVENT_PATH;
+  delete process.env.GITHUB_TOKEN;
+  delete process.env.GITHUB_REPOSITORY;
 
   sh(repo, "init", "-q", "-b", "main");
   sh(repo, "config", "user.email", "t@test.dev");

@@ -15,7 +15,7 @@ The full summary is in the PromptLens comment on the PR conversation.
 
 ### 🧑‍💻 Prompt
 
-> ksnghyk@KSNGHYK-book  ~/promptlens   main  npm publish
+> user@host  ~/promptlens   main  npm publish
 >
 > &gt; @newcodes7/promptlens@0.2.0 prepublishOnly
 > &gt; npm run check && npm run build
