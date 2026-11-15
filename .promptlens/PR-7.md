@@ -7,11 +7,17 @@ The full summary is in the PromptLens comment on the PR conversation.
 
 | Commits | With AI context | AI sessions | Prompts |
 |:-:|:-:|:-:|:-:|
-| 1 | 0 / 1 | 0 | 0 |
+| 2 | 0 / 2 | 0 | 0 |
 
 ## ① Release 0.3.0
 
 💬 0 prompts · commits `108c5fa`
+
+✋ Committed without an AI session.
+
+## ② Keep the CLI tests from reading the CI runner's pull request event
+
+💬 0 prompts · commits `8e26c61`
 
 ✋ Committed without an AI session.
 
